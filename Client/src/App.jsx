@@ -23,6 +23,7 @@ import Orderfailure from "./pages/user/Orderfailure.jsx"
 import AdminCustomerdetails from "./pages/admin/AdminCustomerdetails.jsx"
 import SpecificProduct from "./pages/user/SpecificProduct.jsx"
 import Wishlist from "./pages/user/Wishlist.jsx"
+import Adminorder from "./pages/admin/Adminorder.jsx";
 
 
 function App(){
@@ -53,6 +54,7 @@ function App(){
                 <Route path='/AdminCustomerdetails' element={<AdminCustomerdetails/>}/>
                 <Route path='/SpecificProduct/:id' element={<SpecificProduct/>}/>
                 <Route path="/Wishlist" element={<Wishlist/>}/>
+                <Route path="/Adminorder" element={<Adminorder/>}/>
 
         </Routes> 
         </>

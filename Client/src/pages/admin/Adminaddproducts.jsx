@@ -163,9 +163,9 @@ const Adminaddproducts = () => {
           </button>
 
           <button className="admin-nav-item">
-            <LuShoppingCart className="admin-nav-icon" />
-            <span>Orders</span>
-          </button>
+                        <LuShoppingCart className="admin-nav-icon" />
+                        <Link to='/Adminorder'><span>Orders</span></Link>
+                      </button>
 
         </div>
 
