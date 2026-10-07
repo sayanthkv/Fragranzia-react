@@ -1,0 +1,587 @@
+:root {
+  --primary-color: rgb(6, 57, 40);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+  overflow-x: hidden;
+  font-family: "Poppins", sans-serif;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+section {
+  width: 100%;
+}
+
+.homepage-navbar {
+  padding: 1rem clamp(1rem, 4vw, 2rem);
+  background-color: #ffffff !important;
+}
+
+.homepage-navbar-brand {
+  color: var(--primary-color) !important;
+  font-size: 1.5rem;
+  font-weight: 700;
+  padding: 20px;
+  text-decoration: none !important;
+}
+
+.homepage-navbar-brand a {
+  color: var(--primary-color) !important;
+  text-decoration: none !important;
+}
+
+.homepage-navbar-brand a:hover {
+  color: var(--primary-color) !important;
+  text-decoration: none !important;
+}
+
+.homepage-navbar-brand:hover {
+  color: var(--primary-color) !important;
+  text-decoration: none !important;
+}
+
+.homepage-nav-link {
+  text-decoration: none !important;
+  color: inherit !important;
+  font-weight: 500;
+  padding: 0.5rem 1rem !important;
+  border: none !important;
+}
+
+.homepage-nav-link:hover {
+  text-decoration: none !important;
+  color: inherit !important;
+  border: none !important;
+}
+
+.homepage-nav-link.active {
+  text-decoration: none !important;
+  color: inherit !important;
+  font-weight: 700;
+  border: none !important;
+}
+
+
+.homepage-nav-link a {
+  text-decoration: none !important;
+  color: inherit !important;
+  border: none !important;
+}
+
+.homepage-nav-link a:hover {
+  text-decoration: none !important;
+  color: inherit !important;
+  border: none !important;
+}
+
+.homepage-search-wrapper {
+  position: relative;
+  width: min(220px, 100%);
+}
+
+.homepage-search-wrapper .form-control {
+  border-radius: 50px;
+  padding-left: 2.2rem;
+  font-size: 0.9rem;
+  border: 1px solid #ced4da;
+  height: 40px;
+}
+
+.homepage-search-wrapper .fa-search {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d;
+  pointer-events: none;
+}
+
+.homepage-icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid #ced4da;
+  background-color: white;
+  color: #333;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.homepage-icon-btn a {
+  text-decoration: none !important;
+  color: inherit !important;
+}
+
+.homepage-icon-btn a:hover {
+  text-decoration: none !important;
+  color: inherit !important;
+}
+
+.homepage-icon-btn:hover {
+  background-color: #f8f9fa;
+  border-color: #adb5bd;
+  color: #333;
+}
+
+.homepage-icon-btn i {
+  pointer-events: none;
+}
+
+/* ==================================
+   PRODUCT PAGE TWO - MAIN CONTAINER
+================================== */
+
+.productpagetwo-container {
+  width: 100%;
+  padding: 30px 3%;
+  box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #212529;
+  background-color: #ffffff;
+}
+
+/* Breadcrumb */
+
+.productpagetwo-breadcrumb {
+  font-size: 14px;
+  color: #6c757d;
+  margin-bottom: 26px;
+}
+
+/* Main Layout */
+
+.productpagetwo-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: start;
+}
+
+/* ==================================
+   LEFT SIDE - PRODUCT GALLERY
+================================== */
+
+.productpagetwo-gallery-card {
+  background-color: #ffffff;
+  border: 1px solid #f0f0f0;
+  border-radius: 7px;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* Gallery Layout */
+
+.productpagetwo-gallery {
+  display: grid;
+  grid-template-columns: 23% 77%;
+  gap: 16px;
+  align-items: start;
+}
+
+/* Thumbnail Images */
+
+.productpagetwo-thumbnails {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.productpagetwo-thumbnail {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  overflow: hidden;
+  box-sizing: border-box;
+  background-color: #ffffff;
+}
+
+.productpagetwo-active-thumbnail {
+  border: 2px solid #0d6efd;
+}
+
+.productpagetwo-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* Main Product Image */
+
+.productpagetwo-main-image {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ffffff;
+}
+
+.productpagetwo-main-product-img {
+  width: 100%;
+  height: auto;
+  max-height: 570px;
+  object-fit: contain;
+  display: block;
+}
+
+/* Wishlist and Share Icons */
+
+.productpagetwo-image-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 2;
+}
+
+.productpagetwo-icon-btn {
+  width: 42px;
+  height: 42px;
+  border: 1px solid #e0e0e0;
+  border-radius: 50%;
+  background-color: #ffffff;
+  color: #333333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+
+
+.homepage-product-image-frame img {
+  max-height: 80%;
+  max-width: 80%;
+  object-fit: contain;
+}
+
+
+/* ==================================
+   PURCHASE AND CART BUTTONS
+================================== */
+
+.productpagetwo-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.productpagetwo-purchase-btn,
+.productpagetwo-add-cart-btn {
+  width: 100%;
+  height: 60px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: default;
+}
+
+.productpagetwo-purchase-btn {
+  background-color: #00334e;
+  color: #ffffff;
+  border: 1px solid #00334e;
+}
+
+.productpagetwo-add-cart-btn {
+  background-color: #ffffff;
+  color: #000000;
+  border: 2px solid #00334e;
+}
+
+/* ==================================
+   RIGHT SIDE - PRODUCT DETAILS
+================================== */
+
+.productpagetwo-info {
+  width: 100%;
+  min-width: 0;
+  padding-left: 4px;
+}
+
+/* Product Heading */
+
+.productpagetwo-heading {
+  font-size: 32px;
+  line-height: 1.25;
+  font-weight: 700;
+  margin: 0 0 6px;
+  color: #212529;
+}
+
+/* Brand */
+
+.productpagetwo-brand {
+  font-size: 20px;
+  color: #6c757d;
+  margin: 0 0 10px;
+}
+
+/* ==================================
+   RATING
+================================== */
+
+.productpagetwo-rating {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.productpagetwo-rating-badge {
+  background-color: #198754;
+  color: #ffffff;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.productpagetwo-rating-count {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+/* Stock Warning */
+
+.productpagetwo-stock-warning {
+  color: #dc3545;
+  font-size: 16px;
+  margin: 0 0 34px;
+}
+
+/* ==================================
+   PRICE SECTION
+================================== */
+
+.productpagetwo-price {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-bottom: 26px;
+}
+
+.productpagetwo-current-price {
+  font-size: 32px;
+  font-weight: 700;
+  color: #212529;
+}
+
+.productpagetwo-old-price {
+  color: #6c757d;
+  font-size: 14px;
+  text-decoration: line-through;
+}
+
+.productpagetwo-discount {
+  color: #198754;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+
+.productpagetwo-quantity {
+  width: 134px;
+  height: 40px;
+  display: grid;
+  grid-template-columns: 1fr 1.5fr 1fr;
+  border: 1px solid #adb5bd;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.productpagetwo-quantity button {
+  border: none;
+  background-color: #ffffff;
+  color: #6c757d;
+  font-size: 16px;
+}
+
+.productpagetwo-quantity span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-left: 1px solid #adb5bd;
+  border-right: 1px solid #adb5bd;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* Divider */
+
+.productpagetwo-divider {
+  border: none;
+  border-top: 1px solid #dee2e6;
+  margin: 24px 0;
+}
+
+/* ==================================
+   DELIVERY
+================================== */
+
+.productpagetwo-delivery {
+  margin-bottom: 26px;
+}
+
+.productpagetwo-delivery h2,
+.productpagetwo-description h2,
+.productpagetwo-offers h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #212529;
+  margin: 0 0 10px;
+}
+
+.productpagetwo-delivery p {
+  font-size: 14px;
+  color: #6c757d;
+  margin: 0 0 8px;
+  line-height: 1.6;
+}
+
+.productpagetwo-delivery p span {
+  color: #198754;
+  font-weight: 600;
+}
+
+.productpagetwo-delivery small {
+  font-size: 14px;
+  color: #6c757d;
+}
+
+/* ==================================
+   DESCRIPTION
+================================== */
+
+.productpagetwo-description {
+  margin-bottom: 26px;
+}
+
+.productpagetwo-description p {
+  color: #6c757d;
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ==================================
+   AVAILABLE OFFERS
+================================== */
+
+.productpagetwo-offers h2 {
+  margin-bottom: 16px;
+}
+
+.productpagetwo-offers ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.productpagetwo-offers li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: #6c757d;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.productpagetwo-offer-tag {
+  color: #198754;
+  font-size: 14px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+/* ==================================
+   RESPONSIVE DESIGN
+================================== */
+
+@media (max-width: 992px) {
+  .productpagetwo-layout {
+    grid-template-columns: 1fr;
+    gap: 35px;
+  }
+
+  .productpagetwo-heading {
+    font-size: 28px;
+  }
+
+  .productpagetwo-main-product-img {
+    max-height: 500px;
+  }
+}
+
+@media (max-width: 576px) {
+  .productpagetwo-container {
+    padding: 20px 4%;
+  }
+
+  .productpagetwo-gallery-card {
+    padding: 10px;
+  }
+
+  .productpagetwo-gallery {
+    grid-template-columns: 22% 78%;
+    gap: 8px;
+  }
+
+  .productpagetwo-heading {
+    font-size: 23px;
+  }
+
+  .productpagetwo-brand {
+    font-size: 17px;
+  }
+
+  .productpagetwo-current-price {
+    font-size: 27px;
+  }
+
+  .productpagetwo-thumbnail {
+    aspect-ratio: 1 / 1;
+  }
+
+  .productpagetwo-icon-btn {
+    width: 35px;
+    height: 35px;
+  }
+
+  .productpagetwo-buttons button {
+    height: 52px;
+  }
+
+  .productpagetwo-description p,
+  .productpagetwo-offers li {
+    font-size: 14px;
+  }
+}

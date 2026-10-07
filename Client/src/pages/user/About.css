@@ -1,0 +1,19 @@
+/* Custom styles specific to the About page layout */
+.img1 {
+    width: 100%;
+    max-width: 280px;
+    height: 270px;          /* Equal height for both images */
+    object-fit: cover;      /* Prevents image distortion/stretching */
+   border-top-left-radius: 130px;
+   border-bottom-right-radius: 130px;
+}
+
+.img2 {
+    width: 100%;
+    max-width: 280px;
+    height: 270px;          /* Equal height for both images */
+    object-fit: cover;      /* Prevents image distortion/stretching */
+    border-top-right-radius: 130px;
+   border-bottom-left-radius: 130px;
+   
+}
