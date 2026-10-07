@@ -136,3 +136,106 @@ a {
 .product-table-card{
     margin-top: 50px;
 }
+
+.admincustomer-overlay{
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  z-index: 1000;
+  
+}
+
+.admincustomer-content {
+  background-color: #ffffff;
+  border-radius: 10px;
+  width: 400px;
+  max-width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow:
+    0 10px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  padding: 24px;
+}
+
+.admincustomer-content input{
+  border: none;
+  border-bottom: 1px solid #737f92;
+  padding-bottom: 15px;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.customer-status-badge{
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+ border: none;
+}
+
+.status-block {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.status-unblock {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.view-detail-group {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 100px;
+  width: 100%;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+.customer-status,
+.customer-role {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.customer-status label,
+.customer-role label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.customer-status-badge,
+.customer-role-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+  border: none;
+}
+
+.customer-role-badge {
+  background-color: #e0f2fe;
+  color: #0369a1;
+}
+
+.close-button{
+  background-color: rgb(240, 236, 236);
+  border: none;
+  width: 100px;
+  height: 40px;
+  margin-left: 250px;
+}
