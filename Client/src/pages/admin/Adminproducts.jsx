@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
@@ -30,16 +31,16 @@ const Adminproducts = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [selectedImage, setSelectedImage] = useState(null);
-const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState([]);
 
-const fetchCategories = async () => {
-  try {
-    const res = await axios.get(CATEGORY_API_URL);
-    setCategories(res.data);
-  } catch (error) {
-    console.error('Error fetching categories:', error);
-  }
-};
+  const fetchCategories = async () => {
+    try {
+      const res = await axios.get(CATEGORY_API_URL);
+      setCategories(res.data);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
 
   const fetchproduct = async () => {
     try {
@@ -59,19 +60,19 @@ const fetchCategories = async () => {
   };
 
   const handleEditProduct = (item) => {
-  setEditingProduct({
-    ...item,
-    category: item.category?._id || ''
-  });
+    setEditingProduct({
+      ...item,
+      category: item.category?._id || ''
+    });
 
-  setImagePreview(
-    item.image
-      ? `${IMAGE_URL}/${item.image}`
-      : ''
-  );
+    setImagePreview(
+      item.image
+        ? `${IMAGE_URL}/${item.image}`
+        : ''
+    );
 
-  setSelectedImage(null);
-};
+    setSelectedImage(null);
+  };
 
   const handleCloseEdit = () => {
     setEditingProduct(null);
@@ -114,9 +115,9 @@ const fetchCategories = async () => {
       formData.append('saleprice', editingProduct.saleprice || '');
       formData.append('quantity', editingProduct.quantity || '');
       formData.append(
-          'category',
-          editingProduct.category || ''
-        );
+        'category',
+        editingProduct.category || ''
+      );
 
       if (selectedImage) {
         formData.append('image', selectedImage);
@@ -184,63 +185,65 @@ const fetchCategories = async () => {
   };
 
   useEffect(() => {
-  fetchproduct();
-  fetchCategories();
-}, []);
+    fetchproduct();
+    fetchCategories();
+  }, []);
 
   return (
-    <div className="product-main-container">
+    <div className="adminproduct-main-container">
 
-      <nav className="admin-navbar">
+      <nav className="adminproduct-navbar">
 
-        <div className="admin-navbar-brand">
+        <div className="adminproduct-navbar-brand">
           <h2>Dashtar</h2>
         </div>
 
-        <div className="admin-navbar-buttons">
+        <div className="adminproduct-navbar-buttons">
 
-          <button className="admin-nav-item">
-            <LuLayoutDashboard className="admin-nav-icon" />
+          <button className="adminproduct-nav-item">
+            <LuLayoutDashboard className="adminproduct-nav-icon" />
             <span>Dashboard</span>
           </button>
 
-          <button className="admin-nav-item">
-            <LuShoppingBag className="admin-nav-icon" />
+          <button className="adminproduct-nav-item">
+            <LuShoppingBag className="adminproduct-nav-icon" />
             <Link to="/Adminproducts">
               <span>Products</span>
             </Link>
           </button>
 
-          <button className="admin-nav-item">
-            <LuList className="admin-nav-icon" />
+          <button className="adminproduct-nav-item">
+            <LuList className="adminproduct-nav-icon" />
             <Link to="/AdminCategory">
               <span>Categories</span>
             </Link>
           </button>
 
-          <button className="admin-nav-item">
-            <LuTag className="admin-nav-icon" />
+          <button className="adminproduct-nav-item">
+            <LuTag className="adminproduct-nav-icon" />
             <span>Offers</span>
           </button>
 
-          <button className="admin-nav-item">
-            <LuUsers className="admin-nav-icon" />
+          <button className="adminproduct-nav-item">
+            <LuUsers className="adminproduct-nav-icon" />
             <Link to="/AdminCustomerdetails">
               <span>Customers</span>
             </Link>
           </button>
 
-          <button className="admin-nav-item">
-                        <LuShoppingCart className="admin-nav-icon" />
-                        <Link to='/Adminorder'><span>Orders</span></Link>
-                      </button>
+          <button className="adminproduct-nav-item">
+            <LuShoppingCart className="adminproduct-nav-icon" />
+            <Link to='/Adminorder'>
+              <span>Orders</span>
+            </Link>
+          </button>
 
         </div>
 
-        <div className="admin-navbar-logout">
+        <div className="adminproduct-navbar-logout">
 
-          <button className="admin-logout-btn">
-            <LuLogOut className="admin-nav-icon" />
+          <button className="adminproduct-logout-btn">
+            <LuLogOut className="adminproduct-nav-icon" />
             <span>Log Out</span>
           </button>
 
@@ -248,38 +251,38 @@ const fetchCategories = async () => {
 
       </nav>
 
-      <div className="product-main-content">
+      <div className="adminproduct-main-content">
 
-        <div className="product-action-bar">
+        <div className="adminproduct-action-bar">
 
-          <div className="product-action-left">
+          <div className="adminproduct-action-left">
 
-            <button className="product-btn product-btn-secondary">
-              <LuDownload className="btn-icon" />
+            <button className="adminproduct-btn adminproduct-btn-secondary">
+              <LuDownload className="adminproduct-btn-icon" />
               Export
             </button>
 
-            <button className="product-btn product-btn-secondary">
-              <LuUpload className="btn-icon" />
+            <button className="adminproduct-btn adminproduct-btn-secondary">
+              <LuUpload className="adminproduct-btn-icon" />
               Import
             </button>
 
           </div>
 
-          <button className="product-btn product-btn-primary">
+          <button className="adminproduct-btn adminproduct-btn-primary">
             <Link to="/Adminaddproducts">
-              <LuPlus className="btn-icon" />
+              <LuPlus className="adminproduct-btn-icon" />
               Add Product
             </Link>
           </button>
 
         </div>
 
-        <div className="product-table-card">
+        <div className="adminproduct-table-card">
 
-          <table className="product-table">
+          <table className="adminproduct-table">
 
-            <thead className="product-table-head">
+            <thead className="adminproduct-table-head">
 
               <tr>
                 <th>Product Name</th>
@@ -293,60 +296,60 @@ const fetchCategories = async () => {
 
             </thead>
 
-            <tbody className="product-table-body">
+            <tbody className="adminproduct-table-body">
 
               {product.map((item) => (
 
                 <tr key={item._id}>
 
-                  <td className="product-col-name">
+                  <td className="adminproduct-col-name">
                     {item.name}
                   </td>
 
-                  <td className="product-col-category">
+                  <td className="adminproduct-col-category">
                     {item.category?.name}
                   </td>
 
-                  <td className="product-col-category">
+                  <td className="adminproduct-col-category">
                     ₹{item.price}
                   </td>
 
-                  <td className="product-col-category">
+                  <td className="adminproduct-col-category">
                     ₹{item.saleprice}
                   </td>
 
-                  <td className="product-col-category">
+                  <td className="adminproduct-col-category">
                     {item.quantity}
                   </td>
 
-                  <td className="product-col-actions">
+                  <td className="adminproduct-col-actions">
 
                     <button
-                      className="product-action-show-btn"
+                      className="adminproduct-action-show-btn"
                       onClick={() => handleShowProduct(item)}
                     >
-                      <LuEye className="action-icon" />
+                      <LuEye className="adminproduct-action-icon" />
                       Show
                     </button>
 
                     <button
-                      className="product-action-edit-btn"
+                      className="adminproduct-action-edit-btn"
                       onClick={() => handleEditProduct(item)}
                     >
-                      <LuPencil className="action-icon" />
+                      <LuPencil className="adminproduct-action-icon" />
                       Edit
                     </button>
 
                   </td>
 
-                  <td className="Products-col-status">
+                  <td className="adminproduct-col-status">
 
                     <button
                       onClick={() => toggleStatus(item._id)}
-                      className={`product-status-btn ${
+                      className={`adminproduct-status-btn ${
                         item.status === 'Unblock'
-                          ? 'status-unblock'
-                          : 'status-block'
+                          ? 'adminproduct-status-unblock'
+                          : 'adminproduct-status-block'
                       }`}
                     >
                       {item.status}
@@ -362,20 +365,20 @@ const fetchCategories = async () => {
 
           </table>
 
-          <div className="product-pagination">
+          <div className="adminproduct-pagination">
 
             <button
-              className="product-page-btn"
+              className="adminproduct-page-btn"
               disabled
             >
               Previous
             </button>
 
-            <span className="product-page-info">
+            <span className="adminproduct-page-info">
               Page 1 of 2
             </span>
 
-            <button className="product-page-btn">
+            <button className="adminproduct-page-btn">
               Next
             </button>
 
@@ -388,24 +391,24 @@ const fetchCategories = async () => {
       {selectedProduct && (
 
         <div
-          className="adminmodal-overlay"
+          className="adminproduct-modal-overlay"
           onClick={handleCloseProduct}
         >
 
           <div
-            className="adminmodal-content product-details-modal"
+            className="adminproduct-modal-content adminproduct-details-modal"
             onClick={(e) => e.stopPropagation()}
           >
 
-            <div className="adminmodal-header">
+            <div className="adminproduct-modal-header">
 
               <h3>
-                <LuEye className="view-modal-icon" />
+                <LuEye className="adminproduct-view-modal-icon" />
                 Product Details
               </h3>
 
               <button
-                className="adminmodal-close-btn"
+                className="adminproduct-modal-close-btn"
                 onClick={handleCloseProduct}
               >
                 <LuX />
@@ -413,15 +416,15 @@ const fetchCategories = async () => {
 
             </div>
 
-            <hr className="view-modal-divider" />
+            <hr className="adminproduct-view-modal-divider" />
 
-            <div className="view-product-info">
+            <div className="adminproduct-view-product-info">
 
-              <div className="view-product-image-section">
+              <div className="adminproduct-view-product-image-section">
 
                 <label>Product Image</label>
 
-                <div className="view-product-image">
+                <div className="adminproduct-view-product-image">
 
                   {selectedProduct.image ? (
 
@@ -440,37 +443,37 @@ const fetchCategories = async () => {
 
               </div>
 
-              <div className="view-product-details">
+              <div className="adminproduct-view-product-details">
 
-                <div className="view-detail-group">
+                <div className="adminproduct-view-detail-group">
                   <label>Product Name</label>
                   <p>{selectedProduct.name}</p>
                 </div>
 
-                <div className="view-detail-group">
+                <div className="adminproduct-view-detail-group">
                   <label>Category</label>
 
-                  <span className="view-category-badge">
+                  <span className="adminproduct-view-category-badge">
                     {selectedProduct.category?.name}
                   </span>
 
                 </div>
 
-                <div className="view-price-section">
+                <div className="adminproduct-view-price-section">
 
-                  <div className="view-detail-group">
+                  <div className="adminproduct-view-detail-group">
                     <label>Price</label>
 
-                    <p className="view-regular-price">
+                    <p className="adminproduct-view-regular-price">
                       ₹{selectedProduct.price}
                     </p>
 
                   </div>
 
-                  <div className="view-detail-group">
+                  <div className="adminproduct-view-detail-group">
                     <label>Sale Price</label>
 
-                    <p className="view-sale-price">
+                    <p className="adminproduct-view-sale-price">
                       ₹{selectedProduct.saleprice}
                     </p>
 
@@ -478,17 +481,17 @@ const fetchCategories = async () => {
 
                 </div>
 
-                <div className="view-status-section">
+                <div className="adminproduct-view-status-section">
 
-                  <div className="view-detail-group">
+                  <div className="adminproduct-view-detail-group">
 
                     <label>Stock</label>
 
                     <span
-                      className={`view-stock-badge ${
+                      className={`adminproduct-view-stock-badge ${
                         selectedProduct.quantity > 0
-                          ? 'in-stock'
-                          : 'out-of-stock'
+                          ? 'adminproduct-in-stock'
+                          : 'adminproduct-out-of-stock'
                       }`}
                     >
                       {selectedProduct.quantity > 0
@@ -499,15 +502,15 @@ const fetchCategories = async () => {
 
                   </div>
 
-                  <div className="view-detail-group">
+                  <div className="adminproduct-view-detail-group">
 
                     <label>Status</label>
 
                     <button
-                      className={`product-status-btn ${
+                      className={`adminproduct-status-btn ${
                         selectedProduct.status === 'Unblock'
-                          ? 'status-unblock'
-                          : 'status-block'
+                          ? 'adminproduct-status-unblock'
+                          : 'adminproduct-status-block'
                       }`}
                       onClick={() =>
                         toggleStatus(selectedProduct._id)
@@ -524,29 +527,29 @@ const fetchCategories = async () => {
 
             </div>
 
-            <div className="view-description-section">
+            <div className="adminproduct-view-description-section">
 
               <label>Description</label>
 
               <textarea
-                className="view-product-description"
+                className="adminproduct-view-product-description"
                 value={selectedProduct.description || ''}
                 readOnly
               />
 
             </div>
 
-            <div className="view-modal-footer">
+            <div className="adminproduct-view-modal-footer">
 
               <button
-                className="view-close-btn"
+                className="adminproduct-view-close-btn"
                 onClick={handleCloseProduct}
               >
                 Close
               </button>
 
               <button
-                className="view-edit-product-btn"
+                className="adminproduct-view-edit-product-btn"
                 onClick={() => {
                   handleCloseProduct();
                   handleEditProduct(selectedProduct);
@@ -567,23 +570,23 @@ const fetchCategories = async () => {
       {editingProduct && (
 
         <div
-          className="adminmodal-overlay"
+          className="adminproduct-modal-overlay"
           onClick={handleCloseEdit}
         >
 
           <div
-            className="adminmodal-content admin-edit-modal"
+            className="adminproduct-modal-content adminproduct-edit-modal"
             onClick={(e) => e.stopPropagation()}
           >
 
-            <div className="adminmodal-header">
+            <div className="adminproduct-modal-header">
 
               <h3>
                 Update Product
               </h3>
 
               <button
-                className="adminmodal-close-btn"
+                className="adminproduct-modal-close-btn"
                 onClick={handleCloseEdit}
               >
                 <LuX />
@@ -593,10 +596,10 @@ const fetchCategories = async () => {
 
             <form
               onSubmit={handleSave}
-              className="adminmodal-form"
+              className="adminproduct-modal-form"
             >
 
-              <div className="form-group">
+              <div className="adminproduct-form-group">
 
                 <label htmlFor="name">
                   Name
@@ -612,7 +615,7 @@ const fetchCategories = async () => {
 
               </div>
 
-              <div className="form-group">
+              <div className="adminproduct-form-group">
 
                 <label htmlFor="description">
                   Description
@@ -628,7 +631,7 @@ const fetchCategories = async () => {
 
               </div>
 
-              <div className="form-group">
+              <div className="adminproduct-form-group">
 
                 <label htmlFor="price">
                   Price
@@ -644,7 +647,7 @@ const fetchCategories = async () => {
 
               </div>
 
-              <div className="form-group">
+              <div className="adminproduct-form-group">
 
                 <label htmlFor="saleprice">
                   Sale Price
@@ -660,7 +663,7 @@ const fetchCategories = async () => {
 
               </div>
 
-              <div className="form-group">
+              <div className="adminproduct-form-group">
 
                 <label htmlFor="quantity">
                   Stock
@@ -676,7 +679,7 @@ const fetchCategories = async () => {
 
               </div>
 
-               <div className="form-group">
+              <div className="adminproduct-form-group">
                 <label htmlFor="category">Category</label>
 
                 <select
@@ -701,25 +704,25 @@ const fetchCategories = async () => {
                 </select>
               </div>
 
-              <div className="form-group">
+              <div className="adminproduct-form-group">
 
                 <label htmlFor="productImage">
                   Product Image
                 </label>
 
-                <div className="edit-image-container">
+                <div className="adminproduct-edit-image-container">
 
                   {imagePreview ? (
 
                     <img
-                      className="editimageview"
+                      className="adminproduct-editimageview"
                       src={imagePreview}
                       alt="Product"
                     />
 
                   ) : (
 
-                    <div className="edit-no-image">
+                    <div className="adminproduct-edit-no-image">
                       No Image
                     </div>
 
@@ -736,11 +739,11 @@ const fetchCategories = async () => {
 
               </div>
 
-              <div className="adminedit-action">
+              <div className="adminproduct-edit-action">
 
                 <button
                   type="button"
-                  className="adminedit-cancel"
+                  className="adminproduct-edit-cancel"
                   onClick={handleCloseEdit}
                 >
                   Cancel
@@ -748,7 +751,7 @@ const fetchCategories = async () => {
 
                 <button
                   type="submit"
-                  className="adminedit-update"
+                  className="adminproduct-edit-update"
                 >
                   Update Product
                 </button>
