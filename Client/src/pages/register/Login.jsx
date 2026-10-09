@@ -5,15 +5,19 @@ import loginImg from "../../assets/login.jpg";
 import { User, Lock, Eye } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebookF } from "react-icons/fa";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
   const [formData, setFormData] = useState({
-    name: "",
+    email: "",
     password: ""
   });
 
+  const navigate = useNavigate();
+
   const [formErr, setFormErr] = useState({
-    name: false,
+    email: false,
     password: false
   });
 
@@ -25,18 +29,18 @@ function Login() {
     }));
   };
 
-  const onHandleSubmit = (event) => {
+  const onHandleSubmit = async (event) => {
     event.preventDefault();
 
     let next = true;
     let err = {
-      name: false,
+      email: false,
       password: false
     };
 
-    if (formData.name === "") {
+    if (formData.email === "") {
       next = false;
-      err.name = true;
+      err.email = true;
     }
 
     const passwordRegex =
@@ -49,7 +53,11 @@ function Login() {
     setFormErr(err);
 
     if (next) {
-      console.log("Login successful!", formData);
+     const res = await axios.post("http://localhost:5000/api/auth/login", formData);
+     console.log(res,"=====res=====");
+     
+    localStorage.setItem("token", res.data.token);
+    navigate("/");
     }
   };
 
@@ -57,7 +65,7 @@ function Login() {
     const { name } = event.target;
     let err = false;
 
-    if (name === "name" && formData.name === "") {
+    if (name === "email" && formData.email === "") {
       err = true;
     } else if (
       name === "password" &&
@@ -113,16 +121,16 @@ function Login() {
             <div className={styles.inputGroup}>
               <User className={styles.inputIcon} size={18} />
               <input
-                id="username"
-                name="name"
+                id="email"
+                name="email"
                 type="text"
-                value={formData.name}
+                value={formData.email}
                 placeholder="Enter your username"
                 onChange={onHandleChange}
                 onBlur={handleBlur}
               />
-              {formErr.name && (
-                <span className={styles.error}>Please enter your name</span>
+              {formErr.email && (
+                <span className={styles.error}>Please enter your email</span>
               )}
             </div>
 

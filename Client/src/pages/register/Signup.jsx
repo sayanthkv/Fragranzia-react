@@ -5,6 +5,7 @@ import signupImg from "../../assets/signup.jpg";
 import { User, Mail, Lock, Eye } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebookF } from "react-icons/fa";
+import axios from "axios"
 
 function Signup() {
     const [formData, setFormData] = useState({
@@ -33,7 +34,7 @@ function Signup() {
         }));
     };
 
-    const onhandlesubmit = (event) => {
+    const onhandlesubmit = async (event) => {
         event.preventDefault();
 
         let next = true;
@@ -83,8 +84,11 @@ function Signup() {
         setFormErr(err);
 
         if (next) {
-            console.log("Form submitted successfully!", formData);
+            await axios.post("http://localhost:5000/api/auth/register", formData);
+            alert("Registered Successfully");
         }
+
+
     };
 
     const handleBlur = (event) => {
