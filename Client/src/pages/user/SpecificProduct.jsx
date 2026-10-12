@@ -4,39 +4,49 @@ import { Link, useParams } from "react-router-dom";
 import axios from "axios";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "./SpecificProduct.css";
+import UserService from "../../services/user-api-services/UserService";
 
 const SpecificProduct = () => {
   const { id } = useParams();
-
+ const {getDetailedProduct,getProduct} = UserService()
   const [product, setProduct] = useState(null);
   const [products, setProducts] = useState([]);
   const [isFavorite, setIsFavorite] = useState(false);
   const [quantity, setQuantity] = useState(1);
 
-  const API_URL = "http://localhost:5000/Products";
+ 
 
-  useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        const res = await axios.get(`${API_URL}/${id}`);
-        setProduct(res.data);
-      } catch (error) {
-        console.error("Error fetching product:", error);
-      }
-    };
+ useEffect(() => {
+  const fetchProduct = async () => {
+    try {
+      const res = await getDetailedProduct(id);
+      setProduct(res);
+    } catch (error) {
+      console.error(
+        "Error fetching product:",
+        error.response?.data || error.message
+      );
+    }
+  };
 
-    const fetchProducts = async () => {
-      try {
-        const res = await axios.get(API_URL);
-        setProducts(res.data);
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      }
-    };
+  const fetchProducts = async () => {
+    try {
+      const res = await getProduct();
+      setProducts(res);
+    } catch (error) {
+      console.error(
+        "Error fetching products:",
+        error.response?.data || error.message
+      );
+    }
+  };
 
+  if (id) {
     fetchProduct();
-    fetchProducts();
-  }, [id]);
+  }
+
+  fetchProducts();
+}, [id]);
 
   const toggleFavorite = () => {
     setIsFavorite((prev) => !prev);

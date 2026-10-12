@@ -4,7 +4,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import { Link } from "react-router-dom";
 import axios from "axios";
-
+import UserService from "../../services/user-api-services/UserService";
 import photo10 from "../../assets/photo10.png"
 import photo11 from "../../assets/photo11.png"
 // import photo12 from "../../assets/photo12.png"
@@ -20,13 +20,15 @@ import filter from "../../assets/filter.png"
 
 const Products = () => {
 
+   const {getProduct} = UserService()
+
    const [Productsitems,setProductsitems] =useState([])
   
- const API_URL = "http://localhost:5000/Products";
+
 
 const fetchproduct =  async () => {
-    let res = await axios.get(API_URL)
-    setProductsitems(res.data)
+    let res = await getProduct()
+    setProductsitems(res)
   }
   
     useEffect(() => {

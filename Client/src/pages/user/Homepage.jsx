@@ -3,7 +3,7 @@ import "./Homepage.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import axios from "axios";
-
+import UserService from "../../services/user-api-services/UserService";
 import MosqueSilhouetteBackground from "../../assets/MosqueSilhouetteBackground.png";
 import photo1 from "../../assets/photo1.png"
 import photo2 from "../../assets/photo2.png"
@@ -32,69 +32,21 @@ import c4 from "../../assets/c4.png"
 import c5 from "../../assets/c5.png"
 import b1 from "../../assets/b1.png"
 import { Link } from "react-router-dom";
-// import Products from "../Products/Products";
 
-// const Productsitems =[
-//   {
-//     image:photo10,
-//     name:"Autograph Eau De Parfum 100ml For Men",
-//     price:"Rs 650",
-//     oldprice:"Rs 1400"
-//   }, {
-//     image:photo11,
-//     name:"Kyros Eau De Parfum 100ml For Men",
-//     price:"Rs 899",
-//     oldprice:"Rs 2000"
-//   },
-//    {
-//     image:photo13,
-//     name:"Autograph Eau De Parfum 100ml For Men",
-//     price:"Rs 999",
-//     oldprice:"Rs 2241"
-//   },
-//   {
-//     image:photo14,
-//     name:"Royal Eau De Parfum 100ml For Men",
-//     price:"Rs 650",
-//     oldprice:"Rs 1200"
-//   },
-//   {
-//     image:photo15,
-//     name:"Royal Eau De Parfum 100ml For Men",
-//     price:"Rs 650",
-//     oldprice:"Rs 1200"
-//   },
-//   {
-//     image:photo16,
-//     name:"Royal Eau De Parfum 100ml For Men",
-//     price:"Rs 650",
-//     oldprice:"Rs 1200"
-//   },
-//   {
-//     image:photo17,
-//     name:"Royal Eau De Parfum 100ml For Men",
-//     price:"Rs 650",
-//     oldprice:"Rs 1200"
-//   },
 
-// ]
-
-// useEffect(() => {
-//       fetchproduct();
-//     }, []);
 
 
 const Homepage = () => {
 
-  
+  const {getProduct} = UserService()
   
      const [Productsitems,setProductsitems] =useState([])
     
-   const API_URL = "http://localhost:5000/Products";
+   
   
   const fetchproduct =  async () => {
-      let res = await axios.get(API_URL)
-      setProductsitems(res.data)
+      let res = await getProduct();
+      setProductsitems(res)
     }
     
       useEffect(() => {
