@@ -14,6 +14,7 @@ import {
 import './Category.css';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import AdminService from '../../services/admin-api-services/AdminService';
 
 const API_URL = 'http://localhost:5000/Category';
 
@@ -25,6 +26,7 @@ function Category() {
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const {AddCategory,getCategory} = AdminService()
 
   const [editDetails, setEditDetails] = useState({
     id: '',
@@ -34,8 +36,8 @@ function Category() {
 
   const fetchCategory = async () => {
     try {
-      const res = await axios.get(API_URL);
-      setCategories(res.data);
+      const res = await getCategory();
+      setCategories(res);
     } catch (error) {
       console.log(
         'Error fetching categories:',
@@ -55,11 +57,16 @@ function Category() {
     }
 
     try {
-      await axios.post(API_URL, {
+      await AddCategory({
         name,
         description,
         isActive: true
-      });
+      })
+      // await axios.post(API_URL, {
+      //   name,
+      //   description,
+      //   isActive: true
+      // });
 
       await fetchCategory();
 
