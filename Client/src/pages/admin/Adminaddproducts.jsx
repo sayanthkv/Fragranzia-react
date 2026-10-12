@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import AdminService from '../../services/admin-api-services/AdminService';
 
 import {
   LuLayoutDashboard,
@@ -14,8 +15,6 @@ import {
 
 import './Adminaddproducts.css';
 
-const API_URL = 'http://localhost:5000/Products';
-const CATEGORY_API_URL = 'http://localhost:5000/Category';
 
 const Adminaddproducts = () => {
   const [productData, setProductData] = useState({
@@ -28,6 +27,8 @@ const Adminaddproducts = () => {
     image: null,
     status: 'Unblock'
   });
+
+  const {getCategory,addToProduct} = AdminService()
 
   const [categoriesData, setCategoriesData] = useState([]);
 
@@ -55,8 +56,8 @@ const Adminaddproducts = () => {
   useEffect(() => {
     const handleCategories = async () => {
       try {
-        const res = await axios.get(CATEGORY_API_URL);
-        setCategoriesData(res.data);
+        const res = await getCategory();
+        setCategoriesData(res);
       } catch (error) {
         console.log(
           'Error fetching categories:',
@@ -87,7 +88,7 @@ const Adminaddproducts = () => {
         formData.append('image', productData.image);
       }
 
-      const res = await axios.post(API_URL, formData);
+      const res = await addToProduct(formData);
 
       console.log('Product added:', res.data);
 

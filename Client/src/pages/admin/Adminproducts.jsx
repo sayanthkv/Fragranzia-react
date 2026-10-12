@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import AdminService from '../../services/admin-api-services/AdminService';
 
 import {
   LuLayoutDashboard,
@@ -21,9 +22,10 @@ import {
 import './Adminproducts.css';
 import { Link } from 'react-router-dom';
 
-const API_URL = 'http://localhost:5000/Products';
+
 const IMAGE_URL = 'http://localhost:5000/uploads';
-const CATEGORY_API_URL = 'http://localhost:5000/Category';
+
+
 
 const Adminproducts = () => {
   const [product, setProduct] = useState([]);
@@ -33,10 +35,13 @@ const Adminproducts = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [categories, setCategories] = useState([]);
 
+  const { getCategory, getProduct, EditProduct,editProductStatus } = AdminService()
+
+
   const fetchCategories = async () => {
     try {
-      const res = await axios.get(CATEGORY_API_URL);
-      setCategories(res.data);
+      const res = await getCategory();
+      setCategories(res);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
@@ -44,8 +49,8 @@ const Adminproducts = () => {
 
   const fetchproduct = async () => {
     try {
-      const res = await axios.get(API_URL);
-      setProduct(res.data);
+      const res = await getProduct();
+      setProduct(res);
     } catch (error) {
       console.error('Error fetching products:', error);
     }
@@ -123,15 +128,15 @@ const Adminproducts = () => {
         formData.append('image', selectedImage);
       }
 
-      const res = await axios.put(
-        `${API_URL}/${editingProduct._id}`,
+      const res = await EditProduct(
+        editingProduct._id,
         formData
       );
 
       setProduct((prevProducts) =>
         prevProducts.map((item) =>
           item._id === editingProduct._id
-            ? res.data
+            ? res
             : item
         )
       );
@@ -159,24 +164,21 @@ const Adminproducts = () => {
           ? 'Unblock'
           : 'Block';
 
-      const res = await axios.put(
-        `${API_URL}/${id}/status`,
-        {
-          status: newStatus
-        }
+      const res = await editProductStatus(
+        id, {status: newStatus}
       );
 
       setProduct((prevProducts) =>
         prevProducts.map((item) =>
           item._id === id
-            ? res.data
+            ? res
             : item
         )
       );
 
       setSelectedProduct((prev) =>
         prev && prev._id === id
-          ? res.data
+          ? res
           : prev
       );
     } catch (error) {
@@ -346,11 +348,10 @@ const Adminproducts = () => {
 
                     <button
                       onClick={() => toggleStatus(item._id)}
-                      className={`adminproduct-status-btn ${
-                        item.status === 'Unblock'
+                      className={`adminproduct-status-btn ${item.status === 'Unblock'
                           ? 'adminproduct-status-unblock'
                           : 'adminproduct-status-block'
-                      }`}
+                        }`}
                     >
                       {item.status}
                     </button>
@@ -488,11 +489,10 @@ const Adminproducts = () => {
                     <label>Stock</label>
 
                     <span
-                      className={`adminproduct-view-stock-badge ${
-                        selectedProduct.quantity > 0
+                      className={`adminproduct-view-stock-badge ${selectedProduct.quantity > 0
                           ? 'adminproduct-in-stock'
                           : 'adminproduct-out-of-stock'
-                      }`}
+                        }`}
                     >
                       {selectedProduct.quantity > 0
                         ? `${selectedProduct.quantity} In Stock`
@@ -507,11 +507,10 @@ const Adminproducts = () => {
                     <label>Status</label>
 
                     <button
-                      className={`adminproduct-status-btn ${
-                        selectedProduct.status === 'Unblock'
+                      className={`adminproduct-status-btn ${selectedProduct.status === 'Unblock'
                           ? 'adminproduct-status-unblock'
                           : 'adminproduct-status-block'
-                      }`}
+                        }`}
                       onClick={() =>
                         toggleStatus(selectedProduct._id)
                       }

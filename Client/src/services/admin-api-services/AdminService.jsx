@@ -9,7 +9,7 @@ const AdminService = () => {
 
     const addToProduct = async (data) => {
 
-        const response = await axiosPrivate.post("/product/admin",data);
+        const response = await axiosPrivate.post("/Products",data);
         return response.data;
     };
 
@@ -18,15 +18,16 @@ const AdminService = () => {
         const response = await axiosPrivate.post("/Category",data);
         return response.data;
     };
+
     const EditCategory = async (categoryId, data) => {
 
-        const response = await axiosPrivate.put(`category/admin/${categoryId}`, data)
+        const response = await axiosPrivate.put(`Category/${categoryId}/editdetails`, data)
         return response?.data
     };
 
     const EditProduct = async (editProductId, data) => {
 
-        const response = await axiosPrivate.put(`product/admin/${editProductId}`, data)
+        const response = await axiosPrivate.put(`/Products/${editProductId}`, data)
         return response?.data
     };
 
@@ -35,6 +36,24 @@ const AdminService = () => {
     return response.data;
   };
 
+    const getProduct = async () => {
+    const response = await axiosPrivate.get("/Products");
+    return response.data;
+  };
+
+
+  const editStatus = async (categoryId, data) => {
+
+        const response = await axiosPrivate.put(`Category/${categoryId}/status`, data)
+        return response?.data
+    };
+
+    const editProductStatus = async (productId, data) => {
+
+        const response = await axiosPrivate.put(`Products/${productId}/status`, data)
+        return response?.data
+    };
+
     return {
         // getHomePageData,
         // postRegister,
@@ -42,7 +61,10 @@ const AdminService = () => {
         AddCategory,
         EditCategory,
         EditProduct,
-        getCategory
+        getCategory,
+        editStatus,
+        getProduct,
+        editProductStatus
         // handleToggleProduct,
         // handleToggleCategory,
         // handleToggleUser,

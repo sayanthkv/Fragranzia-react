@@ -16,7 +16,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import AdminService from '../../services/admin-api-services/AdminService';
 
-const API_URL = 'http://localhost:5000/Category';
+
 
 function Category() {
   const [categories, setCategories] = useState([]);
@@ -26,7 +26,7 @@ function Category() {
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const {AddCategory,getCategory} = AdminService()
+  const {AddCategory,getCategory,EditCategory,editStatus} = AdminService()
 
   const [editDetails, setEditDetails] = useState({
     id: '',
@@ -89,11 +89,11 @@ function Category() {
 
   const toggleStatus = async (id) => {
     try {
-      const res = await axios.put(`${API_URL}/${id}/status`);
+      const res = await editStatus(id);
 
       setCategories((prevCategories) =>
         prevCategories.map((cat) =>
-          cat._id === id ? res.data : cat
+          cat._id === id ? res : cat
         )
       );
     } catch (error) {
@@ -133,8 +133,7 @@ function Category() {
     }
 
     try {
-      const res = await axios.put(
-        `${API_URL}/${editDetails.id}/editdetails`,
+      const res = await EditCategory(editDetails.id,
         {
           name: editDetails.name,
           description: editDetails.description
@@ -143,7 +142,7 @@ function Category() {
 
       setCategories((prevCategories) =>
         prevCategories.map((cat) =>
-          cat._id === editDetails.id ? res.data : cat
+          cat._id === editDetails.id ? res : cat
         )
       );
 
