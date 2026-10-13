@@ -7,6 +7,7 @@ const connectDb = require('./Config/db');
 const categoryRoutes = require('./routes/categoryRoutes');
 const productsRoutes = require('./routes/productsRoutes');
 const authRoutes = require("./routes/authRoutes");
+const cartRoutes = require("./routes/cartRoutes");
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use("/uploads", express.static("uploads"));
 app.use('/Category', categoryRoutes);
 app.use('/Products', productsRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/Cart", cartRoutes);
 
 
 app.listen(PORT, () => {

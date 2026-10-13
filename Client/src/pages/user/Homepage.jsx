@@ -51,8 +51,23 @@ const Homepage = () => {
 
   
   const Addtocart = async (id) => {
-    await Addproducttocart();
+  try {
+    const response = await Addproducttocart(id);
+
+    alert(response.message || "Product added to cart successfully!");
+  } catch (error) {
+    console.error("Add to cart error:", error.response?.data || error.message);
+
+    if (error.response?.status === 401) {
+      alert("Please login to add products to your cart.");
+    } else {
+      alert(
+        error.response?.data?.message ||
+        "Unable to add product to cart."
+      );
+    }
   }
+};
     
       useEffect(() => {
           fetchproduct();

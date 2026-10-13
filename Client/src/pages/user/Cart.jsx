@@ -2,46 +2,34 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./Cart.css"
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import UserService from "../../services/user-api-services/UserService";
 
-const INITIAL_CART_ITEMS = [
-  {
-    id: 1,
-    title: 'Autograph eau de parfum 100ml for men',
-    price: 899,
-    originalPrice: 2000,
-    discountPercent: 61,
-    qty: 1,
-    image: 'AUTOGRAPH_EDP_100ML_1 3 payment.png',
-    alt: 'Autograph EDP Red'
-  },
-  {
-    id: 2,
-    title: 'Autograph eau de parfum 100ml for men',
-    price: 899,
-    originalPrice: 2000,
-    discountPercent: 61,
-    qty: 1,
-    image: 'AUTOGRAPH_EDP_100ML_1 3 payment.png',
-    alt: 'Autograph EDP Gold'
-  },
-  {
-    id: 3,
-    title: 'Royal eau de parfum 100ml for men',
-    price: 899,
-    originalPrice: 2000,
-    discountPercent: 61,
-    qty: 1,
-    image: 'AUTOGRAPH_EDP_100ML_1 3 payment.png',
-    alt: 'Royal EDP'
-  }
-];
 
 const Cart = () =>{
     
 
 
-  const [cartItems, setCartItems] = useState(INITIAL_CART_ITEMS);
+const [cartItems, setCartItems] = useState([]);
+const { getCart,removeProductFromCart } = UserService();
+
+useEffect(() => {
+  const fetchCart = async () => {
+    try {
+      const response = await getCart();
+      setCartItems(response.cart || []);
+    } catch (error) {
+      console.error(
+        "Failed to fetch cart:",
+        error.response?.data || error.message
+      );
+    }
+  };
+
+  fetchCart();
+}, []);
+
+  
 
   // Handlers
   const handleQuantityChange = (id, delta) => {
@@ -56,9 +44,30 @@ const Cart = () =>{
     );
   };
 
-  const handleDeleteItem = (id) => {
-    setCartItems((prevItems) => prevItems.filter((item) => item.id !== id));
-  };
+
+const handleDelete = async (productId) => {
+  if (!productId) {
+    console.error("Product ID is missing");
+    return;
+  }
+
+  try {
+    await removeProductFromCart(productId);
+
+    setCartItems((prevItems) =>
+      prevItems.filter(
+        (item) => item.product._id !== productId
+      )
+    );
+
+    alert("Product removed successfully");
+  } catch (error) {
+    console.error(
+      "Delete error:",
+      error.response?.data || error.message
+    );
+  }
+};
 
   const handleShare = (title) => {
     if (navigator.share) {
@@ -175,14 +184,14 @@ const Cart = () =>{
                 <div className="row align-items-center g-3">
                   <div className="col-12 col-sm-3 text-center">
                     <img
-                      src={item.image}
+                      src={`http://localhost:5000/uploads/${item.product.image}`}
                       alt={item.alt}
                       className="img-fluid"
                       style={{ maxHeight: '120px' }}
                     />
                   </div>
                   <div className="col-12 col-sm-9">
-                    <div className="cart-product-title">{item.title}</div>
+                    <div className="cart-product-title">{item.product.name}</div>
 
                     <div className="d-flex align-items-center cart-qty-container mb-2">
                       <button
@@ -194,12 +203,12 @@ const Cart = () =>{
                       <input
                         type="text"
                         className="cart-qty-input"
-                        value={item.qty}
+                        value={item.quantity}
                         readOnly
                       />
                       <button
                         className="cart-qty-btn"
-                        onClick={() => handleQuantityChange(item.id, 1)}
+                        onClick={() => handleQuantityChange(item.idid, 1)}
                       >
                         +
                       </button>
@@ -216,12 +225,10 @@ const Cart = () =>{
                     </div>
 
                     <div className="d-flex flex-wrap gap-2">
-                      <button
-                        className="btn cart-action-btn cart-btn-delete"
-                        onClick={() => handleDeleteItem(item.id)}
-                      >
-                        Delete
-                      </button>
+                      <button className="btn cart-action-btn cart-btn-delete"
+                      onClick={() => handleDelete(item.product._id)}>
+  Delete
+</button>
                       <button
                         className="btn cart-action-btn cart-btn-share"
                         onClick={() => handleShare(item.title)}

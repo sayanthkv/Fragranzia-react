@@ -1,5 +1,6 @@
 import React from 'react'
 
+
 import useAxiosPrivate from '../../hooks/useAxiosprivate';
 
 const UserService = () => {
@@ -20,11 +21,26 @@ const UserService = () => {
   const Addproducttocart = async (id)=>{
     const response = await axiosPrivate.post(`/Cart/add/${id}`);
     return response.data
+  }
+
+const getCart = async () => {
+  const response = await axiosPrivate.get("/Cart/");
+  return response.data;
+};
+
+
+const removeProductFromCart = async (id) => {
+  const response = await axiosPrivate.delete(`/Cart/remove/${id}`);
+  return response.data;
+};
+
 
 return{
     getProduct,
     getDetailedProduct,
-    Addproducttocart
+    Addproducttocart,
+    getCart,
+    removeProductFromCart
 }
 
  }

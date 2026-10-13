@@ -56,7 +56,7 @@ function Login() {
      const res = await axios.post("http://localhost:5000/api/auth/login", formData);
      console.log(res,"=====res=====");
      
-    localStorage.setItem("token", res.data.token);
+    localStorage.setItem("Token", res.data.token);
     navigate("/");
     }
   };
