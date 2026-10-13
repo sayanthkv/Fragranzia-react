@@ -17,9 +17,14 @@ const UserService = () => {
   return response.data;
 };
 
+  const Addproducttocart = async (id)=>{
+    const response = await axiosPrivate.post(`/Cart/add/${id}`);
+    return response.data
+
 return{
     getProduct,
-    getDetailedProduct
+    getDetailedProduct,
+    Addproducttocart
 }
 
  }

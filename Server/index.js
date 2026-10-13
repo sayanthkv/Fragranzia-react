@@ -23,6 +23,7 @@ app.use('/Category', categoryRoutes);
 app.use('/Products', productsRoutes);
 app.use("/api/auth", authRoutes);
 
+
 app.listen(PORT, () => {
   console.log(`Backend running on http://localhost:${PORT}`);
 });

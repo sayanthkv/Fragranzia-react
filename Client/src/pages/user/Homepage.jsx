@@ -38,7 +38,7 @@ import { Link } from "react-router-dom";
 
 const Homepage = () => {
 
-  const {getProduct} = UserService()
+  const {getProduct,Addproducttocart} = UserService()
   
      const [Productsitems,setProductsitems] =useState([])
     
@@ -48,10 +48,17 @@ const Homepage = () => {
       let res = await getProduct();
       setProductsitems(res)
     }
+
+  
+  const Addtocart = async (id) => {
+    await Addproducttocart();
+  }
     
       useEffect(() => {
           fetchproduct();
         }, []);
+
+  
       
 
   return (
@@ -385,7 +392,7 @@ const Homepage = () => {
                   Rs {products.price}
                 </span>
               </div></Link>
-              <button className="btn-add-cart homepage-btn-add-cart">Add to Cart</button>
+              <button onClick={()=>Addtocart(products._id)} className="btn-add-cart homepage-btn-add-cart">Add to Cart</button>
             </div>
             ))}
             
