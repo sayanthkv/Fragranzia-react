@@ -494,7 +494,6 @@ const addTotheWishlist = async (productId) => {
   <h5 className="product-title homepage-product-title mb-0">
     {products.name}
   </h5>
-
   <button
     className="specificproduct-action-btn"
     type="button"
