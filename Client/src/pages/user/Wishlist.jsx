@@ -141,7 +141,7 @@ const Wishlist = () => {
 
               <li className="nav-item">
                 <span className="nav-link wishlist-nav-link">
-                  <Link to="/Gifting">Gifting</Link>
+                  <Link to='/Wishlist'>Wishlist</Link>
                 </span>
               </li>
 

@@ -51,7 +51,7 @@ export default function Profile() {
                   </li>
                   <li className="nav-item">
                     <span className="nav-link homepage-nav-link" >
-                       <Link to='/Gifting'>Gifting</Link>
+                       <Link to='/Wishlist'>Wishlist</Link>
                     </span>
                   </li>
                   <li className="nav-item me-3">
