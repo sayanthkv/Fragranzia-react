@@ -11,8 +11,8 @@ import Profileedit from "./pages/user/Profileedit.jsx";
 import { Route,Routes } from "react-router-dom";
 import Alladdressview from "./pages/user/Alladdressview.jsx"
 import Newaddress from "./pages/user/Newaddress.jsx";
-import Addresseditview from "./pages/user/Addresseditview.jsx";
-import AddressEditing from "./pages/user/AddressEditing.jsx";
+// import Addresseditview from "./pages/user/Addresseditview.jsx";
+// import AddressEditing from "./pages/user/AddressEditing.jsx";
 import OrderTracking from "./pages/user/OrderTracking.jsx";
 import Category from "./pages/admin/Category.jsx"
 import Adminproducts from "./pages/admin/Adminproducts.jsx"
@@ -42,8 +42,8 @@ function App(){
                 <Route path="/Profileedit" element={<Profileedit/>}/>
                 <Route path="/Alladdressview" element={<Alladdressview/>}/>
                 <Route path="/Newaddress" element={<Newaddress/>}/>
-                <Route path="/Addresseditview" element={<Addresseditview/>}/>
-                <Route path="/AddressEditing" element={<AddressEditing/>}/>
+                {/* <Route path="/Addresseditview" element={<Addresseditview/>}/>
+                <Route path="/AddressEditing" element={<AddressEditing/>}/> */}
                 <Route path="/OrderTracking" element={<OrderTracking/>}/>
                 <Route path="/AdminCategory" element={<Category/>}/>
                 <Route path="/AdminProducts" element={<Adminproducts/>}/>
