@@ -183,12 +183,14 @@ img {
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
+ 
 }
 
 .wishlist-delete {
   border: 1px solid #dc3545;
   background-color: transparent;
   color: #dc3545;
+  margin-bottom: 10px;
 }
 
 .wishlist-delete:hover {

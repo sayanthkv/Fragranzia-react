@@ -1,47 +1,105 @@
+
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./Wishlist.css";
+
 import { Link } from "react-router-dom";
-import { useState } from "react";
-
-
-const INITIAL_WISHLIST_ITEMS = [
-  {
-    id: 1,
-    title: "Autograph eau de parfum 100ml for men",
-    price: 899,
-    originalPrice: 2000,
-    discountPercent: 61,
-    image: "AUTOGRAPH_EDP_100ML_1 3 payment.png",
-    alt: "Autograph EDP Red"
-  },
-  {
-    id: 2,
-    title: "Autograph eau de parfum 100ml for men",
-    price: 899,
-    originalPrice: 2000,
-    discountPercent: 61,
-    image: "AUTOGRAPH_EDP_100ML_1 3 payment.png",
-    alt: "Autograph EDP Gold"
-  },
-  {
-    id: 3,
-    title: "Royal eau de parfum 100ml for men",
-    price: 899,
-    originalPrice: 2000,
-    discountPercent: 61,
-    image: "AUTOGRAPH_EDP_100ML_1 3 payment.png",
-    alt: "Royal EDP"
-  }
-];
+import { useState, useEffect } from "react";
+import UserService from "../../services/user-api-services/UserService";
 
 const Wishlist = () => {
-  const [wishlistItems, setWishlistItems] = useState(INITIAL_WISHLIST_ITEMS);
+  const [wishlistItems, setWishlistItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [removingId, setRemovingId] = useState(null);
+  const [addingCartId, setAddingCartId] = useState(null);
+  const [successMessage, setSuccessMessage] = useState("");
 
-  const handleDeleteItem = (id) => {
-    setWishlistItems((prevItems) =>
-      prevItems.filter((item) => item.id !== id)
-    );
+  const {
+    getWishlist,
+    removeProductFromWishlist,
+    Addproducttocart,
+  } = UserService();
+
+  useEffect(() => {
+    const fetchWishlist = async () => {
+      try {
+        setLoading(true);
+        setErrorMessage("");
+
+        const response = await getWishlist();
+
+        setWishlistItems(response.wishlist || []);
+      } catch (error) {
+        console.error(
+          "Failed to fetch wishlist:",
+          error.response?.data || error.message
+        );
+
+        setErrorMessage(
+          error.response?.data?.message ||
+            "Unable to load your wishlist. Please try again."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWishlist();
+  }, []);
+
+  const handleDeleteItem = async (productId) => {
+    try {
+      setRemovingId(productId);
+      setSuccessMessage("");
+      setErrorMessage("");
+
+      await removeProductFromWishlist(productId);
+
+      setWishlistItems((prevItems) =>
+        prevItems.filter(
+          (item) => item.productId !== productId && item.id !== productId
+        )
+      );
+
+      setSuccessMessage("Product removed from your wishlist.");
+    } catch (error) {
+      console.error(
+        "Delete wishlist error:",
+        error.response?.data || error.message
+      );
+
+      setErrorMessage(
+        error.response?.data?.message ||
+          "Unable to remove this product. Please try again."
+      );
+    } finally {
+      setRemovingId(null);
+    }
+  };
+
+  const handleAddToCart = async (productId) => {
+    try {
+      setAddingCartId(productId);
+      setSuccessMessage("");
+      setErrorMessage("");
+
+      await Addproducttocart(productId);
+
+      setSuccessMessage("Product added to your cart successfully.");
+    } catch (error) {
+      console.error(
+        "Add to cart error:",
+        error.response?.data || error.message
+      );
+
+      setErrorMessage(
+        error.response?.data?.message ||
+          "Unable to add this product to your cart."
+      );
+    } finally {
+      setAddingCartId(null);
+    }
   };
 
   return (
@@ -108,7 +166,7 @@ const Wishlist = () => {
 
               <li className="nav-item">
                 <span className="wishlist-icon">
-                  <Link to="/Cart">
+                  <Link to="/Cart" aria-label="Shopping cart">
                     <i className="fa-solid fa-cart-shopping"></i>
                   </Link>
                 </span>
@@ -126,7 +184,7 @@ const Wishlist = () => {
 
               <li className="nav-item">
                 <span className="wishlist-icon">
-                  <Link to="/Profile">
+                  <Link to="/Profile" aria-label="Profile">
                     <i className="fa-regular fa-user"></i>
                   </Link>
                 </span>
@@ -140,10 +198,31 @@ const Wishlist = () => {
         <h2 className="wishlist-heading">Wishlist</h2>
 
         <div className="wishlist-breadcrumb">
-          Home &gt; Wishlist
+          <Link to="/">Home</Link> &gt; Wishlist
         </div>
 
-        {wishlistItems.length === 0 ? (
+        {successMessage && (
+          <div className="alert alert-success mt-3" role="status">
+            {successMessage}
+          </div>
+        )}
+
+        {errorMessage && (
+          <div className="alert alert-danger mt-3" role="alert">
+            {errorMessage}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="wishlist-empty">
+            <div
+              className="spinner-border"
+              role="status"
+              aria-label="Loading wishlist"
+            ></div>
+            <p className="mt-3">Loading your wishlist...</p>
+          </div>
+        ) : wishlistItems.length === 0 ? (
           <div className="wishlist-empty">
             <i className="fa-regular fa-heart"></i>
 
@@ -152,49 +231,83 @@ const Wishlist = () => {
             <p>
               Explore our fragrance collection and add your favorite products.
             </p>
+
+            <Link to="/Products" className="btn btn-dark mt-2">
+              Explore Products
+            </Link>
           </div>
         ) : (
           <div className="row g-4">
-            {wishlistItems.map((item) => (
-              <div className="col-12 col-md-6" key={item.id}>
-                <div className="wishlist-card">
-                  <div className="wishlist-image">
-                    <img src={item.image} alt={item.alt} />
-                  </div>
+            {wishlistItems.map((item) => {
+              const productId = item.productId || item.id;
 
-                  <div className="wishlist-details">
-                    <h3>{item.title}</h3>
-
-                    <div className="wishlist-price">
-                      <span className="wishlist-current-price">
-                        Rs {item.price}
-                      </span>
-
-                      <span className="wishlist-original-price">
-                        Rs {item.originalPrice}
-                      </span>
-
-                      <span className="wishlist-discount">
-                        {item.discountPercent}% off
-                      </span>
+              return (
+                <div className="col-12 col-md-6" key={productId}>
+                  <div className="wishlist-card">
+                    <div className="wishlist-image">
+                      {item.image ? (
+                        <img
+                          src={item.image}
+                          alt={item.alt || item.title || "Fragrance"}
+                        />
+                      ) : (
+                        <div className="wishlist-no-image">
+                          <i className="fa-regular fa-image"></i>
+                          <p>No image available</p>
+                        </div>
+                      )}
                     </div>
 
-                    <div className="wishlist-actions">
-                      <button
+                    <div className="wishlist-details">
+                      <h3>{item.title || "Fragrance"}</h3>
+
+                      <div className="wishlist-price">
+                        <span className="wishlist-current-price">
+                          Rs {item.price ?? 0}
+                        </span>
+
+                        {Number(item.originalPrice) >
+                          Number(item.price) && (
+                          <>
+                            <span className="wishlist-original-price">
+                              Rs {item.originalPrice}
+                            </span>
+
+                            <span className="wishlist-discount">
+                              {item.discountPercent ?? 0}% off
+                            </span>
+                          </>
+                        )}
+                      </div>
+
+                     <div className="wishlist-actions">
+                       <button
                         className="wishlist-delete"
-                        onClick={() => handleDeleteItem(item.id)}
+                        type="button"
+                        disabled={removingId === productId}
+                        onClick={() => handleDeleteItem(productId)}
                       >
-                        Remove
+                        {removingId === productId
+                          ? "Removing..."
+                          : "Remove"}
                       </button>
 
-                      <button className="wishlist-cart">
-                        Add to cart
+                      <button
+                        className="wishlist-cart"
+                        type="button"
+                        disabled={addingCartId === productId}
+                        onClick={() => handleAddToCart(productId)}
+                      >
+                        {addingCartId === productId
+                          ? "Adding..."
+                          : "Add to cart"}
                       </button>
+                     </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </main>
@@ -212,25 +325,13 @@ const Wishlist = () => {
                   <h5>Pages</h5>
 
                   <ul>
-                    <li>
-                      <Link to="/">Home</Link>
-                    </li>
-
-                    <li>
-                      <Link to="/Products">Products</Link>
-                    </li>
-
-                    <li>
-                      <Link to="/Gifting">Gifting</Link>
-                    </li>
-
-                    <li>
-                      <Link to="/About">About</Link>
-                    </li>
-
-                    <li>
-                      <Link to="/Profile">Profile</Link>
-                    </li>
+                    <li><Link to="/">Home</Link></li>
+                    <li><Link to="/Products">Products</Link></li>
+                    <li><Link to="/Gifting">Gifting</Link></li>
+                    <li><Link to="/About">About</Link></li>
+                    <li><Link to="/Profile">Profile</Link></li>
+                    <li><Link to="/Cart">Cart</Link></li>
+                    <li><Link to="/Wishlist">Wishlist</Link></li>
                   </ul>
                 </div>
 
@@ -241,15 +342,12 @@ const Wishlist = () => {
                     <li>
                       <a href="privacy.html">Privacy Policy</a>
                     </li>
-
                     <li>
                       <a href="terms.html">Terms and Conditions</a>
                     </li>
-
                     <li>
                       <a href="faqs.html">FAQs</a>
                     </li>
-
                     <li>
                       <a href="customer-service.html">
                         Customer Services
@@ -259,15 +357,15 @@ const Wishlist = () => {
                 </div>
 
                 <div className="col-12 col-sm-4">
-                  <h5>Contact & Social</h5>
+                  <h5>Contact &amp; Social</h5>
 
                   <p>
-                    <i className="fa-regular fa-envelope"></i>
+                    <i className="fa-regular fa-envelope"></i>{" "}
                     ftrafurniture@gmail.com
                   </p>
 
                   <p>
-                    <i className="fa-solid fa-phone"></i>
+                    <i className="fa-solid fa-phone"></i>{" "}
                     +91 9876543210
                   </p>
 
@@ -308,4 +406,3 @@ const Wishlist = () => {
 };
 
 export default Wishlist;
-

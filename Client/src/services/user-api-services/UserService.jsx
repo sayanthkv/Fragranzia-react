@@ -17,11 +17,15 @@ const UserService = () => {
   const response = await axiosPrivate.get(`/Products/${id}`);
   return response.data;
 };
+  
+const Addproducttocart = async (id, quantity = 1) => {
+  const response = await axiosPrivate.post(`/Cart/add/${id}`, {
+    quantity,
+  });
 
-  const Addproducttocart = async (id)=>{
-    const response = await axiosPrivate.post(`/Cart/add/${id}`);
-    return response.data
-  }
+  return response.data;
+};
+
 
 const getCart = async () => {
   const response = await axiosPrivate.get("/Cart/");
@@ -35,12 +39,30 @@ const removeProductFromCart = async (id) => {
 };
 
 
+  const addToWishlist = async (id)=>{
+    const response = await axiosPrivate.post(`/Wishlist/add/${id}`);
+    return response.data
+  }
+
+  const getWishlist = async () => {
+  const response = await axiosPrivate.get("/Wishlist/");
+  return response.data;
+};
+
+const removeProductFromWishlist = async (id) => {
+  const response = await axiosPrivate.delete(`/Wishlist/remove/${id}`);
+  return response.data;
+};
+
 return{
     getProduct,
     getDetailedProduct,
     Addproducttocart,
     getCart,
-    removeProductFromCart
+    removeProductFromCart,
+    addToWishlist,
+    getWishlist,
+    removeProductFromWishlist
 }
 
  }

@@ -7,12 +7,24 @@ import "./SpecificProduct.css";
 import UserService from "../../services/user-api-services/UserService";
 
 const SpecificProduct = () => {
-  const { id } = useParams();
- const {getDetailedProduct,getProduct} = UserService()
-  const [product, setProduct] = useState(null);
-  const [products, setProducts] = useState([]);
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [quantity, setQuantity] = useState(1);
+  
+  
+const {
+  getDetailedProduct,
+  getProduct,
+  addToWishlist,
+  getWishlist,
+  removeProductFromWishlist,
+  Addproducttocart,
+} = UserService();
+
+
+const [product, setProduct] = useState(null);
+const [products, setProducts] = useState([]);
+const [isFavorite, setIsFavorite] = useState(false);
+const [quantity, setQuantity] = useState(1);
+const [actionMessage, setActionMessage] = useState("");
+const [actionLoading, setActionLoading] = useState(false);
 
  
 
@@ -45,24 +57,94 @@ const SpecificProduct = () => {
     fetchProduct();
   }
 
+  
+const fetchWishlistStatus = async () => {
+  try {
+    const response = await getWishlist();
+    const wishlistItems = response.wishlist || [];
+
+    setIsFavorite(
+      wishlistItems.some(
+        (item) =>
+          String(item.productId || item.id) === String(id)
+      )
+    );
+  } catch (error) {
+    console.error(
+      "Error fetching wishlist:",
+      error.response?.data || error.message
+    );
+  }
+};
+
+fetchWishlistStatus()
   fetchProducts();
 }, [id]);
 
-  const toggleFavorite = () => {
-    setIsFavorite((prev) => !prev);
-  };
+  
+const addTotheWishlist = async (productId) => {
+  try {
+    setActionMessage("");
 
-  const increaseQuantity = () => {
-    if (product && quantity < product.quantity) {
-      setQuantity((prev) => prev + 1);
+    if (isFavorite) {
+      await removeProductFromWishlist(productId);
+      setIsFavorite(false);
+      setActionMessage("Removed from wishlist.");
+    } else {
+      await addToWishlist(productId);
+      setIsFavorite(true);
+      setActionMessage("Added to wishlist.");
     }
-  };
+  } catch (error) {
+    console.error(
+      "Wishlist error:",
+      error.response?.data || error.message
+    );
 
-  const decreaseQuantity = () => {
-    if (quantity > 1) {
-      setQuantity((prev) => prev - 1);
-    }
-  };
+    setActionMessage(
+      error.response?.data?.message ||
+        "Unable to update wishlist."
+    );
+  }
+};
+
+ 
+const increaseQuantity = () => {
+  const stock = Number(product?.quantity) || 0;
+
+  setQuantity((prev) => Math.min(prev + 1, stock));
+};
+
+const decreaseQuantity = () => {
+  setQuantity((prev) => Math.max(1, prev - 1));
+};
+
+
+const handleAddToCart = async () => {
+  try {
+    setActionLoading(true);
+    setActionMessage("");
+
+    await Addproducttocart(product._id, quantity);
+
+    setActionMessage(
+      `${quantity} item(s) added to your cart successfully.`
+    );
+  } catch (error) {
+    console.error(
+      "Add to cart error:",
+      error.response?.data || error.message
+    );
+
+    setActionMessage(
+      error.response?.data?.message ||
+        "Unable to add product to cart."
+    );
+  } finally {
+    setActionLoading(false);
+  }
+};
+
 
   const shareProduct = async () => {
     const shareData = {
@@ -234,18 +316,18 @@ const SpecificProduct = () => {
             <div className="specificproduct-actions">
 
               <button
-                className="specificproduct-action-btn"
-                onClick={toggleFavorite}
-                type="button"
-              >
-                <i
-                  className={
-                    isFavorite
-                      ? "bi bi-heart-fill"
-                      : "bi bi-heart"
-                  }
-                ></i>
-              </button>
+  className="specificproduct-action-btn"
+  onClick={() => addTotheWishlist(product._id)}
+  type="button"
+  aria-label={isFavorite ? "Remove from wishlist" : "Add to wishlist"}
+>
+  <i
+    className={
+      isFavorite ? "bi bi-heart-fill" : "bi bi-heart"
+    }
+    style={{ color: isFavorite ? "#e63946" : "inherit" }}
+  ></i>
+</button>
 
               <button
                 className="specificproduct-action-btn"
@@ -276,12 +358,14 @@ const SpecificProduct = () => {
             Purchase Now
           </button>
 
-          <button
-            className="specificproduct-add-cart"
-            disabled={product.quantity <= 0}
-          >
-            Add to Cart
-          </button>
+         <button
+  className="specificproduct-add-cart"
+  onClick={handleAddToCart}
+  disabled={Number(product.quantity) <= 0 || actionLoading}
+  type="button"
+>
+  {actionLoading ? "Adding..." : "Add to Cart"}
+</button>
 
         </div>
 
