@@ -1,48 +1,135 @@
-import React, { useState,useEffect } from "react";
+
+import React, { useState, useEffect } from "react";
 import "./Products.css";
 import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap-icons/font/bootstrap-icons.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import { Link } from "react-router-dom";
-import axios from "axios";
 import UserService from "../../services/user-api-services/UserService";
-import photo10 from "../../assets/photo10.png"
-import photo11 from "../../assets/photo11.png"
-// import photo12 from "../../assets/photo12.png"
-import photo13 from "../../assets/photo13.png"
-import photo14 from "../../assets/photo14.png"
-import photo15 from "../../assets/photo15.png"
-import photo16 from "../../assets/photo16.png"
-import photo17 from "../../assets/photo17.png"
-import filter from "../../assets/filter.png"
-
-
-  
+import filter from "../../assets/filter.png";
 
 const Products = () => {
+  const {
+    getProduct,
+    Addproducttocart,
+    addToWishlist,
+    getWishlist,
+    removeProductFromWishlist,
+  } = UserService();
 
-   const {getProduct} = UserService()
+  const [Productsitems, setProductsitems] = useState([]);
+  const [wishlistIds, setWishlistIds] = useState(() => new Set());
+  const [wishlistLoadingId, setWishlistLoadingId] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [actionMessage, setActionMessage] = useState("");
 
-   const [Productsitems,setProductsitems] =useState([])
-  
+  useEffect(() => {
+    const loadProductsAndWishlist = async () => {
+      try {
+        const products = await getProduct();
+        setProductsitems(Array.isArray(products) ? products : []);
+      } catch (error) {
+        console.error("Failed to load products:", error);
+      }
 
+      try {
+        const response = await getWishlist();
+        const wishlist = response?.wishlist || [];
 
-const fetchproduct =  async () => {
-    let res = await getProduct()
-    setProductsitems(res)
-  }
-  
-    useEffect(() => {
-        fetchproduct();
-      }, []);
-  
+        const savedIds = wishlist.map((item) =>
+          String(item.productId || item.id || item._id)
+        );
+
+        setWishlistIds(new Set(savedIds));
+      } catch (error) {
+        console.error(
+          "Failed to load wishlist:",
+          error.response?.data || error.message
+        );
+      }
+    };
+
+    loadProductsAndWishlist();
+  }, []);
+
+  const Addtocart = async (id) => {
+    try {
+      const response = await Addproducttocart(id);
+
+      alert(response.message || "Product added to cart successfully!");
+    } catch (error) {
+      console.error(
+        "Add to cart error:",
+        error.response?.data || error.message
+      );
+
+      if (error.response?.status === 401) {
+        alert("Please login to add products to your cart.");
+      } else {
+        alert(
+          error.response?.data?.message ||
+            "Unable to add product to cart."
+        );
+      }
+    }
+  };
+
+  const addTotheWishlist = async (productId) => {
+    const id = String(productId);
+
+    if (wishlistLoadingId !== null) return;
+
+    const alreadyFavorite = wishlistIds.has(id);
+
+    try {
+      setWishlistLoadingId(id);
+      setErrorMessage("");
+      setActionMessage("");
+
+      if (alreadyFavorite) {
+        await removeProductFromWishlist(id);
+
+        setWishlistIds((previous) => {
+          const updated = new Set(previous);
+          updated.delete(id);
+          return updated;
+        });
+
+        setActionMessage("Product removed from wishlist.");
+      } else {
+        await addToWishlist(id);
+
+        setWishlistIds((previous) => {
+          const updated = new Set(previous);
+          updated.add(id);
+          return updated;
+        });
+
+        setActionMessage("Product added to wishlist.");
+      }
+    } catch (error) {
+      console.error(
+        "Wishlist error:",
+        error.response?.data || error.message
+      );
+
+      setErrorMessage(
+        error.response?.data?.message ||
+          "Unable to update wishlist. Please try again."
+      );
+    } finally {
+      setWishlistLoadingId(null);
+    }
+  };
 
   return (
     <>
       <nav className="navbar navbar-expand-lg navbar-light shadow-sm homepage-navbar">
         <div className="container-fluid px-0">
           <span className="navbar-brand homepage-navbar-brand">
-            <Link to='/'>Fragranzia</Link>
+            <Link to="/">Fragranzia</Link>
           </span>
+
           <button
             className="navbar-toggler"
             type="button"
@@ -54,28 +141,36 @@ const fetchproduct =  async () => {
           >
             <span className="navbar-toggler-icon"></span>
           </button>
-          <div className="collapse navbar-collapse justify-content-end" id="navbarContent">
+
+          <div
+            className="collapse navbar-collapse justify-content-end"
+            id="navbarContent"
+          >
             <ul className="navbar-nav align-items-center gap-2">
               <li className="nav-item">
-                <span className="nav-link  homepage-nav-link" >
-                  <Link to='/'>Home</Link>
+                <span className="nav-link homepage-nav-link">
+                  <Link to="/">Home</Link>
                 </span>
               </li>
+
               <li className="nav-item">
-                <span className="nav-link active homepage-nav-link" >
-                  <Link to='/Products'>Products</Link>
+                <span className="nav-link active homepage-nav-link">
+                  <Link to="/Products">Products</Link>
                 </span>
               </li>
+
               <li className="nav-item">
-                <span className="nav-link homepage-nav-link" >
-                  <Link to='/Gifting'>Gifting</Link>
+                <span className="nav-link homepage-nav-link">
+                  <Link to="/Gifting">Gifting</Link>
                 </span>
               </li>
+
               <li className="nav-item me-3">
-                <span className="nav-link homepage-nav-link" >
-                  <Link to='/About'>About</Link>
+                <span className="nav-link homepage-nav-link">
+                  <Link to="/About">About</Link>
                 </span>
               </li>
+
               <li className="nav-item me-2">
                 <div className="search-wrapper homepage-search-wrapper">
                   <i className="fa-solid fa-magnifying-glass fa-search"></i>
@@ -87,11 +182,15 @@ const fetchproduct =  async () => {
                   />
                 </div>
               </li>
+
               <li className="nav-item">
                 <span className="icon-btn homepage-icon-btn" aria-label="Cart">
-                  <Link to='/Cart'><i className="fa-solid fa-cart-shopping"></i></Link>
+                  <Link to="/Cart">
+                    <i className="fa-solid fa-cart-shopping"></i>
+                  </Link>
                 </span>
               </li>
+
               <li className="nav-item">
                 <button
                   className="icon-btn homepage-icon-btn"
@@ -101,13 +200,12 @@ const fetchproduct =  async () => {
                   <i className="fa-regular fa-bell"></i>
                 </button>
               </li>
-              <li className="nav-item">
-                <span
-                  className="icon-btn homepage-icon-btn"
 
-                  aria-label="Profile"
-                >
-                  <Link to='/Profile'><i className="fa-regular fa-user"></i></Link>
+              <li className="nav-item">
+                <span className="icon-btn homepage-icon-btn" aria-label="Profile">
+                  <Link to="/Profile">
+                    <i className="fa-regular fa-user"></i>
+                  </Link>
                 </span>
               </li>
             </ul>
@@ -120,7 +218,6 @@ const fetchproduct =  async () => {
           <b>ENJOY FESTIVE DISCOUNTS! FREE SHIPPING ABOVE 999 !</b>
         </span>
       </section>
-
 
       <section className="productpage-section mx-3 mx-md-5 my-4">
         <div className="productpage-header-row d-flex flex-wrap align-items-center justify-content-between mb-4">
@@ -152,141 +249,209 @@ const fetchproduct =  async () => {
             </ul>
           </div>
         </div>
-        </section>
+      </section>
 
-        <section>
-          
-          <div className="productpage-row row g-4 justify-content-center justify-content-lg-between mb-4">
-            {Productsitems.map((products,index)=>(
-                <div className="productpage-col col-12 col-md-6 col-lg-4 d-flex justify-content-center" key={index}>
-              <Link to={`/SpecificProduct/${products._id}`}><div className="productpage-card card bg-transparent">
-                <img
-                  className="productpage-product-img"
-                  src={`http://localhost:5000/uploads/${products.image}`}
-                  alt="Kyros Eau De Parfum 100ml for Men"
-                />
-                <div className="productpage-card-body card-body px-0">
-                  <h5 className="productpage-card-title card-title">
-                    {products.name}
-                  </h5>
-                  <p className="productpage-card-text card-text">
-                    <span className="productpage-price">Rs {products.price}</span>
-                    <span className="productpage-old-price">
-                      <s>Rs {products.saleprice}</s>
-                    </span>
-                  </p>
+      <section>
+        {actionMessage && (
+          <div className="alert alert-success mx-3 mx-md-5" role="status">
+            {actionMessage}
+          </div>
+        )}
+
+        {errorMessage && (
+          <div className="alert alert-danger mx-3 mx-md-5" role="alert">
+            {errorMessage}
+          </div>
+        )}
+
+        <div className="productpage-row row g-4 justify-content-center justify-content-lg-between mb-4">
+          {Productsitems.map((products) => {
+            const productId = String(products._id);
+            const isFavorite = wishlistIds.has(productId);
+
+            return (
+              <div
+                className="productpage-col col-12 col-md-6 col-lg-4 d-flex justify-content-center"
+                key={products._id}
+              >
+                <div className="productpage-card card bg-transparent">
+                  <Link
+                    to={`/SpecificProduct/${products._id}`}
+                    className="text-decoration-none"
+                  >
+                    <img
+                      className="productpage-product-img"
+                      src={`http://localhost:5000/uploads/${products.image}`}
+                      alt={products.name}
+                    />
+                  </Link>
+
+                  <div className="productpage-card-body card-body px-0">
+                    <div className="d-flex justify-content-between align-items-center gap-2">
+                      <Link
+                        to={`/SpecificProduct/${products._id}`}
+                        className="text-decoration-none text-dark"
+                      >
+                        <h5 className="productpage-card-title card-title mb-0">
+                          {products.name}
+                        </h5>
+                      </Link>
+
+                      <button
+                        type="button"
+                        className="products-wishlist-btn"
+                        onClick={() => addTotheWishlist(productId)}
+                        disabled={wishlistLoadingId !== null}
+                        aria-label={
+                          isFavorite
+                            ? "Remove from wishlist"
+                            : "Add to wishlist"
+                        }
+                        aria-pressed={isFavorite}
+                      >
+                        <i
+                          className={
+                            isFavorite
+                              ? "bi bi-heart-fill"
+                              : "bi bi-heart"
+                          }
+                          style={{
+                            color: isFavorite ? "#e63946" : "#555",
+                          }}
+                        ></i>
+                      </button>
+                    </div>
+
+                    <p className="productpage-card-text card-text mt-2">
+                      <span className="productpage-price">
+                        Rs {products.price}
+                      </span>
+
+                      <span className="productpage-old-price">
+                        <s>Rs {products.saleprice}</s>
+                      </span>
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => Addtocart(products._id)}
+                    className="btn-add-cart homepage-btn-add-cart"
+                  >
+                    Add to Cart
+                  </button>
                 </div>
-                <Link to={'/Cart'}><button type="button" className="productpage-add-to-cart">
-                  Add to Cart
-                </button></Link>
-              </div></Link>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="productpage-loadmore d-flex justify-content-center my-5">
+          <button type="button" className="productpage-loadmore-btn">
+            Load More
+          </button>
+        </div>
+      </section>
+
+      <footer className="py-5 mt-5 homepage-footer">
+        <div className="container">
+          <div className="row g-4 align-items-start">
+            <div className="col-12 col-md-3 pt-5 mt-4">
+              <h1
+                className="homepage-footer-brand"
+                style={{ color: "#043948" }}
+              >
+                <b>Fragranzia</b>
+              </h1>
             </div>
-            ))}
-            
-          </div>
 
-          {/* Load More */}
-          <div className="productpage-loadmore d-flex justify-content-center my-5">
-            <button type="button" className="productpage-loadmore-btn">
-              Load More
-            </button>
-          </div>
-        </section>
-         <footer className="py-5 mt-5 homepage-footer">
-                <div className="container">
-                  <div className="row g-4 align-items-start">
-                    <div className="col-12 col-md-3 pt-5 mt-4">
-                      <h1 className="homepage-footer-brand" style={{ color: "#043948" }}>
-                        <b>Fragranzia</b>
-                      </h1>
-                    </div>
-        
-                    <div className="col-12 col-md-9">
-                      <div className="row g-4">
-                        <div className="col-6 col-sm-4">
-                          <h5 className="homepage-footer-heading" style={{ color: "#043948" }}>
-                            <b>Pages</b>
-                          </h5>
-                          <ul className="list list-unstyled lh-lg homepage-footer-list">
-                            <li>
-                              <span><Link to='/' >Home</Link></span>
-                            </li>
-                            <li>
-                              <span><Link to='/Products' >Products</Link></span>
-                            </li>
-                            <li>
-                              <span><Link to='/Gifting' >Gifting</Link></span>
-                            </li>
-                            <li>
-                              <span><Link to='/About' >About</Link></span>
-                            </li>
-                            <li>
-                              <span><Link to='/Profile' >Profile</Link></span>
-                            </li>
-                          </ul>
-                        </div>
-                        <div className="col-6 col-sm-4">
-                          <h5 className="homepage-footer-heading" style={{ color: "#043948" }}>
-                            <b>Quick Links</b>
-                          </h5>
-                          <ul className="list-unstyled lh-lg homepage-footer-list">
-                            <li>
-                              <a href="privacy.html">Privacy Policy</a>
-                            </li>
-                            <li>
-                              <a href="terms.html">Terms and Conditions</a>
-                            </li>
-                            <li>
-                              <a href="faqs.html">FAQs</a>
-                            </li>
-                            <li>
-                              <a href="customer-service.html">Customer Services</a>
-                            </li>
-                          </ul>
-                        </div>
-                        <div className="col-12 col-sm-4">
-                          <h5 className="homepage-footer-heading" style={{ color: "#043948" }}>
-                            <b>Contact & Social</b>
-                          </h5>
-                          <p className="mb-1 homepage-footer-contact">
-                            <i className="fa-regular fa-envelope me-2"></i>
-                            ftrafurniture@gmail.com
-                          </p>
-                          <p className="mb-3 homepage-footer-contact">
-                            <i className="fa-solid fa-phone me-2"></i>
-                            +91 9876543210
-                          </p>
-                          <p className="mb-2 homepage-footer-social-title">
-                            <b>Social Media</b>
-                          </p>
-                          <div className="d-flex gap-3 homepage-footer-social-icons">
-                            <i className="fa-brands fa-instagram fa-lg"></i>
-                            <i className="fa-brands fa-facebook fa-lg"></i>
-                            <i className="fa-brands fa-x-twitter fa-lg"></i>
-                            <i className="fa-brands fa-youtube fa-lg"></i>
-                            <i className="fa-brands fa-linkedin fa-lg"></i>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <hr className="my-4 homepage-footer-divider" />
-        
-                  <div className="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-                    <ul className="d-flex list-unstyled gap-3 mb-0 flex-wrap justify-content-center homepage-footer-bottom-links">
-                      <li>Web Accessibility</li>
-                      <li>Terms of Use</li>
-                      <li>Privacy Statement</li>
-                      <li>Contact Us</li>
-                    </ul>
-                    <div className="text-muted text-center text-md-end small homepage-footer-copyright">
-                      © 2024 fragranzia Company. All rights reserved
-                    </div>
+            <div className="col-12 col-md-9">
+              <div className="row g-4">
+                <div className="col-6 col-sm-4">
+                  <h5
+                    className="homepage-footer-heading"
+                    style={{ color: "#043948" }}
+                  >
+                    <b>Pages</b>
+                  </h5>
+
+                  <ul className="list list-unstyled lh-lg homepage-footer-list">
+                    <li><span><Link to="/">Home</Link></span></li>
+                    <li><span><Link to="/Products">Products</Link></span></li>
+                    <li><span><Link to="/Gifting">Gifting</Link></span></li>
+                    <li><span><Link to="/About">About</Link></span></li>
+                    <li><span><Link to="/Profile">Profile</Link></span></li>
+                  </ul>
+                </div>
+
+                <div className="col-6 col-sm-4">
+                  <h5
+                    className="homepage-footer-heading"
+                    style={{ color: "#043948" }}
+                  >
+                    <b>Quick Links</b>
+                  </h5>
+
+                  <ul className="list-unstyled lh-lg homepage-footer-list">
+                    <li><a href="privacy.html">Privacy Policy</a></li>
+                    <li><a href="terms.html">Terms and Conditions</a></li>
+                    <li><a href="faqs.html">FAQs</a></li>
+                    <li><a href="customer-service.html">Customer Services</a></li>
+                  </ul>
+                </div>
+
+                <div className="col-12 col-sm-4">
+                  <h5
+                    className="homepage-footer-heading"
+                    style={{ color: "#043948" }}
+                  >
+                    <b>Contact & Social</b>
+                  </h5>
+
+                  <p className="mb-1 homepage-footer-contact">
+                    <i className="fa-regular fa-envelope me-2"></i>
+                    ftrafurniture@gmail.com
+                  </p>
+
+                  <p className="mb-3 homepage-footer-contact">
+                    <i className="fa-solid fa-phone me-2"></i>
+                    +91 9876543210
+                  </p>
+
+                  <p className="mb-2 homepage-footer-social-title">
+                    <b>Social Media</b>
+                  </p>
+
+                  <div className="d-flex gap-3 homepage-footer-social-icons">
+                    <i className="fa-brands fa-instagram fa-lg"></i>
+                    <i className="fa-brands fa-facebook fa-lg"></i>
+                    <i className="fa-brands fa-x-twitter fa-lg"></i>
+                    <i className="fa-brands fa-youtube fa-lg"></i>
+                    <i className="fa-brands fa-linkedin fa-lg"></i>
                   </div>
                 </div>
-              </footer>
-      </>
-      )
-}
+              </div>
+            </div>
+          </div>
 
-      export default Products
+          <hr className="my-4 homepage-footer-divider" />
+
+          <div className="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+            <ul className="d-flex list-unstyled gap-3 mb-0 flex-wrap justify-content-center homepage-footer-bottom-links">
+              <li>Web Accessibility</li>
+              <li>Terms of Use</li>
+              <li>Privacy Statement</li>
+              <li>Contact Us</li>
+            </ul>
+
+            <div className="text-muted text-center text-md-end small homepage-footer-copyright">
+              © 2024 fragranzia Company. All rights reserved
+            </div>
+          </div>
+        </div>
+      </footer>
+    </>
+  );
+};
+
+export default Products;

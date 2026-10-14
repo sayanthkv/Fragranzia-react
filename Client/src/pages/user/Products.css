@@ -314,3 +314,22 @@ section {
   background: #043948;
   color: #fff;
 }
+.products-wishlist-btn {
+  border: none;
+  background: transparent;
+  padding: 4px 8px;
+  font-size: 21px;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.products-wishlist-btn:hover {
+  transform: scale(1.15);
+}
+
+.products-wishlist-btn:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}

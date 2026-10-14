@@ -2,10 +2,12 @@ const mongoose = require("mongoose");
 const { User } = require("../models/User");
 const { Products } = require("../models/productModel");
 
+
 const addToCart = async (req, res) => {
   try {
     const userId = req.userId;
     const productId = req.params.id;
+    const quantity = Number(req.body.quantity ?? 1);
 
     if (!userId) {
       return res.status(401).json({
@@ -16,6 +18,12 @@ const addToCart = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(productId)) {
       return res.status(400).json({
         message: "Invalid product ID",
+      });
+    }
+
+    if (!Number.isInteger(quantity) || quantity < 1) {
+      return res.status(400).json({
+        message: "Quantity must be a positive integer",
       });
     }
 
@@ -39,12 +47,32 @@ const addToCart = async (req, res) => {
       (item) => item.product.toString() === productId
     );
 
+    // Check stock if your product model has a quantity field.
+    if (product.quantity !== undefined) {
+      const availableStock = Number(product.quantity);
+
+      if (!Number.isFinite(availableStock) || availableStock < 0) {
+        return res.status(400).json({
+          message: "Invalid product stock",
+        });
+      }
+
+      const totalRequested =
+        quantity + (existingItem ? existingItem.quantity : 0);
+
+      if (totalRequested > availableStock) {
+        return res.status(400).json({
+          message: `Only ${availableStock} items are available in stock`,
+        });
+      }
+    }
+
     if (existingItem) {
-      existingItem.quantity += 1;
+      existingItem.quantity += quantity;
     } else {
       user.cart.push({
         product: productId,
-        quantity: 1,
+        quantity,
       });
     }
 
@@ -55,7 +83,7 @@ const addToCart = async (req, res) => {
 
       if (cartProduct) {
         const price = Number(
-          cartProduct.saleprice || cartProduct.price
+          cartProduct.saleprice || cartProduct.price || 0
         );
 
         total += price * item.quantity;
@@ -79,7 +107,6 @@ const addToCart = async (req, res) => {
     });
   }
 };
-
 
 
 const getCart = async (req, res) => {

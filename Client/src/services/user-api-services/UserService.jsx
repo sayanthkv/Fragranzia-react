@@ -27,6 +27,7 @@ const Addproducttocart = async (id, quantity = 1) => {
 };
 
 
+
 const getCart = async () => {
   const response = await axiosPrivate.get("/Cart/");
   return response.data;
@@ -56,13 +57,13 @@ const removeProductFromWishlist = async (id) => {
 
 return{
     getProduct,
-    getDetailedProduct,
-    Addproducttocart,
-    getCart,
-    removeProductFromCart,
-    addToWishlist,
-    getWishlist,
-    removeProductFromWishlist
+  getDetailedProduct,
+  Addproducttocart,
+  getCart,
+  removeProductFromCart,
+  addToWishlist,
+  getWishlist,
+  removeProductFromWishlist,
 }
 
  }

@@ -1,175 +1,214 @@
 
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import axios from "axios";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "./SpecificProduct.css";
 import UserService from "../../services/user-api-services/UserService";
 
 const SpecificProduct = () => {
-  
-  
-const {
-  getDetailedProduct,
-  getProduct,
-  addToWishlist,
-  getWishlist,
-  removeProductFromWishlist,
-  Addproducttocart,
-} = UserService();
+  const { id } = useParams();
 
+  const {
+    getDetailedProduct,
+    getProduct,
+    addToWishlist,
+    getWishlist,
+    removeProductFromWishlist,
+    Addproducttocart,
+  } = UserService();
 
-const [product, setProduct] = useState(null);
-const [products, setProducts] = useState([]);
-const [isFavorite, setIsFavorite] = useState(false);
-const [quantity, setQuantity] = useState(1);
-const [actionMessage, setActionMessage] = useState("");
-const [actionLoading, setActionLoading] = useState(false);
+  const [product, setProduct] = useState(null);
+  const [products, setProducts] = useState([]);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [quantity, setQuantity] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+  const [actionMessage, setActionMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
- 
+  useEffect(() => {
+    let active = true;
 
- useEffect(() => {
-  const fetchProduct = async () => {
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
+        setErrorMessage("");
+        setProduct(null);
+        setQuantity(1);
+
+        const response = await getDetailedProduct(id);
+
+        if (active) {
+          setProduct(response);
+        }
+      } catch (error) {
+        console.error(
+          "Error fetching product:",
+          error.response?.data || error.message
+        );
+
+        if (active) {
+          setErrorMessage("Unable to load this product.");
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
+    const fetchProducts = async () => {
+      try {
+        const response = await getProduct();
+
+        if (active) {
+          setProducts(Array.isArray(response) ? response : []);
+        }
+      } catch (error) {
+        console.error(
+          "Error fetching products:",
+          error.response?.data || error.message
+        );
+      }
+    };
+
+    const fetchWishlistStatus = async () => {
+      try {
+        const response = await getWishlist();
+        const wishlistItems = response.wishlist || [];
+
+        if (active) {
+          setIsFavorite(
+            wishlistItems.some(
+              (item) =>
+                String(item.productId || item.id) === String(id)
+            )
+          );
+        }
+      } catch (error) {
+        console.error(
+          "Error fetching wishlist:",
+          error.response?.data || error.message
+        );
+
+        if (active) {
+          setIsFavorite(false);
+        }
+      }
+    };
+
+    if (id) {
+      fetchProduct();
+      fetchWishlistStatus();
+    }
+
+    fetchProducts();
+
+    return () => {
+      active = false;
+    };
+  }, [id]);
+
+  const stock = Math.max(0, Number(product?.quantity) || 0);
+
+  const increaseQuantity = () => {
+    setQuantity((previous) => Math.min(previous + 1, stock));
+  };
+
+  const decreaseQuantity = () => {
+    setQuantity((previous) => Math.max(1, previous - 1));
+  };
+
+  const addTotheWishlist = async (productId) => {
+    if (wishlistLoading) return;
+
     try {
-      const res = await getDetailedProduct(id);
-      setProduct(res);
+      setWishlistLoading(true);
+      setActionMessage("");
+      setErrorMessage("");
+
+      if (isFavorite) {
+        await removeProductFromWishlist(productId);
+        setIsFavorite(false);
+        setActionMessage("Product removed from wishlist.");
+      } else {
+        await addToWishlist(productId);
+        setIsFavorite(true);
+        setActionMessage("Product added to wishlist.");
+      }
     } catch (error) {
       console.error(
-        "Error fetching product:",
+        "Wishlist error:",
         error.response?.data || error.message
       );
+
+      setErrorMessage(
+        error.response?.data?.message ||
+          "Unable to update wishlist."
+      );
+    } finally {
+      setWishlistLoading(false);
     }
   };
 
-  const fetchProducts = async () => {
+  const handleAddToCart = async () => {
+    if (!product || stock < 1 || quantity > stock) {
+      setErrorMessage("This product is currently out of stock.");
+      return;
+    }
+
     try {
-      const res = await getProduct();
-      setProducts(res);
+      setActionLoading(true);
+      setActionMessage("");
+      setErrorMessage("");
+
+      await Addproducttocart(product._id, quantity);
+
+      setActionMessage(
+        `${quantity} item(s) added to your cart successfully.`
+      );
     } catch (error) {
       console.error(
-        "Error fetching products:",
+        "Add to cart error:",
         error.response?.data || error.message
       );
+
+      setErrorMessage(
+        error.response?.data?.message ||
+          "Unable to add product to cart."
+      );
+    } finally {
+      setActionLoading(false);
     }
   };
-
-  if (id) {
-    fetchProduct();
-  }
-
-  
-const fetchWishlistStatus = async () => {
-  try {
-    const response = await getWishlist();
-    const wishlistItems = response.wishlist || [];
-
-    setIsFavorite(
-      wishlistItems.some(
-        (item) =>
-          String(item.productId || item.id) === String(id)
-      )
-    );
-  } catch (error) {
-    console.error(
-      "Error fetching wishlist:",
-      error.response?.data || error.message
-    );
-  }
-};
-
-fetchWishlistStatus()
-  fetchProducts();
-}, [id]);
-
-  
-const addTotheWishlist = async (productId) => {
-  try {
-    setActionMessage("");
-
-    if (isFavorite) {
-      await removeProductFromWishlist(productId);
-      setIsFavorite(false);
-      setActionMessage("Removed from wishlist.");
-    } else {
-      await addToWishlist(productId);
-      setIsFavorite(true);
-      setActionMessage("Added to wishlist.");
-    }
-  } catch (error) {
-    console.error(
-      "Wishlist error:",
-      error.response?.data || error.message
-    );
-
-    setActionMessage(
-      error.response?.data?.message ||
-        "Unable to update wishlist."
-    );
-  }
-};
-
- 
-const increaseQuantity = () => {
-  const stock = Number(product?.quantity) || 0;
-
-  setQuantity((prev) => Math.min(prev + 1, stock));
-};
-
-const decreaseQuantity = () => {
-  setQuantity((prev) => Math.max(1, prev - 1));
-};
-
-
-const handleAddToCart = async () => {
-  try {
-    setActionLoading(true);
-    setActionMessage("");
-
-    await Addproducttocart(product._id, quantity);
-
-    setActionMessage(
-      `${quantity} item(s) added to your cart successfully.`
-    );
-  } catch (error) {
-    console.error(
-      "Add to cart error:",
-      error.response?.data || error.message
-    );
-
-    setActionMessage(
-      error.response?.data?.message ||
-        "Unable to add product to cart."
-    );
-  } finally {
-    setActionLoading(false);
-  }
-};
-
 
   const shareProduct = async () => {
     const shareData = {
-      title: product?.name || "Product",
-      text: "Check out this product.",
-      url: window.location.href
+      title: product?.name || "Fragranzia Product",
+      text: "Check out this fragrance.",
+      url: window.location.href,
     };
 
     if (navigator.share) {
       try {
         await navigator.share(shareData);
       } catch (error) {
-        console.log("Share cancelled");
+        if (error.name !== "AbortError") {
+          console.error("Unable to share product:", error);
+        }
       }
     } else {
       try {
         await navigator.clipboard.writeText(window.location.href);
-        alert("Product link copied to clipboard!");
+        setActionMessage("Product link copied to clipboard.");
       } catch (error) {
-        alert("Unable to copy product link.");
+        setErrorMessage("Unable to copy product link.");
       }
     }
   };
 
-  if (!product) {
+  if (loading) {
     return (
       <div className="specificproduct-loading">
         <h2>Loading product...</h2>
@@ -177,11 +216,30 @@ const handleAddToCart = async () => {
     );
   }
 
+  if (errorMessage && !product) {
+    return (
+      <div className="specificproduct-loading">
+        <h2>{errorMessage}</h2>
+        <Link to="/Products">Back to Products</Link>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="specificproduct-loading">
+        <h2>Product not found.</h2>
+        <Link to="/Products">Back to Products</Link>
+      </div>
+    );
+  }
+
+  const price = Number(product.price) || 0;
+  const salePrice = Number(product.saleprice ?? product.price) || 0;
+
   const discount =
-    product.price > 0
-      ? Math.round(
-          ((product.price - product.saleprice) / product.price) * 100
-        )
+    price > salePrice && price > 0
+      ? Math.round(((price - salePrice) / price) * 100)
       : 0;
 
   const productImage = product.image
@@ -190,473 +248,470 @@ const handleAddToCart = async () => {
 
   return (
     <div className="specificproduct-page">
-       <nav className="navbar navbar-expand-lg navbar-light shadow-sm homepage-navbar">
-              <div className="container-fluid px-0">
-                <span className="navbar-brand homepage-navbar-brand">
-                  <Link to='/'>Fragranzia</Link>
+      <nav className="navbar navbar-expand-lg navbar-light shadow-sm homepage-navbar">
+        <div className="container-fluid px-0">
+          <span className="navbar-brand homepage-navbar-brand">
+            <Link to="/">Fragranzia</Link>
+          </span>
+
+          <button
+            className="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarContent"
+            aria-controls="navbarContent"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            <span className="navbar-toggler-icon"></span>
+          </button>
+
+          <div
+            className="collapse navbar-collapse justify-content-end"
+            id="navbarContent"
+          >
+            <ul className="navbar-nav align-items-center gap-2">
+              <li className="nav-item">
+                <span className="nav-link active homepage-nav-link">
+                  <Link to="/">Home</Link>
                 </span>
+              </li>
+
+              <li className="nav-item">
+                <span className="nav-link homepage-nav-link">
+                  <Link to="/Products">Products</Link>
+                </span>
+              </li>
+
+              <li className="nav-item">
+                <span className="nav-link homepage-nav-link">
+                  <Link to="/Gifting">Gifting</Link>
+                </span>
+              </li>
+
+              <li className="nav-item me-3">
+                <span className="nav-link homepage-nav-link">
+                  <Link to="/About">About</Link>
+                </span>
+              </li>
+
+              <li className="nav-item me-2">
+                <div className="search-wrapper homepage-search-wrapper">
+                  <i className="fa-solid fa-magnifying-glass fa-search"></i>
+                  <input
+                    className="form-control"
+                    type="search"
+                    placeholder="Search Here"
+                    aria-label="Search"
+                  />
+                </div>
+              </li>
+
+              <li className="nav-item">
+                <span className="icon-btn homepage-icon-btn">
+                  <Link to="/Cart" aria-label="Cart">
+                    <i className="fa-solid fa-cart-shopping"></i>
+                  </Link>
+                </span>
+              </li>
+
+              <li className="nav-item">
                 <button
-                  className="navbar-toggler"
+                  className="icon-btn homepage-icon-btn"
                   type="button"
-                  data-bs-toggle="collapse"
-                  data-bs-target="#navbarContent"
-                  aria-controls="navbarContent"
-                  aria-expanded="false"
-                  aria-label="Toggle navigation"
+                  aria-label="Notifications"
                 >
-                  <span className="navbar-toggler-icon"></span>
+                  <i className="fa-regular fa-bell"></i>
                 </button>
-                <div className="collapse navbar-collapse justify-content-end" id="navbarContent">
-                  <ul className="navbar-nav align-items-center gap-2">
-                    <li className="nav-item">
-                      <span className="nav-link active homepage-nav-link" >
-                         <Link to='/'>Home</Link>
-                      </span>
-                    </li>
-                    <li className="nav-item">
-                      <span className="nav-link homepage-nav-link" >
-                        <Link to='/Products'>Products</Link>
-                      </span>
-                    </li>
-                    <li className="nav-item">
-                      <span className="nav-link homepage-nav-link" >
-                         <Link to='/Gifting'>Gifting</Link>
-                      </span>
-                    </li>
-                    <li className="nav-item me-3">
-                      <span className="nav-link homepage-nav-link" >
-                        <Link to='/About'>About</Link>
-                      </span>
-                    </li>
-                    <li className="nav-item me-2">
-                      <div className="search-wrapper homepage-search-wrapper">
-                        <i className="fa-solid fa-magnifying-glass fa-search"></i>
-                        <input
-                          className="form-control"
-                          type="search"
-                          placeholder="Search Here"
-                          aria-label="Search"
-                        />
-                      </div>
-                    </li>
-                    <li className="nav-item">
-                      <span className="icon-btn homepage-icon-btn"  aria-label="Cart">
-                        <Link to='/Cart'><i className="fa-solid fa-cart-shopping"></i></Link>
-                      </span>
-                    </li>
-                    <li className="nav-item">
-                      <button
-                        className="icon-btn homepage-icon-btn"
-                        type="button"
-                        aria-label="Notifications"
-                      >
-                        <i className="fa-regular fa-bell"></i>
-                      </button>
-                    </li>
-                    <li className="nav-item">
-                      <span
-                        className="icon-btn homepage-icon-btn"
-                        
-                        aria-label="Profile"
-                      >
-                       <Link to='/Profile'><i className="fa-regular fa-user"></i></Link>
-                     </span>
+              </li>
+
+              <li className="nav-item">
+                <span className="icon-btn homepage-icon-btn">
+                  <Link to="/Profile" aria-label="Profile">
+                    <i className="fa-regular fa-user"></i>
+                  </Link>
+                </span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+
+      <div className="container-fluid specificproduct-wrapper">
+        <div className="specificproduct-breadcrumb">
+          <Link to="/">Home</Link>
+          <span>&gt;</span>
+          <Link to="/Products">Products</Link>
+          <span>&gt;</span>
+          <span>{product.name}</span>
+        </div>
+
+        {actionMessage && (
+          <div className="alert alert-success mt-3" role="status">
+            {actionMessage}
+          </div>
+        )}
+
+        {errorMessage && (
+          <div className="alert alert-danger mt-3" role="alert">
+            {errorMessage}
+          </div>
+        )}
+
+        <div className="specificproduct-main">
+          <div className="specificproduct-left">
+            <div className="specificproduct-product-card">
+              <div className="specificproduct-gallery">
+                <div className="specificproduct-thumbnails">
+                  {[1, 2, 3].map((number) => (
+                    <div
+                      className={`specificproduct-thumbnail ${
+                        number === 1 ? "active" : ""
+                      }`}
+                      key={number}
+                    >
+                      <img src={productImage} alt={product.name} />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="specificproduct-main-image-wrapper">
+                  <div className="specificproduct-actions">
+                    <button
+                      className="specificproduct-action-btn"
+                      onClick={() => addTotheWishlist(product._id)}
+                      disabled={wishlistLoading}
+                      type="button"
+                      aria-label={
+                        isFavorite
+                          ? "Remove from wishlist"
+                          : "Add to wishlist"
+                      }
+                    >
+                      <i
+                        className={
+                          isFavorite ? "bi bi-heart-fill" : "bi bi-heart"
+                        }
+                        style={{
+                          color: isFavorite ? "#e63946" : "inherit",
+                        }}
+                      ></i>
+                    </button>
+
+                    <button
+                      className="specificproduct-action-btn"
+                      onClick={shareProduct}
+                      type="button"
+                      aria-label="Share product"
+                    >
+                      <i className="bi bi-share"></i>
+                    </button>
+                  </div>
+
+                  <img
+                    src={productImage}
+                    alt={product.name}
+                    className="specificproduct-main-image"
+                  />
+                </div>
+              </div>
+
+              <div className="specificproduct-purchase-buttons">
+                <button
+                  className="specificproduct-buy-now"
+                  type="button"
+                  disabled={stock <= 0}
+                  onClick={handleAddToCart}
+                >
+                  Purchase Now
+                </button>
+
+                <button
+                  className="specificproduct-add-cart"
+                  type="button"
+                  onClick={handleAddToCart}
+                  disabled={stock <= 0 || actionLoading}
+                >
+                  {actionLoading ? "Adding..." : "Add to Cart"}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="specificproduct-details">
+            <h1>{product.name}</h1>
+
+            <p className="specificproduct-brand">
+              {product.category?.name || "Category"}
+            </p>
+
+            <div className="specificproduct-rating-row">
+              <span className="specificproduct-rating">
+                4.5 <i className="bi bi-star-fill"></i>
+              </span>
+              <span className="specificproduct-rating-count">
+                1,000 Ratings
+              </span>
+            </div>
+
+            <p className="specificproduct-stock-message">
+              {stock > 0
+                ? stock <= 5
+                  ? `Hurry! Only ${stock} left in stock.`
+                  : "In stock and ready to order."
+                : "Currently out of stock."}
+            </p>
+
+            <div className="specificproduct-price">
+              <span className="specificproduct-sale-price">
+                Rs {salePrice}
+              </span>
+
+              {price > salePrice && (
+                <>
+                  <span className="specificproduct-original-price">
+                    Rs {price}
+                  </span>
+                  <span className="specificproduct-discount">
+                    {discount}% off
+                  </span>
+                </>
+              )}
+            </div>
+
+            <div className="specificproduct-quantity">
+              <div className="quantity-control">
+                <button
+                  onClick={decreaseQuantity}
+                  type="button"
+                  disabled={quantity <= 1}
+                  aria-label="Decrease quantity"
+                >
+                  −
+                </button>
+
+                <span>{quantity}</span>
+
+                <button
+                  onClick={increaseQuantity}
+                  type="button"
+                  disabled={quantity >= stock}
+                  aria-label="Increase quantity"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <hr className="specificproduct-divider" />
+
+            <div className="specificproduct-section">
+              <h3>Delivery</h3>
+              <p>
+                Delivery date will be confirmed after ordering |{" "}
+                <span>Free</span>
+              </p>
+              <small>Delivery availability may vary by location.</small>
+            </div>
+
+            <div className="specificproduct-section">
+              <h3>Description</h3>
+              <p className="specificproduct-description-text">
+                {product.description}
+              </p>
+            </div>
+
+            <div className="specificproduct-section">
+              <h3>Available Offers</h3>
+              <ul className="specificproduct-offers">
+                <li>
+                  <i className="bi bi-tag-fill"></i>
+                  <span>
+                    Buy two of the same product and get a third one free.
+                  </span>
+                </li>
+                <li>
+                  <i className="bi bi-tag-fill"></i>
+                  <span>
+                    Enjoy free standard shipping on orders exceeding ₹1,399.
+                  </span>
+                </li>
+                <li>
+                  <i className="bi bi-tag-fill"></i>
+                  <span>Get 15% off your first order.</span>
+                </li>
+                <li>
+                  <i className="bi bi-tag-fill"></i>
+                  <span>
+                    Receive a free tool case with the purchase of any perfume
+                    over ₹2,000.
+                  </span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="container-fluid my-5">
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <h2 className="fw-bold homepage-section-title homepage-offer-zone-title">
+            Suggested for you
+          </h2>
+        </div>
+
+        <div
+          className="product-slider-container homepage-product-slider-container d-flex gap-4"
+          id="offerSlider"
+        >
+          {products
+            .filter((item) => String(item._id) !== String(id))
+            .map((item) => (
+              <div
+                className="product-card-custom homepage-product-card-custom"
+                key={item._id}
+              >
+                <Link
+                  to={`/SpecificProduct/${item._id}`}
+                  className="text-decoration-none text-reset"
+                >
+                  <div className="product-image-frame homepage-product-image-frame mb-3">
+                    <img
+                      src={
+                        item.image
+                          ? `http://localhost:5000/uploads/${item.image}`
+                          : "/images/AUTOGRAPH_EDP_100ML_1.png"
+                      }
+                      alt={item.name}
+                    />
+                  </div>
+
+                  <h5 className="product-title homepage-product-title mb-1">
+                    {item.name}
+                  </h5>
+                </Link>
+
+                <div className="mb-3 homepage-product-price">
+                  <span className="fw-bold fs-5">
+                    Rs {item.saleprice ?? item.price}
+                  </span>
+                  {Number(item.price) > Number(item.saleprice) && (
+                    <span className="text-decoration-line-through text-muted ms-2 fs-6 small">
+                      Rs {item.price}
+                    </span>
+                  )}
+                </div>
+
+                <Link
+                  to={`/SpecificProduct/${item._id}`}
+                  className="btn-add-cart homepage-btn-add-cart"
+                >
+                  View Product
+                </Link>
+              </div>
+            ))}
+        </div>
+      </div>
+
+      <footer className="py-5 mt-5 homepage-footer">
+        <div className="container">
+          <div className="row g-4 align-items-start">
+            <div className="col-12 col-md-3 pt-5 mt-4">
+              <h1
+                className="homepage-footer-brand"
+                style={{ color: "#043948" }}
+              >
+                <b>Fragranzia</b>
+              </h1>
+            </div>
+
+            <div className="col-12 col-md-9">
+              <div className="row g-4">
+                <div className="col-6 col-sm-4">
+                  <h5
+                    className="homepage-footer-heading"
+                    style={{ color: "#043948" }}
+                  >
+                    <b>Pages</b>
+                  </h5>
+                  <ul className="list list-unstyled lh-lg homepage-footer-list">
+                    <li><Link to="/">Home</Link></li>
+                    <li><Link to="/Products">Products</Link></li>
+                    <li><Link to="/Gifting">Gifting</Link></li>
+                    <li><Link to="/About">About</Link></li>
+                    <li><Link to="/Profile">Profile</Link></li>
+                    <li><Link to="/Cart">Cart</Link></li>
+                    <li><Link to="/Wishlist">Wishlist</Link></li>
+                  </ul>
+                </div>
+
+                <div className="col-6 col-sm-4">
+                  <h5
+                    className="homepage-footer-heading"
+                    style={{ color: "#043948" }}
+                  >
+                    <b>Quick Links</b>
+                  </h5>
+                  <ul className="list-unstyled lh-lg homepage-footer-list">
+                    <li><a href="privacy.html">Privacy Policy</a></li>
+                    <li><a href="terms.html">Terms and Conditions</a></li>
+                    <li><a href="faqs.html">FAQs</a></li>
+                    <li>
+                      <a href="customer-service.html">Customer Services</a>
                     </li>
                   </ul>
                 </div>
+
+                <div className="col-12 col-sm-4">
+                  <h5
+                    className="homepage-footer-heading"
+                    style={{ color: "#043948" }}
+                  >
+                    <b>Contact &amp; Social</b>
+                  </h5>
+
+                  <p className="mb-1 homepage-footer-contact">
+                    <i className="fa-regular fa-envelope me-2"></i>
+                    ftrafurniture@gmail.com
+                  </p>
+
+                  <p className="mb-3 homepage-footer-contact">
+                    <i className="fa-solid fa-phone me-2"></i>
+                    +91 9876543210
+                  </p>
+
+                  <p className="mb-2 homepage-footer-social-title">
+                    <b>Social Media</b>
+                  </p>
+
+                  <div className="d-flex gap-3 homepage-footer-social-icons">
+                    <i className="fa-brands fa-instagram fa-lg"></i>
+                    <i className="fa-brands fa-facebook fa-lg"></i>
+                    <i className="fa-brands fa-x-twitter fa-lg"></i>
+                    <i className="fa-brands fa-youtube fa-lg"></i>
+                    <i className="fa-brands fa-linkedin fa-lg"></i>
+                  </div>
+                </div>
               </div>
-            </nav>
-      
-
-     <div className="container-fluid specificproduct-wrapper">
-
-  <div className="specificproduct-breadcrumb">
-    <Link to="/">Home</Link>
-    <span>&gt;</span>
-    <Link to="/products">Products</Link>
-    <span>&gt;</span>
-    <span>{product.name}</span>
-  </div>
-
-  <div className="specificproduct-main">
-
-    <div className="specificproduct-left">
-
-      <div className="specificproduct-product-card">
-
-        <div className="specificproduct-gallery">
-
-          <div className="specificproduct-thumbnails">
-
-            <div className="specificproduct-thumbnail active">
-              <img
-                src={productImage}
-                alt={product.name}
-              />
-            </div>
-
-            <div className="specificproduct-thumbnail">
-              <img
-                src={productImage}
-                alt={product.name}
-              />
-            </div>
-
-            <div className="specificproduct-thumbnail">
-              <img
-                src={productImage}
-                alt={product.name}
-              />
-            </div>
-
-          </div>
-
-          <div className="specificproduct-main-image-wrapper">
-
-            <div className="specificproduct-actions">
-
-              <button
-  className="specificproduct-action-btn"
-  onClick={() => addTotheWishlist(product._id)}
-  type="button"
-  aria-label={isFavorite ? "Remove from wishlist" : "Add to wishlist"}
->
-  <i
-    className={
-      isFavorite ? "bi bi-heart-fill" : "bi bi-heart"
-    }
-    style={{ color: isFavorite ? "#e63946" : "inherit" }}
-  ></i>
-</button>
-
-              <button
-                className="specificproduct-action-btn"
-                onClick={shareProduct}
-                type="button"
-              >
-                <i className="bi bi-share"></i>
-              </button>
-
-            </div>
-
-            <img
-              src={productImage}
-              alt={product.name}
-              className="specificproduct-main-image"
-            />
-
-          </div>
-
-        </div>
-
-        <div className="specificproduct-purchase-buttons">
-
-          <button
-            className="specificproduct-buy-now"
-            disabled={product.quantity <= 0}
-          >
-            Purchase Now
-          </button>
-
-         <button
-  className="specificproduct-add-cart"
-  onClick={handleAddToCart}
-  disabled={Number(product.quantity) <= 0 || actionLoading}
-  type="button"
->
-  {actionLoading ? "Adding..." : "Add to Cart"}
-</button>
-
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <div className="specificproduct-details">
-
-      <h1>{product.name}</h1>
-
-      <p className="specificproduct-brand">
-        {product.category?.name || "Category"}
-      </p>
-
-      <div className="specificproduct-rating-row">
-
-        <span className="specificproduct-rating">
-          4.5
-          <i className="bi bi-star-fill"></i>
-        </span>
-
-        <span className="specificproduct-rating-count">
-          1,000 Ratings
-        </span>
-
-      </div>
-
-      <p className="specificproduct-stock-message">
-        Hurry only few stocks left!
-      </p>
-
-      <div className="specificproduct-price">
-
-        <span className="specificproduct-sale-price">
-          Rs {product.saleprice}
-        </span>
-
-        <span className="specificproduct-original-price">
-          Rs {product.price}
-        </span>
-
-        <span className="specificproduct-discount">
-          {discount}% off
-        </span>
-
-      </div>
-
-      <div className="specificproduct-quantity">
-
-        <div className="quantity-control">
-
-          <button
-            onClick={decreaseQuantity}
-            type="button"
-          >
-            −
-          </button>
-
-          <span>{quantity}</span>
-
-          <button
-            onClick={increaseQuantity}
-            type="button"
-          >
-            +
-          </button>
-
-        </div>
-
-      </div>
-
-      <hr className="specificproduct-divider" />
-
-      <div className="specificproduct-section">
-
-        <h3>Delivery</h3>
-
-        <p>
-          Delivery by 28 Aug, Wednesday |{" "}
-          <span>Free</span>
-        </p>
-
-        <small>
-          if ordered before 9:24 PM
-        </small>
-
-      </div>
-
-      <div className="specificproduct-section">
-
-        <h3>Description</h3>
-
-        <p className="specificproduct-description-text">
-          {product.description}
-        </p>
-
-      </div>
-
-      <div className="specificproduct-section">
-
-        <h3>Available Offers</h3>
-
-        <ul className="specificproduct-offers">
-
-          <li>
-            <i className="bi bi-tag-fill"></i>
-            <span>
-              Buy two of the same product and get a third one free.
-            </span>
-          </li>
-
-          <li>
-            <i className="bi bi-tag-fill"></i>
-            <span>
-              Enjoy free standard shipping on orders exceeding ₹1,399.
-            </span>
-          </li>
-
-          <li>
-            <i className="bi bi-tag-fill"></i>
-            <span>
-              Get 15% off your first order
-            </span>
-          </li>
-
-          <li>
-            <i className="bi bi-tag-fill"></i>
-            <span>
-              Receive a free tool case with the purchase of any perfume over ₹2,000
-            </span>
-          </li>
-
-        </ul>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</div>
-  <div className="container-fluid my-5">
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <h2 className="fw-bold homepage-section-title homepage-offer-zone-title">
-              Suggested for you
-            </h2>
-            <div className="d-flex gap-2">
-              <button
-                className="scroll-arrow-btn homepage-scroll-arrow-btn"
-                type="button"
-                onClick={() => {}}
-                aria-label="Previous offers"
-              >
-                <i className="fa-solid fa-chevron-left"></i>
-              </button>
-              <button
-                className="scroll-arrow-btn homepage-scroll-arrow-btn"
-                type="button"
-                onClick={() => {}}
-                aria-label="Next offers"
-              >
-                <i className="fa-solid fa-chevron-right"></i>
-              </button>
             </div>
           </div>
 
-          <div
-  className="product-slider-container homepage-product-slider-container d-flex gap-4"
-  id="offerSlider"
->
-  {products.map((product, index) => (
-    <div className="product-card-custom homepage-product-card-custom" key={index}>
-      <div className="product-image-frame homepage-product-image-frame mb-3">
-        <img
-  src={`http://localhost:5000/uploads/${product.image}`}
-  alt={product.name}
-/>
+          <hr className="my-4 homepage-footer-divider" />
 
-      </div>
-      <h5 className="product-title homepage-product-title mb-1">
-        {product.name}
-      </h5>
-      <div className="mb-3 homepage-product-price">
-        <span className="fw-bold fs-5">Rs {product.saleprice}</span>
-        <span className="text-decoration-line-through text-muted ms-2 fs-6 small">
-          Rs {product.price}
-        </span>
-      </div>
-      <button className="btn-add-cart homepage-btn-add-cart">Add to Cart</button>
-    </div>
-  ))}
-</div>
-      
+          <div className="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+            <ul className="d-flex list-unstyled gap-3 mb-0 flex-wrap justify-content-center homepage-footer-bottom-links">
+              <li>Web Accessibility</li>
+              <li>Terms of Use</li>
+              <li>Privacy Statement</li>
+              <li>Contact Us</li>
+            </ul>
+
+            <div className="text-muted text-center text-md-end small homepage-footer-copyright">
+              © 2024 Fragranzia Company. All rights reserved
+            </div>
+          </div>
         </div>
-       <footer className="py-5 mt-5 homepage-footer">
-               <div className="container">
-                 <div className="row g-4 align-items-start">
-                   <div className="col-12 col-md-3 pt-5 mt-4">
-                     <h1 className="homepage-footer-brand" style={{ color: "#043948" }}>
-                       <b>Fragranzia</b>
-                     </h1>
-                   </div>
-       
-                   <div className="col-12 col-md-9">
-                     <div className="row g-4">
-                       <div className="col-6 col-sm-4">
-                         <h5 className="homepage-footer-heading" style={{ color: "#043948" }}>
-                           <b>Pages</b>
-                         </h5>
-                         <ul className="list list-unstyled lh-lg homepage-footer-list">
-                           <li>
-                             <span><Link to='/' >Home</Link></span>
-                           </li>
-                           <li>
-                             <span><Link to='/Products' >Products</Link></span>
-                           </li>
-                           <li>
-                             <span><Link to='/Gifting' >Gifting</Link></span>
-                           </li>
-                           <li>
-                             <span><Link to='/About' >About</Link></span>
-                           </li>
-                           <li>
-                             <span><Link to='/Profile' >Profile</Link></span>
-                           </li>
-                         </ul>
-                       </div>
-                       <div className="col-6 col-sm-4">
-                         <h5 className="homepage-footer-heading" style={{ color: "#043948" }}>
-                           <b>Quick Links</b>
-                         </h5>
-                         <ul className="list-unstyled lh-lg homepage-footer-list">
-                           <li>
-                             <a href="privacy.html">Privacy Policy</a>
-                           </li>
-                           <li>
-                             <a href="terms.html">Terms and Conditions</a>
-                           </li>
-                           <li>
-                             <a href="faqs.html">FAQs</a>
-                           </li>
-                           <li>
-                             <a href="customer-service.html">Customer Services</a>
-                           </li>
-                         </ul>
-                       </div>
-                       <div className="col-12 col-sm-4">
-                         <h5 className="homepage-footer-heading" style={{ color: "#043948" }}>
-                           <b>Contact & Social</b>
-                         </h5>
-                         <p className="mb-1 homepage-footer-contact">
-                           <i className="fa-regular fa-envelope me-2"></i>
-                           ftrafurniture@gmail.com
-                         </p>
-                         <p className="mb-3 homepage-footer-contact">
-                           <i className="fa-solid fa-phone me-2"></i>
-                           +91 9876543210
-                         </p>
-                         <p className="mb-2 homepage-footer-social-title">
-                           <b>Social Media</b>
-                         </p>
-                         <div className="d-flex gap-3 homepage-footer-social-icons">
-                           <i className="fa-brands fa-instagram fa-lg"></i>
-                           <i className="fa-brands fa-facebook fa-lg"></i>
-                           <i className="fa-brands fa-x-twitter fa-lg"></i>
-                           <i className="fa-brands fa-youtube fa-lg"></i>
-                           <i className="fa-brands fa-linkedin fa-lg"></i>
-                         </div>
-                       </div>
-                     </div>
-                   </div>
-                 </div>
-                 <hr className="my-4 homepage-footer-divider" />
-       
-                 <div className="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-                   <ul className="d-flex list-unstyled gap-3 mb-0 flex-wrap justify-content-center homepage-footer-bottom-links">
-                     <li>Web Accessibility</li>
-                     <li>Terms of Use</li>
-                     <li>Privacy Statement</li>
-                     <li>Contact Us</li>
-                   </ul>
-                   <div className="text-muted text-center text-md-end small homepage-footer-copyright">
-                     © 2024 fragranzia Company. All rights reserved
-                   </div>
-                 </div>
-               </div>
-             </footer>
-
-     
+      </footer>
     </div>
   );
 };
