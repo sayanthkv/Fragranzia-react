@@ -66,6 +66,15 @@ const saveaddress = async (data) => {
   const response = await axiosPrivate.get("/address/getdata");
   return response.data;}
 
+  
+const updateaddress = async (id, data) => {
+  const response = await axiosPrivate.put(
+    `/address/updateaddress/${id}`,
+    data
+  );
+
+  return response.data;
+};
 
 return{
     getProduct,
@@ -77,7 +86,8 @@ return{
   getWishlist,
   removeProductFromWishlist,
   saveaddress,
-  fetchdata
+  fetchdata,
+  updateaddress
 }
 
  }

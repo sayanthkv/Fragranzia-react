@@ -27,7 +27,7 @@ const [loading, setLoading] = useState(true);
   });
   const [addressType, setAddressType] = useState("Home");
 
-   const { saveaddress,fetchdata } = UserService();
+   const { saveaddress,fetchdata,updateaddress } = UserService();
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -107,17 +107,51 @@ const [loading, setLoading] = useState(true);
     setEditFormData((previousData) => ({ ...previousData, [name]: value }));
   };
 
-  const handleEditSave = (event) => {
-    event.preventDefault();
-    console.log("Edited Address Type:", editAddressType);
-    console.log("Edited Address Details:", editFormData);
-    setShowEditModal(false);
-  };
+ 
 
   const closeModal = () => {
     setShowModal(false);
   };
 
+  const handleEditSave = async (event) => {
+  event.preventDefault();
+
+  if (!selectedAddress?._id) {
+    alert("Please select an address to edit.");
+    return;
+  }
+
+  try {
+    await updateaddress(selectedAddress._id, {
+      fullName: editFormData.fullName,
+      phone: editFormData.phone,
+      address: editFormData.address,
+      city: editFormData.city,
+      state: editFormData.state,
+      pincode: editFormData.pincode,
+      country: selectedAddress.country,
+    });
+
+    await getdata();
+
+    setShowEditModal(false);
+    setShowViewModal(false);
+
+    alert("Address updated successfully!");
+  } catch (error) {
+    console.error(
+      "Failed to update address:",
+      error.response?.data || error.message
+    );
+
+    alert(
+      error.response?.data?.message ||
+        "Failed to update address. Please try again."
+    );
+  }
+};
+
+  
    useEffect(() => {
       getdata();
     }, []);

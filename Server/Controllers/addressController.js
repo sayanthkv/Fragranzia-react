@@ -83,4 +83,57 @@ const getaddress = async (req, res) => {
 };
 
 
-module.exports = { addAddress,getaddress };
+const updateAddress = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { id } = req.params;
+
+    const {
+      fullName,
+      phone,
+      address,
+      city,
+      state,
+      pincode,
+      country,
+    } = req.body;
+
+    const updatedAddress = await Address.findOneAndUpdate(
+      { _id: id, user: userId },
+      {
+        fullName,
+        phone,
+        street: address,
+        city,
+        state,
+        zip: pincode,
+        country,
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!updatedAddress) {
+      return res.status(404).json({
+        message: "Address not found",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Address updated successfully",
+      address: updatedAddress,
+    });
+  } catch (error) {
+    console.error("Address update failed:", error);
+
+    return res.status(500).json({
+      message: "Failed to update address",
+      error: error.message,
+    });
+  }
+};
+
+
+module.exports = { addAddress,getaddress,updateAddress };
