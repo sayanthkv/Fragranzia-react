@@ -55,6 +55,18 @@ const removeProductFromWishlist = async (id) => {
   return response.data;
 };
 
+
+const saveaddress = async (data) => {
+
+        const response = await axiosPrivate.post("/address/saveaddress",data);
+        return response.data;
+    };
+
+    const fetchdata = async () => {
+  const response = await axiosPrivate.get("/address/getdata");
+  return response.data;}
+
+
 return{
     getProduct,
   getDetailedProduct,
@@ -64,6 +76,8 @@ return{
   addToWishlist,
   getWishlist,
   removeProductFromWishlist,
+  saveaddress,
+  fetchdata
 }
 
  }

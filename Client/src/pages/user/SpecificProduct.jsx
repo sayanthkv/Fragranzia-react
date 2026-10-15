@@ -1,5 +1,4 @@
-
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "./SpecificProduct.css";
@@ -20,12 +19,16 @@ const SpecificProduct = () => {
   const [product, setProduct] = useState(null);
   const [products, setProducts] = useState([]);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [wishlistIds, setWishlistIds] = useState(() => new Set());
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
+  const [wishlistLoadingId, setWishlistLoadingId] = useState(null);
   const [actionMessage, setActionMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+
+  const suggestedSliderRef = useRef(null);
 
   useEffect(() => {
     let active = true;
@@ -76,15 +79,21 @@ const SpecificProduct = () => {
     const fetchWishlistStatus = async () => {
       try {
         const response = await getWishlist();
-        const wishlistItems = response.wishlist || [];
+        const wishlistItems = response?.wishlist || [];
 
         if (active) {
-          setIsFavorite(
-            wishlistItems.some(
-              (item) =>
-                String(item.productId || item.id) === String(id)
+          const savedIds = wishlistItems.map((item) =>
+            String(
+              item.productId?._id ||
+                item.productId ||
+                item.product?._id ||
+                item.id ||
+                item._id
             )
           );
+
+          setWishlistIds(new Set(savedIds));
+          setIsFavorite(savedIds.includes(String(id)));
         }
       } catch (error) {
         console.error(
@@ -94,6 +103,7 @@ const SpecificProduct = () => {
 
         if (active) {
           setIsFavorite(false);
+          setWishlistIds(new Set());
         }
       }
     };
@@ -130,11 +140,25 @@ const SpecificProduct = () => {
 
       if (isFavorite) {
         await removeProductFromWishlist(productId);
+
         setIsFavorite(false);
+        setWishlistIds((previous) => {
+          const updated = new Set(previous);
+          updated.delete(String(productId));
+          return updated;
+        });
+
         setActionMessage("Product removed from wishlist.");
       } else {
         await addToWishlist(productId);
+
         setIsFavorite(true);
+        setWishlistIds((previous) => {
+          const updated = new Set(previous);
+          updated.add(String(productId));
+          return updated;
+        });
+
         setActionMessage("Product added to wishlist.");
       }
     } catch (error) {
@@ -149,6 +173,62 @@ const SpecificProduct = () => {
       );
     } finally {
       setWishlistLoading(false);
+    }
+  };
+
+  const handleSuggestedWishlist = async (productId) => {
+    const productIdString = String(productId);
+
+    if (wishlistLoadingId !== null) return;
+
+    const alreadyFavorite = wishlistIds.has(productIdString);
+
+    try {
+      setWishlistLoadingId(productIdString);
+      setActionMessage("");
+      setErrorMessage("");
+
+      if (alreadyFavorite) {
+        await removeProductFromWishlist(productId);
+
+        setWishlistIds((previous) => {
+          const updated = new Set(previous);
+          updated.delete(productIdString);
+          return updated;
+        });
+
+        if (productIdString === String(product?._id)) {
+          setIsFavorite(false);
+        }
+
+        setActionMessage("Product removed from wishlist.");
+      } else {
+        await addToWishlist(productId);
+
+        setWishlistIds((previous) => {
+          const updated = new Set(previous);
+          updated.add(productIdString);
+          return updated;
+        });
+
+        if (productIdString === String(product?._id)) {
+          setIsFavorite(true);
+        }
+
+        setActionMessage("Product added to wishlist.");
+      }
+    } catch (error) {
+      console.error(
+        "Suggested product wishlist error:",
+        error.response?.data || error.message
+      );
+
+      setErrorMessage(
+        error.response?.data?.message ||
+          "Unable to update wishlist."
+      );
+    } finally {
+      setWishlistLoadingId(null);
     }
   };
 
@@ -176,10 +256,39 @@ const SpecificProduct = () => {
 
       setErrorMessage(
         error.response?.data?.message ||
-          "Unable to add product to cart."
+          (error.response?.status === 401
+            ? "Please login to add products to your cart."
+            : "Unable to add product to cart.")
       );
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleSuggestedAddToCart = async (productId) => {
+    try {
+      setActionMessage("");
+      setErrorMessage("");
+
+      await Addproducttocart(productId, 1);
+
+      setActionMessage("Product added to cart successfully.");
+      alert("product added to cart")
+    } catch (error) {
+      console.error(
+        "Suggested product cart error:",
+        error.response?.data || error.message
+      );
+
+      setErrorMessage(
+        error.response?.data?.message ||
+          (error.response?.status === 401
+            ? "Please login to add products to your cart."
+            : "Unable to add product to cart.")
+           
+            
+      );
+       alert("Can't add product to cart")
     }
   };
 
@@ -206,6 +315,13 @@ const SpecificProduct = () => {
         setErrorMessage("Unable to copy product link.");
       }
     }
+  };
+
+  const scrollSuggestedProducts = (direction) => {
+    suggestedSliderRef.current?.scrollBy({
+      left: direction * 300,
+      behavior: "smooth",
+    });
   };
 
   if (loading) {
@@ -246,6 +362,10 @@ const SpecificProduct = () => {
     ? `http://localhost:5000/uploads/${product.image}`
     : "/images/AUTOGRAPH_EDP_100ML_1.png";
 
+  const suggestedProducts = products.filter(
+    (item) => String(item._id) !== String(product._id)
+  );
+
   return (
     <div className="specificproduct-page">
       <nav className="navbar navbar-expand-lg navbar-light shadow-sm homepage-navbar">
@@ -285,7 +405,7 @@ const SpecificProduct = () => {
 
               <li className="nav-item">
                 <span className="nav-link homepage-nav-link">
-                  <Link to='/Wishlist'>Wishlist</Link>
+                  <Link to="/Wishlist">Wishlist</Link>
                 </span>
               </li>
 
@@ -387,6 +507,7 @@ const SpecificProduct = () => {
                           ? "Remove from wishlist"
                           : "Add to wishlist"
                       }
+                      aria-pressed={isFavorite}
                     >
                       <i
                         className={
@@ -420,7 +541,7 @@ const SpecificProduct = () => {
                 <button
                   className="specificproduct-buy-now"
                   type="button"
-                  disabled={stock <= 0}
+                  disabled={stock <= 0 || actionLoading}
                   onClick={handleAddToCart}
                 >
                   Purchase Now
@@ -511,7 +632,9 @@ const SpecificProduct = () => {
                 Delivery date will be confirmed after ordering |{" "}
                 <span>Free</span>
               </p>
-              <small>Delivery availability may vary by location.</small>
+              <small>
+                Delivery availability may vary by location.
+              </small>
             </div>
 
             <div className="specificproduct-section">
@@ -553,63 +676,126 @@ const SpecificProduct = () => {
         </div>
       </div>
 
-      <div className="container-fluid my-5">
+      {/* Suggested For You */}
+      <div className="container-fluid my-5 px-4 px-md-5">
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h2 className="fw-bold homepage-section-title homepage-offer-zone-title">
-            Suggested for you
+          <h2 className="fw-bold homepage-section-title homepage-featured-title">
+            Suggested <span>For You</span>
           </h2>
+
+          <div className="d-flex gap-2">
+            <button
+              className="scroll-arrow-btn homepage-scroll-arrow-btn"
+              type="button"
+              onClick={() => scrollSuggestedProducts(-1)}
+              aria-label="Previous suggested products"
+            >
+              <i className="fa-solid fa-chevron-left"></i>
+            </button>
+
+            <button
+              className="scroll-arrow-btn homepage-scroll-arrow-btn"
+              type="button"
+              onClick={() => scrollSuggestedProducts(1)}
+              aria-label="Next suggested products"
+            >
+              <i className="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
         </div>
 
         <div
           className="product-slider-container homepage-product-slider-container d-flex gap-4"
-          id="offerSlider"
+          id="suggestedProductsSlider"
+          ref={suggestedSliderRef}
         >
-          {products
-            .filter((item) => String(item._id) !== String(id))
-            .map((item) => (
-              <div
-                className="product-card-custom homepage-product-card-custom"
-                key={item._id}
-              >
-                <Link
-                  to={`/SpecificProduct/${item._id}`}
-                  className="text-decoration-none text-reset"
-                >
-                  <div className="product-image-frame homepage-product-image-frame mb-3">
-                    <img
-                      src={
-                        item.image
-                          ? `http://localhost:5000/uploads/${item.image}`
-                          : "/images/AUTOGRAPH_EDP_100ML_1.png"
-                      }
-                      alt={item.name}
-                    />
-                  </div>
-
-                  <h5 className="product-title homepage-product-title mb-1">
-                    {item.name}
-                  </h5>
-                </Link>
-
-                <div className="mb-3 homepage-product-price">
-                  <span className="fw-bold fs-5">
-                    Rs {item.saleprice ?? item.price}
-                  </span>
-                  {Number(item.price) > Number(item.saleprice) && (
-                    <span className="text-decoration-line-through text-muted ms-2 fs-6 small">
-                      Rs {item.price}
-                    </span>
-                  )}
-                </div>
-
-                <Link
-                  to={`/SpecificProduct/${item._id}`}
-                  className="btn-add-cart homepage-btn-add-cart"
-                >
-                  View Product
+          {suggestedProducts.map((item) => (
+            <div
+              className="product-card-custom homepage-product-card-custom"
+              key={item._id}
+            >
+              <div className="product-image-frame homepage-product-image-frame mb-3">
+                <Link to={`/SpecificProduct/${item._id}`}>
+                  <img
+                    src={
+                      item.image
+                        ? `http://localhost:5000/uploads/${item.image}`
+                        : "/images/AUTOGRAPH_EDP_100ML_1.png"
+                    }
+                    alt={item.name}
+                  />
                 </Link>
               </div>
-            ))}
+
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <h5 className="product-title homepage-product-title mb-0">
+                  {item.name}
+                </h5>
+
+                <button
+                  className="specificproduct-action-btn"
+                  type="button"
+                  onClick={() => handleSuggestedWishlist(item._id)}
+                  disabled={wishlistLoadingId === String(item._id)}
+                  aria-label={
+                    wishlistIds.has(String(item._id))
+                      ? "Remove from wishlist"
+                      : "Add to wishlist"
+                  }
+                  aria-pressed={wishlistIds.has(String(item._id))}
+                  style={{
+                    border: "none",
+                    background: "transparent",
+                    cursor: "pointer",
+                    flexShrink: 0,
+                    fontSize: "20px",
+                    padding: "4px 8px",
+                  }}
+                >
+                  <i
+                    className={
+                      wishlistIds.has(String(item._id))
+                        ? "bi bi-heart-fill"
+                        : "bi bi-heart"
+                    }
+                    style={{
+                      color: wishlistIds.has(String(item._id))
+                        ? "#e63946"
+                        : "#555",
+                      transition: "color 0.2s ease",
+                    }}
+                  ></i>
+                </button>
+              </div>
+
+              <div className="mb-3 homepage-product-price">
+                <span className="fw-bold fs-5">
+                  Rs {item.saleprice ?? item.price}
+                </span>
+
+                {Number(item.price) >
+                  Number(item.saleprice ?? item.price) && (
+                  <span className="text-decoration-line-through text-muted ms-2 fs-6 small">
+                    Rs {item.price}
+                  </span>
+                )}
+              </div>
+
+              <button
+                onClick={() => handleSuggestedAddToCart(item._id)}
+                className="btn-add-cart homepage-btn-add-cart"
+                type="button"
+              >
+                Add to Cart
+              </button>
+            </div>
+          ))}
+
+          {suggestedProducts.length === 0 && (
+            <p className="text-muted">
+              No suggested products available right now.
+            </p>
+          )}
         </div>
       </div>
 
@@ -634,6 +820,7 @@ const SpecificProduct = () => {
                   >
                     <b>Pages</b>
                   </h5>
+
                   <ul className="list list-unstyled lh-lg homepage-footer-list">
                     <li><Link to="/">Home</Link></li>
                     <li><Link to="/Products">Products</Link></li>
@@ -652,12 +839,15 @@ const SpecificProduct = () => {
                   >
                     <b>Quick Links</b>
                   </h5>
+
                   <ul className="list-unstyled lh-lg homepage-footer-list">
                     <li><a href="privacy.html">Privacy Policy</a></li>
                     <li><a href="terms.html">Terms and Conditions</a></li>
                     <li><a href="faqs.html">FAQs</a></li>
                     <li>
-                      <a href="customer-service.html">Customer Services</a>
+                      <a href="customer-service.html">
+                        Customer Services
+                      </a>
                     </li>
                   </ul>
                 </div>

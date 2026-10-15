@@ -678,3 +678,38 @@ section {
 .homepage-see-all-link:hover {
   opacity: 0.8;
 }
+
+
+#suggestedProductsSlider {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  scroll-snap-type: x proximity;
+  padding-bottom: 15px;
+  scrollbar-width: thin;
+}
+
+#suggestedProductsSlider .homepage-product-card-custom {
+  flex: 0 0 250px;
+  min-width: 250px;
+  scroll-snap-align: start;
+}
+
+#suggestedProductsSlider .homepage-product-card-custom img {
+  max-width: 100%;
+}
+
+#suggestedProductsSlider .homepage-product-title {
+  overflow-wrap: anywhere;
+}
+
+#suggestedProductsSlider .homepage-btn-add-cart {
+  width: 100%;
+}
+
+@media (max-width: 576px) {
+  #suggestedProductsSlider .homepage-product-card-custom {
+    flex: 0 0 210px;
+    min-width: 210px;
+  }
+}

@@ -1,0 +1,86 @@
+
+const { Address } = require("../models/addressModel");
+
+const addAddress = async (req, res) => {
+  try {
+    console.log("Authenticated user:", req.user);
+    console.log("Address request body:", req.body);
+
+    const userId = req.userId
+
+    if (!userId) {
+      return res.status(401).json({
+        message: "Authenticated user ID not found",
+      });
+    }
+
+    const {
+      fullName,
+      phone,
+      street,
+      city,
+      state,
+      country,
+      zip,
+      landmark,
+      alternativePhone,
+      addressType,
+    } = req.body;
+
+    const newAddress = await Address.create({
+      user: userId,
+      fullName,
+      phone,
+      street,
+      city,
+      state,
+      country,
+      zip,
+      landmark,
+      alternativePhone,
+      addressType,
+    });
+
+    return res.status(201).json({
+      message: "Address saved successfully",
+      address: newAddress,
+    });
+  } catch (error) {
+    console.error("Address saving failed:", error);
+
+    return res.status(500).json({
+      message: "Failed to save address",
+      error: error.message,
+    });
+  }
+};
+
+
+const getaddress = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        message: "User not authenticated",
+      });
+    }
+
+    const addresses = await Address.find({ user: userId });
+
+    return res.status(200).json({
+      message: "Addresses fetched successfully",
+      addresses,
+    });
+  } catch (error) {
+    console.error("Fetching addresses failed:", error);
+
+    return res.status(500).json({
+      message: "Failed to fetch addresses",
+      error: error.message,
+    });
+  }
+};
+
+
+module.exports = { addAddress,getaddress };

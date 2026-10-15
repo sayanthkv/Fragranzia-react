@@ -1,13 +1,17 @@
 
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./Alladdressview.css";
 import { Link } from "react-router-dom";
+import UserService from "../../services/user-api-services/UserService";
 
 function ProfileAddress() {
   const [showModal, setShowModal] = useState(false);
+  const [addresses, setAddresses] = useState([]);
+const [selectedAddress, setSelectedAddress] = useState(null);
+const [loading, setLoading] = useState(true);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editAddressType, setEditAddressType] = useState("Home");
@@ -23,15 +27,17 @@ function ProfileAddress() {
   });
   const [addressType, setAddressType] = useState("Home");
 
+   const { saveaddress,fetchdata } = UserService();
+
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
-    address: "",
+    street: "",
     city: "",
     state: "",
-    landmark: "",
-    pincode: "",
-    alternativePhone: "",
+    country: "",
+    zip: "",
+    
   });
 
   const handleChange = (event) => {
@@ -43,14 +49,58 @@ function ProfileAddress() {
     }));
   };
 
-  const handleSave = (event) => {
-    event.preventDefault();
+ const handleSave = async (event) => {
+  event.preventDefault();
 
-    console.log("Address Type:", addressType);
-    console.log("Address Details:", formData);
+  try {
+    await saveaddress(formData);
 
     setShowModal(false);
-  };
+
+    setFormData({
+      fullName: "",
+      phone: "",
+      street: "",
+      city: "",
+      state: "",
+      country: "",
+      zip: "",
+    });
+
+    await getdata();
+
+    alert("Address saved successfully!");
+  } catch (error) {
+    console.error(
+      "Failed to save address:",
+      error.response?.data || error.message
+    );
+
+    alert(
+      error.response?.data?.message ||
+      "Failed to save address. Please try again."
+    );
+  }
+};
+
+  const getdata = async () => {
+  try {
+    setLoading(true);
+
+    const response = await fetchdata();
+
+    setAddresses(response.addresses || []);
+  } catch (error) {
+    console.error(
+      "Failed to fetch addresses:",
+      error.response?.data || error.message
+    );
+
+    setAddresses([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleEditChange = (event) => {
     const { name, value } = event.target;
@@ -68,6 +118,10 @@ function ProfileAddress() {
     setShowModal(false);
   };
 
+   useEffect(() => {
+      getdata();
+    }, []);
+  
   return (
     <div className="alladdress-page">
       {/* Navigation Bar */}
@@ -193,38 +247,56 @@ function ProfileAddress() {
                 </button>
               </div>
             </div>
+            {loading ? (
+  <p>Loading addresses...</p>
+) : addresses.length === 0 ? (
+  <p>No saved addresses found. Click Add Address to save one.</p>
+) : (
+  <div className="row g-4">
+    {addresses.map((address, index) => (
+      <div className="col-12 col-md-6 col-lg-3" key={address._id}>
+        <div className="address-card h-100">
+          <div className="d-flex justify-content-between align-items-center">
+            <h2 className="address-title">
+              Address {index + 1}
+            </h2>
 
-            {/* Existing Address Card */}
-            <div className="address-card">
-              <div className="d-flex justify-content-between align-items-center">
-                <h2 className="address-title">Address 2</h2>
+            <span className="badge-tag">
+              <i className="fa-solid fa-location-dot"></i>
+              Saved
+            </span>
+          </div>
 
-                <span className="badge-tag">
-                  <i className="fa-solid fa-building"></i>
-                  Office
-                </span>
-              </div>
+          <div className="fw-bold my-2 address-name">
+            {address.fullName}
+          </div>
 
-              <div className="fw-bold my-2 address-name">
-                Priyesh Manu
-              </div>
+          <p className="address-text">
+            {address.street}, {address.city}, {address.state},
+            {address.country} - {address.zip}
+          </p>
 
-              <p className="address-text">
-                Helpstir Technologies 3rd Floor, Lulu Cyber Tower
-                Infopark Phase 2 Kakkanad, Kochi - 682042
-              </p>
+          <div className="alladdress-card-actions">
+            <button
+              type="button"
+              className="alladdress-small-edit"
+              onClick={() => {
+                setSelectedAddress(address);
+                setShowViewModal(true);
+              }}
+            >
+              <i className="fa-solid fa-eye"></i> View
+            </button>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+)}
+            
+               
 
-              <div className="alladdress-card-actions">
-                <button
-                  type="button"
-                  className="alladdress-small-edit"
-                  onClick={() => setShowViewModal(true)}
-                  aria-label="View address details"
-                >
-                  <i className="fa-solid fa-pen-to-square"></i> Edit
-                </button>
-              </div>
-            </div>
+             
           </div>
         </div>
       </main>
@@ -260,78 +332,189 @@ function ProfileAddress() {
             </div>
 
             <form onSubmit={(event) => event.preventDefault()}>
-              <div className="modal-section-title">Address Type</div>
-              <div className="type-radio-group alladdress-view-type-group">
-                <div>
-                  <input type="radio" name="viewAddressType" id="viewTypeHome" className="type-input" checked={true} readOnly />
-                  <label htmlFor="viewTypeHome" className="type-label home-active"><i className="fa-solid fa-house-chimney"></i> Home</label>
-                </div>
-                <div>
-                  <input type="radio" name="viewAddressType" id="viewTypeOffice" className="type-input" checked={false} readOnly />
-                  <label htmlFor="viewTypeOffice" className="type-label"><i className="fa-solid fa-building"></i> Office</label>
-                </div>
-                <div>
-                  <input type="radio" name="viewAddressType" id="viewTypeOther" className="type-input" checked={false} readOnly />
-                  <label htmlFor="viewTypeOther" className="type-label"><i className="fa-solid fa-address-book"></i> Other</label>
-                </div>
-              </div>
+  {selectedAddress && (
+    <>
+      <div className="modal-section-title">Address Type</div>
 
-              <div className="row g-3 mb-3">
-                <div className="col-md-6">
-                  <label htmlFor="viewFullName" className="form-label-custom">Full Name</label>
-                  <input id="viewFullName" className="form-control-custom alladdress-view-input" value="Priyesh" readOnly />
-                </div>
-                <div className="col-md-6">
-                  <label htmlFor="viewPhone" className="form-label-custom">Phone Number</label>
-                  <input id="viewPhone" className="form-control-custom alladdress-view-input" value="98785 43210" readOnly />
-                </div>
-              </div>
+      <div className="type-radio-group alladdress-view-type-group">
+        <div>
+          <input
+            type="radio"
+            name="viewAddressType"
+            id="viewTypeHome"
+            className="type-input"
+            checked={true}
+            readOnly
+          />
+          <label
+            htmlFor="viewTypeHome"
+            className="type-label home-active"
+          >
+            <i className="fa-solid fa-house-chimney"></i> Home
+          </label>
+        </div>
 
-              <div className="mb-3">
-                <label htmlFor="viewAddress" className="form-label-custom">Address</label>
-                <textarea id="viewAddress" className="form-control-custom textarea-custom alladdress-view-input" value="Rumban villa kochi, Ruther road" readOnly />
-              </div>
+        <div>
+          <input
+            type="radio"
+            name="viewAddressType"
+            id="viewTypeOffice"
+            className="type-input"
+            checked={false}
+            readOnly
+          />
+          <label htmlFor="viewTypeOffice" className="type-label">
+            <i className="fa-solid fa-building"></i> Office
+          </label>
+        </div>
 
-              <div className="row g-3 mb-3">
-                <div className="col-md-4">
-                  <label htmlFor="viewCity" className="form-label-custom">City/District</label>
-                  <input id="viewCity" className="form-control-custom alladdress-view-input" value="Kochi" readOnly />
-                </div>
-                <div className="col-md-4">
-                  <label htmlFor="viewState" className="form-label-custom">State</label>
-                  <input id="viewState" className="form-control-custom alladdress-view-input" value="Kerala" readOnly />
-                </div>
-                <div className="col-md-4">
-                  <label htmlFor="viewLandmark" className="form-label-custom">Land Mark</label>
-                  <input id="viewLandmark" className="form-control-custom alladdress-view-input" value="Near Lulu Mall" readOnly />
-                </div>
-              </div>
+        <div>
+          <input
+            type="radio"
+            name="viewAddressType"
+            id="viewTypeOther"
+            className="type-input"
+            checked={false}
+            readOnly
+          />
+          <label htmlFor="viewTypeOther" className="type-label">
+            <i className="fa-solid fa-address-book"></i> Other
+          </label>
+        </div>
+      </div>
 
-              <div className="row g-3 mb-4">
-                <div className="col-md-4">
-                  <label htmlFor="viewPincode" className="form-label-custom">PinCode</label>
-                  <input id="viewPincode" className="form-control-custom alladdress-view-input" value="675433" readOnly />
-                </div>
-                <div className="col-md-4">
-                  <label htmlFor="viewAlternativePhone" className="form-label-custom">Alternative Phone number (Optional)</label>
-                  <input id="viewAlternativePhone" className="form-control-custom alladdress-view-input" value="Enter Alternative Phone number" readOnly />
-                </div>
-                <div className="col-md-4"></div>
-              </div>
+      <div className="row g-3 mb-3">
+        <div className="col-md-6">
+          <label htmlFor="viewFullName" className="form-label-custom">
+            Full Name
+          </label>
+          <input
+            id="viewFullName"
+            className="form-control-custom alladdress-view-input"
+            value={selectedAddress.fullName || ""}
+            readOnly
+          />
+        </div>
 
-              <div className="alladdress-view-actions">
-                <button
-                  type="button"
-                  className="btn-modal-edit"
-                  onClick={() => {
-                    setShowViewModal(false);
-                    setShowEditModal(true);
-                  }}
-                >
-                  Edit
-                </button>
-              </div>
-            </form>
+        <div className="col-md-6">
+          <label htmlFor="viewPhone" className="form-label-custom">
+            Phone Number
+          </label>
+          <input
+            id="viewPhone"
+            className="form-control-custom alladdress-view-input"
+            value={selectedAddress.phone || ""}
+            readOnly
+          />
+        </div>
+      </div>
+
+      <div className="mb-3">
+        <label htmlFor="viewAddress" className="form-label-custom">
+          Address
+        </label>
+        <textarea
+          id="viewAddress"
+          className="form-control-custom textarea-custom alladdress-view-input"
+          value={selectedAddress.street || ""}
+          readOnly
+        />
+      </div>
+
+      <div className="row g-3 mb-3">
+        <div className="col-md-4">
+          <label htmlFor="viewCity" className="form-label-custom">
+            City/District
+          </label>
+          <input
+            id="viewCity"
+            className="form-control-custom alladdress-view-input"
+            value={selectedAddress.city || ""}
+            readOnly
+          />
+        </div>
+
+        <div className="col-md-4">
+          <label htmlFor="viewState" className="form-label-custom">
+            State
+          </label>
+          <input
+            id="viewState"
+            className="form-control-custom alladdress-view-input"
+            value={selectedAddress.state || ""}
+            readOnly
+          />
+        </div>
+
+        <div className="col-md-4">
+          <label htmlFor="viewLandmark" className="form-label-custom">
+            Land Mark
+          </label>
+          <input
+            id="viewLandmark"
+            className="form-control-custom alladdress-view-input"
+            value={selectedAddress.landmark || ""}
+            readOnly
+          />
+        </div>
+      </div>
+
+      <div className="row g-3 mb-4">
+        <div className="col-md-4">
+          <label htmlFor="viewPincode" className="form-label-custom">
+            PinCode
+          </label>
+          <input
+            id="viewPincode"
+            className="form-control-custom alladdress-view-input"
+            value={selectedAddress.zip || ""}
+            readOnly
+          />
+        </div>
+
+        <div className="col-md-4">
+          <label
+            htmlFor="viewAlternativePhone"
+            className="form-label-custom"
+          >
+            Alternative Phone number (Optional)
+          </label>
+          <input
+            id="viewAlternativePhone"
+            className="form-control-custom alladdress-view-input"
+            value={selectedAddress.alternativePhone || ""}
+            placeholder="Not provided"
+            readOnly
+          />
+        </div>
+      </div>
+
+      <div className="alladdress-view-actions">
+        <button
+          type="button"
+          className="btn-modal-edit"
+          onClick={() => {
+            setEditFormData({
+              fullName: selectedAddress.fullName || "",
+              phone: selectedAddress.phone || "",
+              address: selectedAddress.street || "",
+              city: selectedAddress.city || "",
+              state: selectedAddress.state || "",
+              landmark: selectedAddress.landmark || "",
+              pincode: selectedAddress.zip || "",
+              alternativePhone: selectedAddress.alternativePhone || "",
+            });
+
+            setShowViewModal(false);
+            setShowEditModal(true);
+          }}
+        >
+          Edit
+        </button>
+      </div>
+    </>
+  )}
+</form>
           </div>
         </div>
       )}
@@ -605,10 +788,10 @@ function ProfileAddress() {
 
                 <textarea
                   id="address"
-                  name="address"
+                  name="street"
                   className="form-control-custom textarea-custom"
                   placeholder="Enter house or building details"
-                  value={formData.address}
+                  value={formData.street}
                   onChange={handleChange}
                   required
                 ></textarea>
@@ -666,11 +849,11 @@ function ProfileAddress() {
 
                   <input
                     id="landmark"
-                    name="landmark"
+                    name="country"
                     type="text"
                     className="form-control-custom"
                     placeholder="Enter landmark"
-                    value={formData.landmark}
+                    value={formData.country}
                     onChange={handleChange}
                   />
                 </div>
@@ -688,13 +871,13 @@ function ProfileAddress() {
 
                   <input
                     id="pincode"
-                    name="pincode"
+                    name="zip"
                     type="text"
                     className="form-control-custom"
                     placeholder="Enter pincode"
                     pattern="[0-9]{6}"
                     maxLength={6}
-                    value={formData.pincode}
+                    value={formData.zip}
                     onChange={handleChange}
                     required
                   />
