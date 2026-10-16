@@ -217,6 +217,10 @@ img {
   text-align: center;
 }
 
+.wishlist-empty {
+  color: white;
+}
+
 .wishlist-empty i {
   margin-bottom: 1rem;
   color: #6c757d;
@@ -225,6 +229,7 @@ img {
 
 .wishlist-empty h4 {
   margin-bottom: 0.5rem;
+  color: black;
 }
 
 .wishlist-empty p {

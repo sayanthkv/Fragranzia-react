@@ -332,7 +332,7 @@ const Cart = () => {
                   Explore our fragrance collection and add items to your cart.
                 </p>
                 <Link to="/Products" className="btn cart-btn-proceed">
-                  Explore Products
+                 <p> Explore Products</p>
                 </Link>
               </div>
             ) : (

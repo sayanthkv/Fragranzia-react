@@ -260,6 +260,11 @@ section {
   margin-top: 1rem;
 }
 
+.cart-btn-proceed p{
+  color: white;
+  margin-top: 5px;
+}
+
 .cart-btn-proceed:hover {
   background-color: #022530;
   color: white;
@@ -278,7 +283,9 @@ section {
   border: 1px dashed #cbd5e1;
   border-radius: 8px;
   background-color: #f8fafc;
+
 }
+
 
 
 

@@ -1086,3 +1086,18 @@ section {
   }
 }
 
+.homepage-product-category {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #777;
+  background-color: #f3f5f4;
+  
+  border-radius: 5px;
+
+  letter-spacing: 0.3px;
+}
+
+.homepage-sale-price {
+  color: #198754;
+}
