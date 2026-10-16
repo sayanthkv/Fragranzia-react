@@ -7,16 +7,16 @@ export default function Profile() {
   const [activeTab, setActiveTab] = useState('profile');
   const [showEdit,setShowEdit] = useState(false)
   const [showPassword, setShowPassword] = useState(false);
-  const [formData] = useState({
-    fullName: 'Thomas',
-    email: 'thomas12@gmail.com',
+  const [formData,setFormData] = useState({
+    name: '',
+    email: '',
     phone: '+91 98765 43210',
-    dob: '01/01/1995',
-    gender: 'Male',
-    password: 'password123',
+    dob: '',
+    gender: '',
+    password: '',
   });
 
-  const {getUserdata} = UserService()
+  const {getUserdata,updatedetails} = UserService()
 
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
@@ -31,13 +31,49 @@ export default function Profile() {
   };
 
 const fetchdata = async ()=>{
-await getUserdata()
+let res = await getUserdata()
+setFormData(res)
 }
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log('Saved profile data:', formData);
-  };
+  
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  try {
+    const response = await updatedetails({
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+    });
+
+    const updatedUser = response.user;
+
+    if (updatedUser) {
+      setFormData((prev) => ({
+        ...prev,
+        name: updatedUser.name || "",
+        email: updatedUser.email || "",
+        phone: updatedUser.phone || "",
+      }));
+    } else {
+      await fetchdata();
+    }
+
+    setShowEdit(false);
+    alert("Profile updated successfully");
+  } catch (error) {
+    console.error(
+      "Profile update failed:",
+      error.response?.data || error.message
+    );
+
+    alert(
+      error.response?.data?.message ||
+      "Failed to update profile"
+    );
+  }
+};
+
 
   useEffect(()=>{
     fetchdata()
@@ -153,7 +189,7 @@ await getUserdata()
               <input
                 type="text"
                 className="profile-custom-control"
-                value={formData.fullName}
+                value={formData.name}
                 readOnly
               />
             </div>
@@ -210,14 +246,14 @@ await getUserdata()
                   readOnly
                   style={{ letterSpacing: showPassword ? 'normal' : '3px' }}
                 />
-                <button
+                {/* <button
                   type="button"
                   className="profile-password-toggle"
                   onClick={togglePasswordVisibility}
                   aria-label="Toggle password visibility"
                 >
                   <i className={`fa-regular ${showPassword ? 'fa-eye' : 'fa-eye-slash'}`}></i>
-                </button>
+                </button> */}
               </div>
             </div>
 
@@ -240,9 +276,9 @@ await getUserdata()
               <label className="profileedit-form-label">Full Name</label>
               <input
                 type="text"
-                name="fullName"
+                name="name"
                 className="profileedit-custom-control"
-                value={formData.fullName}
+                value={formData.name}
                 onChange={handleChange}
               />
             </div>
@@ -297,16 +333,17 @@ await getUserdata()
                   className="profileedit-custom-control"
                   value={formData.password}
                   onChange={handleChange}
+                  readOnly
                   style={{ letterSpacing: showPassword ? 'normal' : '3px' }}
                 />
-                <button
+                {/* <button
                   type="button"
                   className="profileedit-password-toggle"
                   onClick={togglePasswordVisibility}
                   aria-label="Toggle password visibility"
                 >
                   <i className={`fa-regular ${showPassword ? 'fa-eye' : 'fa-eye-slash'}`}></i>
-                </button>
+                </button> */}
               </div>
             </div>
 

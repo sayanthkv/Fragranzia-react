@@ -90,6 +90,11 @@ const updateaddress = async (id, data) => {
   return response.data
  }
 
+ const updatedetails = async (data)=>{
+  const response = await axiosPrivate.put("/api/auth/updatedata",data)
+  return response.data
+ }
+
 return{
   regUser,
   logUser,
@@ -104,7 +109,8 @@ return{
   saveaddress,
   fetchdata,
   updateaddress,
-  getUserdata
+  getUserdata,
+  updatedetails
 }
 
  }
