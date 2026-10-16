@@ -26,7 +26,16 @@ const Addproducttocart = async (id, quantity = 1) => {
   return response.data;
 };
 
+ const regUser = async (data)=>{
+    const response = await axiosPrivate.post("/api/auth/register",data);
+    return response.data
+  }
 
+  const logUser = async (data) => {
+    const response = await axiosPrivate.post("/api/auth/login",data);
+    return response.data;
+    
+  };
 
 const getCart = async () => {
   const response = await axiosPrivate.get("/Cart/");
@@ -76,7 +85,14 @@ const updateaddress = async (id, data) => {
   return response.data;
 };
 
+ const getUserdata = async () => {
+  const response = await axiosPrivate.get("/api/auth/getdata");
+  return response.data
+ }
+
 return{
+  regUser,
+  logUser,
     getProduct,
   getDetailedProduct,
   Addproducttocart,
@@ -87,7 +103,8 @@ return{
   removeProductFromWishlist,
   saveaddress,
   fetchdata,
-  updateaddress
+  updateaddress,
+  getUserdata
 }
 
  }

@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import './Profile.css';
+import UserService from '../../services/user-api-services/UserService';
 
 export default function Profile() {
   const [activeTab, setActiveTab] = useState('profile');
+  const [showEdit,setShowEdit] = useState(false)
   const [showPassword, setShowPassword] = useState(false);
   const [formData] = useState({
     fullName: 'Thomas',
@@ -14,9 +16,32 @@ export default function Profile() {
     password: 'password123',
   });
 
+  const {getUserdata} = UserService()
+
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+const fetchdata = async ()=>{
+await getUserdata()
+}
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log('Saved profile data:', formData);
+  };
+
+  useEffect(()=>{
+    fetchdata()
+  },[])
 
   return (
         <>
@@ -197,14 +222,104 @@ export default function Profile() {
             </div>
 
             <div className="col-12 text-end">
-              <button type="button" className="profile-btn-edit">
-                <Link to="/Profileedit">Edit</Link>
+              <button type="button" className="profile-btn-edit" onClick={()=>{setShowEdit(true)}}>
+                Edit
               </button>
             </div>
           </form>
         </div>
       </div>
     </div>
+
+    { showEdit && (
+     <div className="alladdress-edit-overlay">
+      <div className="profile-edit-modal">
+         <form className="row g-4" onSubmit={handleSubmit}>
+            {/* Row 1 */}
+            <div className="col-12 col-md-4">
+              <label className="profileedit-form-label">Full Name</label>
+              <input
+                type="text"
+                name="fullName"
+                className="profileedit-custom-control"
+                value={formData.fullName}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="col-12 col-md-4">
+              <label className="profileedit-form-label">Email</label>
+              <input
+                type="email"
+                name="email"
+                className="profileedit-custom-control"
+                value={formData.email}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="col-12 col-md-4">
+              <label className="profileedit-form-label">Phone Number</label>
+              <input
+                type="text"
+                name="phone"
+                className="profileedit-custom-control"
+                value={formData.phone}
+                onChange={handleChange}
+              />
+            </div>
+
+            {/* Row 2 */}
+            <div className="col-12 col-md-4">
+              <label className="profileedit-form-label">Date of Birth</label>
+              <input
+                type="text"
+                name="dob"
+                className="profileedit-custom-control"
+                value={formData.dob}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="col-12 col-md-4">
+              <label className="profileedit-form-label">Gender</label>
+              <input
+                type="text"
+                name="gender"
+                className="profileedit-custom-control"
+                value={formData.gender}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="col-12 col-md-4">
+              <label className="profileedit-form-label">Password</label>
+              <div className="profileedit-custom-input-group">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  className="profileedit-custom-control"
+                  value={formData.password}
+                  onChange={handleChange}
+                  style={{ letterSpacing: showPassword ? 'normal' : '3px' }}
+                />
+                <button
+                  type="button"
+                  className="profileedit-password-toggle"
+                  onClick={togglePasswordVisibility}
+                  aria-label="Toggle password visibility"
+                >
+                  <i className={`fa-regular ${showPassword ? 'fa-eye' : 'fa-eye-slash'}`}></i>
+                </button>
+              </div>
+            </div>
+
+            {/* Action Button Row */}
+            <div className="col-12 text-end">
+              <button type="submit" className="profileedit-btn-save">
+                Save
+              </button>
+            </div>
+          </form>
+      </div>
+     </div>
+    )}
 
     </>
   );}

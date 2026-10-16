@@ -6,6 +6,7 @@ import { User, Mail, Lock, Eye } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebookF } from "react-icons/fa";
 import axios from "axios"
+import UserService from "../../services/user-api-services/UserService";
 
 function Signup() {
     const [formData, setFormData] = useState({
@@ -24,6 +25,7 @@ function Signup() {
         terms: false
     });
 
+    const {regUser} = UserService()
     const onhandlechange = (event) => {
         const { name, value, type, checked } = event.target;
 
@@ -84,7 +86,7 @@ function Signup() {
         setFormErr(err);
 
         if (next) {
-            await axios.post("http://localhost:5000/api/auth/register", formData);
+            await regUser(formData);
             alert("Registered Successfully");
         }
 

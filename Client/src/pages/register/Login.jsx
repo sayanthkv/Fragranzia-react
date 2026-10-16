@@ -7,6 +7,7 @@ import { FcGoogle } from "react-icons/fc";
 import { FaFacebookF } from "react-icons/fa";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import UserService from "../../services/user-api-services/UserService";
 
 function Login() {
   const [formData, setFormData] = useState({
@@ -15,6 +16,8 @@ function Login() {
   });
 
   const navigate = useNavigate();
+   
+  const {logUser} = UserService()
 
   const [formErr, setFormErr] = useState({
     email: false,
@@ -53,10 +56,10 @@ function Login() {
     setFormErr(err);
 
     if (next) {
-     const res = await axios.post("http://localhost:5000/api/auth/login", formData);
+     const res = await logUser(formData);
      console.log(res,"=====res=====");
      
-    localStorage.setItem("Token", res.data.token);
+    localStorage.setItem("Token", res.token);
     navigate("/");
     }
   };

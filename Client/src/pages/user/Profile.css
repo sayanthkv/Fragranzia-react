@@ -250,6 +250,18 @@ section {
   color: #ffffff !important;
 }
 
+.profile-edit-modal {
+  background-color: #ffffff;
+  width: 100%;
+  max-width: 1020px;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  padding: 32px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  animation: alladdress-modal-appear 0.2s ease-out;
+}
+
 @media (max-width: 576px) {
   .profile-tab-container {
     gap: 10px;
