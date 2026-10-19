@@ -33,7 +33,6 @@ section {
 }
 
 .homepage-navbar-brand {
-  color: var(--primary-color) !important;
   font-size: 1.5rem;
   font-weight: 700;
   padding: 20px;
@@ -41,23 +40,19 @@ section {
 }
 
 .homepage-navbar-brand a {
-  color: var(--primary-color) !important;
   text-decoration: none !important;
 }
 
 .homepage-navbar-brand a:hover {
-  color: var(--primary-color) !important;
   text-decoration: none !important;
 }
 
 .homepage-navbar-brand:hover {
-  color: var(--primary-color) !important;
   text-decoration: none !important;
 }
 
 .homepage-nav-link {
   text-decoration: none !important;
-  color: inherit !important;
   font-weight: 500;
   padding: 0.5rem 1rem !important;
   border: none !important;
@@ -65,26 +60,109 @@ section {
 
 .homepage-nav-link:hover {
   text-decoration: none !important;
-  color: inherit !important;
   border: none !important;
 }
 
 .homepage-nav-link.active {
   text-decoration: none !important;
-  color: inherit !important;
   font-weight: 700;
   border: none !important;
 }
 
 .homepage-nav-link a {
   text-decoration: none !important;
-  color: inherit !important;
   border: none !important;
 }
 
 .homepage-nav-link a:hover {
   text-decoration: none !important;
-  color: inherit !important;
+  border: none !important;
+}
+
+.homepage-search-wrapper {
+  position: relative;
+  width: min(220px, 100%);
+}
+
+
+:root {
+  --primary-color: rgb(6, 57, 40);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+  overflow-x: hidden;
+  font-family: "Poppins", sans-serif;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+section {
+  width: 100%;
+}
+
+.homepage-navbar {
+  padding: 1rem clamp(1rem, 4vw, 2rem);
+  background-color: #ffffff !important;
+}
+
+.homepage-navbar-brand {
+  font-size: 1.5rem;
+  font-weight: 700;
+  padding: 20px;
+  text-decoration: none !important;
+}
+
+.homepage-navbar-brand a {
+  text-decoration: none !important;
+}
+
+.homepage-navbar-brand a:hover {
+  text-decoration: none !important;
+}
+
+.homepage-navbar-brand:hover {
+  text-decoration: none !important;
+}
+
+.homepage-nav-link {
+  text-decoration: none !important;
+  font-weight: 500;
+  padding: 0.5rem 1rem !important;
+  border: none !important;
+}
+
+.homepage-nav-link:hover {
+  text-decoration: none !important;
+  border: none !important;
+}
+
+.homepage-nav-link.active {
+  text-decoration: none !important;
+  font-weight: 700;
+  border: none !important;
+}
+
+.homepage-nav-link a {
+  text-decoration: none !important;
+  border: none !important;
+}
+
+.homepage-nav-link a:hover {
+  text-decoration: none !important;
   border: none !important;
 }
 
@@ -126,12 +204,10 @@ section {
 
 .homepage-icon-btn a {
   text-decoration: none !important;
-  color: inherit !important;
 }
 
 .homepage-icon-btn a:hover {
   text-decoration: none !important;
-  color: inherit !important;
 }
 
 .homepage-icon-btn:hover {
@@ -149,9 +225,7 @@ section {
   color: white;
   font-weight: 700;
   background-color: #043948;
-  
 }
-
 
 .cart-item-card {
   border: 1px solid #e2e8f0;
@@ -231,7 +305,7 @@ section {
 }
 
 .cart-btn-buy {
-  background-color:#022530;
+  background-color: #022530;
   color: white;
   border: none;
 }
@@ -260,7 +334,7 @@ section {
   margin-top: 1rem;
 }
 
-.cart-btn-proceed p{
+.cart-btn-proceed p {
   color: white;
   margin-top: 5px;
 }
@@ -283,13 +357,7 @@ section {
   border: 1px dashed #cbd5e1;
   border-radius: 8px;
   background-color: #f8fafc;
-
 }
-
-
-
-
-
 
 .homepage-footer {
   background-color: rgba(139, 184, 190, 1);
@@ -297,13 +365,11 @@ section {
 }
 
 .homepage-footer a {
-  color: #043948 !important;
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
 .homepage-footer a:hover {
-  color: #ffffff !important;
   text-decoration: underline;
 }
 

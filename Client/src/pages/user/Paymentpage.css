@@ -279,3 +279,48 @@ input[type='number']::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
+
+/* Delivery Address Card - Matched to Section1/21/22 UI */
+.section-address {
+  width: 100%;
+  min-height: 120px;
+  border-radius: 10px;
+  box-shadow: 0px 0px 6px 0px rgba(0, 0, 0, 0.25);
+  background-color: #fff;
+  transition: all 0.2s ease-in-out;
+}
+
+.address-status-badge {
+  background-color: var(--primary-color);
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 50px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.address-text-body {
+  color: #555;
+  font-size: 0.9rem;
+  margin-bottom: 0;
+  line-height: 1.4;
+}
+
+.address-change-btn {
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+  background-color: transparent;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none !important;
+  transition: all 0.2s ease;
+}
+
+.address-change-btn:hover {
+  background-color: var(--primary-color);
+  color: #ffffff !important;
+}

@@ -145,7 +145,7 @@ const primaryaddress = async (req,res)=>{
       { user: userId, isPrimary: true },
       { $set: { isPrimary: false } }
     );
-    
+
   const updateprimary = await Address.findOneAndUpdate({ _id: id, user: userId },
     {isPrimary:true},
     {new:true}
@@ -153,8 +153,12 @@ const primaryaddress = async (req,res)=>{
 
   return res.status(200).json(updateprimary)
 
-
-
 }
 
-module.exports = { addAddress,getaddress,updateAddress,primaryaddress };
+const fetchprimary = async (req,res)=>{
+
+  const primary = await Address.findOne({isPrimary:true})
+  return res.status(200).json(primary)
+}
+
+module.exports = { addAddress,getaddress,updateAddress,primaryaddress,fetchprimary };

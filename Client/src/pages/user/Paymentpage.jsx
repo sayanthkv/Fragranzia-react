@@ -2,26 +2,20 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./Paymentpage.css"
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import UserService from "../../services/user-api-services/UserService";
 
-const details = [{
-  name:"Rohan Jaison",
-  address:" Apartment No. 104, Emerald Heights Opposite Lulu Mall,Edappally, Kochi Kerala 682024",
-  ph:"+919856330022"
-},{
-  name:"Rohan Jaison",
-  address:" Apartment No. 104, Emerald Heights Opposite Lulu Mall,Edappally, Kochi Kerala 682024",
-  ph:"+919856330022"
-},{
-  name:"Rohan Jaison",
-  address:" Apartment No. 104, Emerald Heights Opposite Lulu Mall,Edappally, Kochi Kerala 682024",
-  ph:"+919856330022"
-}]
+
+ 
+
 
 
 const Paymentpage = () => {
+
+  const {fetchprimaryaddress} = UserService()
   
   const [quantity, setQuantity] = useState(1);
+  const [details,setDetails] = useState(null)
 
   const handleDecrease = () => {
     if (quantity > 1) {
@@ -33,6 +27,15 @@ const Paymentpage = () => {
     setQuantity(quantity + 1);
   };
 
+
+  const getaddress = async () => {
+    const address = await fetchprimaryaddress()
+    setDetails(address)
+  }
+
+ useEffect(() => {
+  getaddress();
+}, []); 
 
   return (
     <>
@@ -196,12 +199,12 @@ const Paymentpage = () => {
             </div>
 
             {/* Personal Details & Categories */}
-            <div className="H1 col-12 my-3">
+            <div className="H1 col-12 mt-3">
               <h3 className="fw-bold my-3 mx-0">Personal Details</h3>
               <div className="button d-flex gap-4 flex-wrap">
                 <button type="button" className="icon-btn a">
                   <b>
-                    <a href="Profile-address.html">Add Address+</a>
+                    <Link to='/Newaddress'>Add Address+</Link>
                   </b>
                 </button>
                 
@@ -209,22 +212,47 @@ const Paymentpage = () => {
               </div>
             </div>
 
-            {/* Address Overflow Container */}
-            <div className="addressoverflow mt-4">
-              
-                  
-                    {details.map((Content,ind)=>(
-                  <div className="H2 col-12 mb-3" key={ind}>
-                <div className="section2 p-3">
-                  <h4 className="fw-bolder px-2">{Content.name}</h4>
-                  <p className="m-2">
-                    {Content.address}
-                  </p>
-                  <p className="m-2">{Content.ph}</p>
-                </div>
-              </div>
-              ))}
-            </div>
+          
+{/* Delivery Address Section */}
+<div className="col-12 my-3">
+  <div className="d-flex justify-content-between align-items-center mb-2">
+    <h3 className="fw-bold fs-5 text-dark mb-0"></h3>
+    <Link to="/Profile" className="address-change-btn">
+      <i className="fa-solid fa-pen-to-square me-1"></i> Change
+    </Link>
+  </div>
+
+  <div className="section-address p-3">
+    {details ? (
+      <>
+        <div className="d-flex justify-content-between align-items-center mb-2">
+          <span className="fw-bold fs-6 text-dark">
+            {details.fullName || details.name}
+          </span>
+          <span className="address-status-badge">
+            <i className="fa-solid fa-location-dot me-1"></i> Primary
+          </span>
+        </div>
+
+        <p className="address-text-body mb-2">
+          {details.street ? `${details.street}, ${details.city}, ${details.state} - ${details.zip}` : details.address}
+        </p>
+
+        <div className="d-flex align-items-center text-muted small">
+          <i className="fa-solid fa-phone me-2 text-dark"></i>
+          <span className="fw-medium">{details.phone || details.ph}</span>
+        </div>
+      </>
+    ) : (
+      <div className="text-center py-2">
+        <p className="text-muted mb-2 small">No primary address selected.</p>
+        <Link to="/Profile" className="address-change-btn d-inline-block">
+          + Select Address
+        </Link>
+      </div>
+    )}
+  </div>
+</div>
 
           </div>
         </div>

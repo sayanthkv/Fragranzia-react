@@ -100,6 +100,11 @@ const setprimary = async (id) => {
   return response.data;
 };
 
+const fetchprimaryaddress = async () => {
+  const response = await axiosPrivate.get("/address/getprimaryaddress")
+  return response.data
+}
+
 return{
   regUser,
   logUser,
@@ -116,7 +121,8 @@ return{
   updateaddress,
   getUserdata,
   updatedetails,
-  setprimary
+  setprimary,
+  fetchprimaryaddress
 }
 
  }
