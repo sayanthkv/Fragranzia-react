@@ -259,7 +259,7 @@ const Paymentpage = () => {
                                   {Math.round(
                                     ((item.originalPrice - item.price) /
                                       item.originalPrice) *
-                                      100
+                                    100
                                   )}
                                   % Off
                                 </span>
@@ -291,8 +291,8 @@ const Paymentpage = () => {
                 <div className="d-flex justify-content-between align-items-center mb-2">
                   <h3 className="fw-bold fs-5 text-dark mb-0">Delivery Address</h3>
                   <Link to="/Profile?tab=address" className="address-change-btn">
-  <i className="fa-solid fa-pen-to-square me-1"></i> Change
-</Link>
+                    <i className="fa-solid fa-pen-to-square me-1"></i> Change
+                  </Link>
                 </div>
 
                 <div className="section-address p-3">
