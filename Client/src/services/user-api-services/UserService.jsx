@@ -104,7 +104,10 @@ const fetchprimaryaddress = async () => {
   const response = await axiosPrivate.get("/address/getprimaryaddress")
   return response.data
 }
-
+const updateCartQuantity = async (id, quantity) => {
+  const response = await axiosPrivate.put(`/Cart/update/${id}`, { quantity });
+  return response.data;
+};
 return{
   regUser,
   logUser,
@@ -122,7 +125,8 @@ return{
   getUserdata,
   updatedetails,
   setprimary,
-  fetchprimaryaddress
+  fetchprimaryaddress,
+  updateCartQuantity
 }
 
  }

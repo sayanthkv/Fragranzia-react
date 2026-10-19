@@ -227,10 +227,79 @@ const removeFromCart = async (req, res) => {
 };
 
 
+const updateCartQuantity = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const productId = req.params.id;
+    const quantity = Number(req.body.quantity);
 
+    if (!userId) {
+      return res.status(401).json({ message: "Please login first" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(productId)) {
+      return res.status(400).json({ message: "Invalid product ID" });
+    }
+
+    if (!Number.isInteger(quantity) || quantity < 1) {
+      return res.status(400).json({ message: "Quantity must be at least 1" });
+    }
+
+    const product = await Products.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Check available stock
+    if (product.quantity !== undefined && quantity > Number(product.quantity)) {
+      return res.status(400).json({
+        message: `Only ${product.quantity} items available in stock`,
+      });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const itemIndex = user.cart.findIndex(
+      (item) => item.product.toString() === productId
+    );
+
+    if (itemIndex === -1) {
+      return res.status(404).json({ message: "Product not found in cart" });
+    }
+
+    // Update the item quantity directly
+    user.cart[itemIndex].quantity = quantity;
+
+    // Recalculate cart total
+    let total = 0;
+    for (const item of user.cart) {
+      const cartProduct = await Products.findById(item.product);
+      if (cartProduct) {
+        const price = Number(cartProduct.saleprice || cartProduct.price || 0);
+        total += price * item.quantity;
+      }
+    }
+    user.cart_total = total;
+
+    await user.save();
+
+    return res.status(200).json({
+      message: "Cart updated successfully",
+      cart: user.cart,
+      cart_total: user.cart_total,
+    });
+  } catch (error) {
+    console.error("Update cart quantity error:", error);
+    return res.status(500).json({ message: "Failed to update quantity" });
+  }
+};
 
 module.exports = {
   addToCart,
   getCart,
-  removeFromCart
+  removeFromCart,
+  updateCartQuantity
 };

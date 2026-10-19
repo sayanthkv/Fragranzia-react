@@ -1,50 +1,112 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
-import "./Paymentpage.css"
+import "./Paymentpage.css";
+
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import UserService from "../../services/user-api-services/UserService";
 
-
- 
-
-
-
 const Paymentpage = () => {
+  const { fetchprimaryaddress, getCart } = UserService();
 
-  const {fetchprimaryaddress} = UserService()
-  
-  const [quantity, setQuantity] = useState(1);
-  const [details,setDetails] = useState(null)
+  const [details, setDetails] = useState(null);
+  const [cartItems, setCartItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const handleDecrease = () => {
-    if (quantity > 1) {
-      setQuantity(quantity - 1);
+  const formatPrice = (amount) =>
+    Number(amount || 0).toLocaleString("en-IN", {
+      maximumFractionDigits: 2,
+    });
+
+  // Dynamically normalize database cart items and quantities
+  const normalizeCartItem = (item) => {
+    const product = item.product || {};
+    const price = Number(item.price ?? product.price ?? product.saleprice ?? 0);
+    const originalPrice = Number(
+      item.originalPrice ?? product.originalPrice ?? product.saleprice ?? price
+    );
+
+    return {
+      id: String(item._id || item.id || product._id || ""),
+      name: product.name || product.title || "Fragranzia Eau De Parfum",
+      image: product.image || "default.png",
+      rating: product.rating || 4.5,
+      price,
+      originalPrice,
+      quantity: Number(item.quantity || 1),
+    };
+  };
+
+  const getaddress = async () => {
+    try {
+      const address = await fetchprimaryaddress();
+      setDetails(address);
+    } catch (error) {
+      console.error("Failed to fetch address:", error);
     }
   };
 
-  const handleIncrease = () => {
-    setQuantity(quantity + 1);
+  const fetchCart = async () => {
+    try {
+      setLoading(true);
+      setErrorMessage("");
+
+      const response = await getCart();
+      const items = Array.isArray(response?.cart) ? response.cart : [];
+
+      setCartItems(items.map(normalizeCartItem));
+    } catch (error) {
+      console.error(
+        "Failed to fetch cart:",
+        error.response?.data || error.message
+      );
+
+      setErrorMessage(
+        error.response?.status === 401
+          ? "Please log in to view your cart."
+          : "Unable to load your cart. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
+  useEffect(() => {
+    getaddress();
+    fetchCart();
+  }, []);
 
-  const getaddress = async () => {
-    const address = await fetchprimaryaddress()
-    setDetails(address)
-  }
+  // Calculate dynamic pricing across all updated cart items
+  const totalOriginalPrice = cartItems.reduce(
+    (acc, item) => acc + item.originalPrice * item.quantity,
+    0
+  );
+  const totalSellingPrice = cartItems.reduce(
+    (acc, item) => acc + item.price * item.quantity,
+    0
+  );
+  const totalDiscount = Math.max(0, totalOriginalPrice - totalSellingPrice);
 
- useEffect(() => {
-  getaddress();
-}, []); 
+  const discountPercentage =
+    totalOriginalPrice > 0
+      ? Math.round((totalDiscount / totalOriginalPrice) * 100)
+      : 0;
+
+  const totalItemsCount = cartItems.reduce(
+    (acc, item) => acc + item.quantity,
+    0
+  );
 
   return (
     <>
-      
+      {/* Navbar */}
       <nav className="navbar navbar-expand-lg navbar-light shadow-sm homepage-navbar">
         <div className="container-fluid px-0">
           <span className="navbar-brand homepage-navbar-brand">
-            <Link to='/'>Fragranzia</Link>
+            <Link to="/">Fragranzia</Link>
           </span>
+
           <button
             className="navbar-toggler"
             type="button"
@@ -56,28 +118,36 @@ const Paymentpage = () => {
           >
             <span className="navbar-toggler-icon"></span>
           </button>
-          <div className="collapse navbar-collapse justify-content-end" id="navbarContent">
+
+          <div
+            className="collapse navbar-collapse justify-content-end"
+            id="navbarContent"
+          >
             <ul className="navbar-nav align-items-center gap-2">
               <li className="nav-item">
-                <span className="nav-link active homepage-nav-link" >
-                   <Link to='/'>Home</Link>
+                <span className="nav-link active homepage-nav-link">
+                  <Link to="/">Home</Link>
                 </span>
               </li>
+
               <li className="nav-item">
-                <span className="nav-link homepage-nav-link" >
-                  <Link to='/Products'>Products</Link>
+                <span className="nav-link homepage-nav-link">
+                  <Link to="/Products">Products</Link>
                 </span>
               </li>
+
               <li className="nav-item">
-                <span className="nav-link homepage-nav-link" >
-                   <Link to='/Wishlist'>Wishlist</Link>
+                <span className="nav-link homepage-nav-link">
+                  <Link to="/Wishlist">Wishlist</Link>
                 </span>
               </li>
+
               <li className="nav-item me-3">
-                <span className="nav-link homepage-nav-link" >
-                  <Link to='/About'>About</Link>
+                <span className="nav-link homepage-nav-link">
+                  <Link to="/About">About</Link>
                 </span>
               </li>
+
               <li className="nav-item me-2">
                 <div className="search-wrapper homepage-search-wrapper">
                   <i className="fa-solid fa-magnifying-glass fa-search"></i>
@@ -89,11 +159,15 @@ const Paymentpage = () => {
                   />
                 </div>
               </li>
+
               <li className="nav-item">
-                <span className="icon-btn homepage-icon-btn"  aria-label="Cart">
-                  <Link to='/Cart'><i className="fa-solid fa-cart-shopping"></i></Link>
+                <span className="icon-btn homepage-icon-btn" aria-label="Cart">
+                  <Link to="/Cart">
+                    <i className="fa-solid fa-cart-shopping"></i>
+                  </Link>
                 </span>
               </li>
+
               <li className="nav-item">
                 <button
                   className="icon-btn homepage-icon-btn"
@@ -103,306 +177,335 @@ const Paymentpage = () => {
                   <i className="fa-regular fa-bell"></i>
                 </button>
               </li>
+
               <li className="nav-item">
-                <span
-                  className="icon-btn homepage-icon-btn"
-                  
-                  aria-label="Profile"
-                >
-                 <Link to='/Profile'><i className="fa-regular fa-user"></i></Link>
-               </span>
+                <span className="icon-btn homepage-icon-btn" aria-label="Profile">
+                  <Link to="/Profile">
+                    <i className="fa-regular fa-user"></i>
+                  </Link>
+                </span>
               </li>
             </ul>
           </div>
         </div>
       </nav>
-       
 
+      <div className="container py-4">
+        <div className="main row">
+          {/* Left Section */}
+          <div className="left-section col-12 col-md-7">
+            <div className="sec1main row">
+              {/* Product Slider */}
+              {loading ? (
+                <div className="p-3 text-center">Loading cart...</div>
+              ) : errorMessage ? (
+                <div className="p-3 text-danger text-center">{errorMessage}</div>
+              ) : cartItems.length > 0 ? (
+                <div
+                  className="d-flex flex-column overflow-auto gap-3 py-2"
+                  style={{
+                    maxHeight: "340px",
+                    scrollSnapType: "y mandatory",
+                    scrollbarWidth: "thin",
+                  }}
+                >
+                  {cartItems.map((item) => (
+                    <div
+                      className="section1 p-3 flex-shrink-0"
+                      key={item.id}
+                      style={{
+                        scrollSnapAlign: "start",
+                      }}
+                    >
+                      <div className="row align-items-center g-3">
+                        <div className="col-12 col-sm-4 text-center text-sm-start">
+                          <img
+                            src={`http://localhost:5000/uploads/${item.image}`}
+                            alt={item.name}
+                            className="img-fluid product-img"
+                          />
+                        </div>
 
-    <div className="container py-4">
-      <div className="main row">
-        {/* Left Section */}
-        <div className="left-section col-12 col-md-7">
-          <div className="sec1main row">
-            
-            {/* Product Card */}
-            <div className="section1 p-3 mt-3">
+                        <div className="col-12 col-sm-8">
+                          <span className="fw-bolder fs-5 d-block">
+                            {item.name}
+                          </span>
+                          <span>
+                            Autograph {item.rating}{" "}
+                            <i
+                              className="fa-solid fa-star"
+                              style={{ color: "rgb(99, 230, 190)" }}
+                            ></i>
+                          </span>
+
+                          {/* Dynamic Quantity Display */}
+                          <div className="mt-3">
+                            <span className="fw-bold text-dark">
+                              Qty: <span className="fs-6">{item.quantity}</span>
+                            </span>
+                          </div>
+
+                          <div className="mt-2">
+                            <span className="fw-bold fs-4">
+                              Rs {formatPrice(item.price)}
+                            </span>
+
+                            {item.originalPrice > item.price && (
+                              <>
+                                <span className="py-3 mx-2">
+                                  <s>Rs {formatPrice(item.originalPrice)}</s>
+                                </span>
+                                <span className="text-success fw-bold">
+                                  {Math.round(
+                                    ((item.originalPrice - item.price) /
+                                      item.originalPrice) *
+                                      100
+                                  )}
+                                  % Off
+                                </span>
+                              </>
+                            )}
+                          </div>
+
+                          <div className="mt-2 text-muted small">
+                            <span>
+                              Free delivery{" "}
+                              <i className="fa-solid fa-truck fa-xs"></i>
+                            </span>
+                            <br />
+                            <span className="text-success fw-medium">
+                              7 Days Return Policy
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-3 text-center">Your cart is empty.</div>
+              )}
+
+              {/* Personal Details Section */}
+              <div className="H1 col-12 mt-3">
+                <h3 className="fw-bold my-3 mx-0">Personal Details</h3>
+                <div className="button d-flex gap-4 flex-wrap">
+                  <button type="button" className="icon-btn a">
+                    <b>
+                      <Link to="/Newaddress">Add Address+</Link>
+                    </b>
+                  </button>
+                </div>
+              </div>
+
+              {/* Delivery Address Section */}
+              <div className="col-12 my-3">
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <h3 className="fw-bold fs-5 text-dark mb-0">Delivery Address</h3>
+                  <Link to="/Profile" className="address-change-btn">
+                    <i className="fa-solid fa-pen-to-square me-1"></i> Change
+                  </Link>
+                </div>
+
+                <div className="section-address p-3">
+                  {details ? (
+                    <>
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <span className="fw-bold fs-6 text-dark">
+                          {details.fullName || details.name}
+                        </span>
+                        <span className="address-status-badge">
+                          <i className="fa-solid fa-location-dot me-1"></i> Primary
+                        </span>
+                      </div>
+
+                      <p className="address-text-body mb-2">
+                        {details.street
+                          ? `${details.street}, ${details.city}, ${details.state} ${details.zip}`
+                          : details.address}
+                      </p>
+
+                      <div className="d-flex align-items-center text-muted small">
+                        <i className="fa-solid fa-phone me-2 text-dark"></i>
+                        <span className="fw-medium">
+                          {details.phone || details.ph}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-2">
+                      <p className="text-muted mb-2 small">
+                        No primary address selected.
+                      </p>
+                      <Link
+                        to="/Profile"
+                        className="address-change-btn d-inline-block"
+                      >
+                        + Select Address
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Section */}
+          <div className="Right-section col-12 col-md-5">
+            {/* Price Breakdown */}
+            <div className="section21 p-3 mt-3">
               <div className="row align-items-center g-3">
-                <div className="col-12 col-sm-4 text-center text-sm-start">
-                  <img
-                    src="AUTOGRAPH_EDP_100ML_1 3 payment.png"
-                    alt="Autograph EDP"
-                    className="img-fluid product-img"
-                  />
-                </div>
+                <h3 className="fw-bold mb-4 fs-4 text-dark">Price Details</h3>
 
-                <div className="col-12 col-sm-8">
-                  <span className="fw-bolder fs-5 d-block">
-                    Autograph eau de parfum 100ml for men
-                  </span>
+                <div className="d-flex justify-content-between align-items-center mb-0 fs-6">
                   <span>
-                    Autograph 4.5{' '}
-                    <i
-                      className="fa-solid fa-star"
-                      style={{ color: 'rgb(99, 230, 190)' }}
-                    ></i>
+                    Price ({totalItemsCount} item{totalItemsCount !== 1 ? "s" : ""})
                   </span>
-
-                  {/* Quantity Control */}
-                  <div
-                    className="input-group align-items-center border border-3 border-color-dark overflow-hidden mt-3"
-                    style={{ maxWidth: '130px' }}
-                  >
-                    <button
-                      className="btn btn-link text-dark text-decoration-none px-3"
-                      type="button"
-                      onClick={handleDecrease}
-                    >
-                      −
-                    </button>
-                    <input
-                      type="number"
-                      className="form-control text-center bg-transparent border-0 p-0 shadow-none fw-bold"
-                      value={quantity}
-                      readOnly
-                      min="1"
-                    />
-                    <button
-                      className="btn btn-link text-dark text-decoration-none px-3"
-                      type="button"
-                      onClick={handleIncrease}
-                    >
-                      +
-                    </button>
-                  </div>
-
-                  <div className="mt-3">
-                    <span className="fw-bold fs-4">Rs 899</span>
-                    <span className="py-3 mx-2">
-                      <s>Rs 2000</s>
+                  <div>
+                    <span className="fw-bold">
+                      Rs {formatPrice(totalSellingPrice)}
                     </span>
-                    <span className="text-success fw-bold">61% Off</span>
+                    {totalOriginalPrice > totalSellingPrice && (
+                      <span className="text-muted ms-1">
+                        <del>Rs {formatPrice(totalOriginalPrice)}</del>
+                      </span>
+                    )}
                   </div>
+                </div>
 
-                  <div className="mt-2 text-muted small">
-                    <span>
-                      Delivered by August 29, Free delivery{' '}
-                      <i className="fa-solid fa-truck fa-xs"></i>
-                    </span>
-                    <br />
+                {totalDiscount > 0 && (
+                  <div className="d-flex justify-content-between align-items-center mb-0 fs-6">
+                    <span>Discount ({discountPercentage}%)</span>
                     <span className="text-success fw-medium">
-                      7 Days Return Policy
+                      − Rs {formatPrice(totalDiscount)}
                     </span>
                   </div>
+                )}
+
+                <div className="d-flex justify-content-between align-items-center mb-0 fs-6">
+                  <span>Delivery Charge</span>
+                  <span className="text-success fw-medium">Free Delivery</span>
                 </div>
-              </div>
-            </div>
 
-            {/* Personal Details & Categories */}
-            <div className="H1 col-12 mt-3">
-              <h3 className="fw-bold my-3 mx-0">Personal Details</h3>
-              <div className="button d-flex gap-4 flex-wrap">
-                <button type="button" className="icon-btn a">
-                  <b>
-                    <Link to='/Newaddress'>Add Address+</Link>
-                  </b>
-                </button>
-                
-                
-              </div>
-            </div>
+                <hr className="mb-0 border-top border-secondary border-opacity-50" />
 
-          
-{/* Delivery Address Section */}
-<div className="col-12 my-3">
-  <div className="d-flex justify-content-between align-items-center mb-2">
-    <h3 className="fw-bold fs-5 text-dark mb-0"></h3>
-    <Link to="/Profile" className="address-change-btn">
-      <i className="fa-solid fa-pen-to-square me-1"></i> Change
-    </Link>
-  </div>
-
-  <div className="section-address p-3">
-    {details ? (
-      <>
-        <div className="d-flex justify-content-between align-items-center mb-2">
-          <span className="fw-bold fs-6 text-dark">
-            {details.fullName || details.name}
-          </span>
-          <span className="address-status-badge">
-            <i className="fa-solid fa-location-dot me-1"></i> Primary
-          </span>
-        </div>
-
-        <p className="address-text-body mb-2">
-          {details.street ? `${details.street}, ${details.city}, ${details.state} - ${details.zip}` : details.address}
-        </p>
-
-        <div className="d-flex align-items-center text-muted small">
-          <i className="fa-solid fa-phone me-2 text-dark"></i>
-          <span className="fw-medium">{details.phone || details.ph}</span>
-        </div>
-      </>
-    ) : (
-      <div className="text-center py-2">
-        <p className="text-muted mb-2 small">No primary address selected.</p>
-        <Link to="/Profile" className="address-change-btn d-inline-block">
-          + Select Address
-        </Link>
-      </div>
-    )}
-  </div>
-</div>
-
-          </div>
-        </div>
-
-        {/* Right Section */}
-        <div className="Right-section col-12 col-md-5">
-          {/* Price Breakdown */}
-          <div className="section21 p-3 mt-3">
-            <div className="row align-items-center g-3">
-              <h3 className="fw-bold mb-4 fs-4 text-dark">Price Details</h3>
-
-              <div className="d-flex justify-content-between align-items-center mb-0 fs-6">
-                <span>Price (1 item)</span>
-                <div>
-                  <span className="fw-bold">Rs 899</span>
-                  <span className="text-muted ms-1">
-                    <del>Rs 2000</del>
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <span className="fw-bold fs-5">Total Amount</span>
+                  <span className="fw-bold fs-3 text-dark">
+                    Rs {formatPrice(totalSellingPrice)}
                   </span>
                 </div>
               </div>
-
-              <div className="d-flex justify-content-between align-items-center mb-0 fs-6">
-                <span>Discount (61%)</span>
-                <span>Rs 1101</span>
-              </div>
-
-              <div className="d-flex justify-content-between align-items-center mb-0 fs-6">
-                <span>Delivery Charge</span>
-                <span className="text-success fw-medium">Free Delivery</span>
-              </div>
-
-              <hr className="mb-0 border-top border-secondary border-opacity-50" />
-
-              <div className="d-flex justify-content-between align-items-center mb-2">
-                <span className="fw-bold fs-5">Total Amount</span>
-                <span className="fw-bold fs-3 text-dark">Rs 899</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Payment Options */}
-          <div className="section22 p-4 mt-3">
-            <h3 className="fw-bold mb-4 fs-4 text-dark">Payment Methods</h3>
-
-            <div className="d-flex flex-column gap-4">
-              <label className="d-flex justify-content-between align-items-center w-100 cursor-pointer">
-                <div className="d-flex align-items-center gap-3">
-                  <i
-                    className="fa-brands fa-google-pay fs-2 text-dark"
-                    style={{ width: '35px' }}
-                  ></i>
-                  <span className="fw-medium fs-6">Google Pay</span>
-                </div>
-                <input
-                  className="form-check-input border-secondary m-0"
-                  type="radio"
-                  name="paymentMethod"
-                  value="gpay"
-                  defaultChecked
-                  style={{ width: '1.4rem', height: '1.4rem' }}
-                />
-              </label>
-
-              <label className="d-flex justify-content-between align-items-center w-100 cursor-pointer">
-                <div className="d-flex align-items-center gap-3">
-                  <i
-                    className="fa-solid fa-money-bill-wave fs-4 text-secondary"
-                    style={{ width: '35px' }}
-                  ></i>
-                  <span className="fw-medium fs-6">
-                    Cash on delivery (cash/UPI)
-                  </span>
-                </div>
-                <input
-                  className="form-check-input border-secondary m-0"
-                  type="radio"
-                  name="paymentMethod"
-                  value="cod"
-                  style={{ width: '1.4rem', height: '1.4rem' }}
-                />
-              </label>
-
-              <label className="d-flex justify-content-between align-items-center w-100 cursor-pointer">
-                <div className="d-flex align-items-center gap-3">
-                  <i
-                    className="fa-solid fa-wallet fs-4 text-secondary"
-                    style={{ width: '35px' }}
-                  ></i>
-                  <span className="fw-medium fs-6">
-                    Paytm/Phone Pay/Amazon Pay etc
-                  </span>
-                </div>
-                <input
-                  className="form-check-input border-secondary m-0"
-                  type="radio"
-                  name="paymentMethod"
-                  value="wallets"
-                  style={{ width: '1.4rem', height: '1.4rem' }}
-                />
-              </label>
-
-              <label className="d-flex justify-content-between align-items-center w-100 cursor-pointer">
-                <div className="d-flex align-items-center gap-3">
-                  <i
-                    className="fa-regular fa-credit-card fs-4 text-secondary"
-                    style={{ width: '35px' }}
-                  ></i>
-                  <span className="fw-medium fs-6">Credit/Debit card</span>
-                </div>
-                <input
-                  className="form-check-input border-secondary m-0"
-                  type="radio"
-                  name="paymentMethod"
-                  value="card"
-                  style={{ width: '1.4rem', height: '1.4rem' }}
-                />
-              </label>
-
-              <label className="d-flex justify-content-between align-items-center w-100 cursor-pointer">
-                <div className="d-flex align-items-center gap-3">
-                  <i
-                    className="fa-solid fa-building-columns fs-4 text-secondary"
-                    style={{ width: '35px' }}
-                  ></i>
-                  <span className="fw-medium fs-6">Net Banking</span>
-                </div>
-                <input
-                  className="form-check-input border-secondary m-0"
-                  type="radio"
-                  name="paymentMethod"
-                  value="netbanking"
-                  style={{ width: '1.4rem', height: '1.4rem' }}
-                />
-              </label>
             </div>
 
-            <button
-              className="btn w-100 mt-4 py-3 fw-bold text-white fs-5"
-              style={{ backgroundColor: '#043948', borderRadius: '8px' }}
-            >
-              Pay Now
-            </button>
+            {/* Payment Methods */}
+            <div className="section22 p-4 mt-3">
+              <h3 className="fw-bold mb-4 fs-4 text-dark">Payment Methods</h3>
+
+              <div className="d-flex flex-column gap-4">
+                <label className="d-flex justify-content-between align-items-center w-100 cursor-pointer">
+                  <div className="d-flex align-items-center gap-3">
+                    <i
+                      className="fa-brands fa-google-pay fs-2 text-dark"
+                      style={{ width: "35px" }}
+                    ></i>
+                    <span className="fw-medium fs-6">Google Pay</span>
+                  </div>
+                  <input
+                    className="form-check-input border-secondary m-0"
+                    type="radio"
+                    name="paymentMethod"
+                    value="gpay"
+                    defaultChecked
+                    style={{ width: "1.4rem", height: "1.4rem" }}
+                  />
+                </label>
+
+                <label className="d-flex justify-content-between align-items-center w-100 cursor-pointer">
+                  <div className="d-flex align-items-center gap-3">
+                    <i
+                      className="fa-solid fa-money-bill-wave fs-4 text-secondary"
+                      style={{ width: "35px" }}
+                    ></i>
+                    <span className="fw-medium fs-6">
+                      Cash on delivery (cash/UPI)
+                    </span>
+                  </div>
+                  <input
+                    className="form-check-input border-secondary m-0"
+                    type="radio"
+                    name="paymentMethod"
+                    value="cod"
+                    style={{ width: "1.4rem", height: "1.4rem" }}
+                  />
+                </label>
+
+                <label className="d-flex justify-content-between align-items-center w-100 cursor-pointer">
+                  <div className="d-flex align-items-center gap-3">
+                    <i
+                      className="fa-solid fa-wallet fs-4 text-secondary"
+                      style={{ width: "35px" }}
+                    ></i>
+                    <span className="fw-medium fs-6">
+                      Paytm/Phone Pay/Amazon Pay etc
+                    </span>
+                  </div>
+                  <input
+                    className="form-check-input border-secondary m-0"
+                    type="radio"
+                    name="paymentMethod"
+                    value="wallets"
+                    style={{ width: "1.4rem", height: "1.4rem" }}
+                  />
+                </label>
+
+                <label className="d-flex justify-content-between align-items-center w-100 cursor-pointer">
+                  <div className="d-flex align-items-center gap-3">
+                    <i
+                      className="fa-regular fa-credit-card fs-4 text-secondary"
+                      style={{ width: "35px" }}
+                    ></i>
+                    <span className="fw-medium fs-6">Credit/Debit card</span>
+                  </div>
+                  <input
+                    className="form-check-input border-secondary m-0"
+                    type="radio"
+                    name="paymentMethod"
+                    value="card"
+                    style={{ width: "1.4rem", height: "1.4rem" }}
+                  />
+                </label>
+
+                <label className="d-flex justify-content-between align-items-center w-100 cursor-pointer">
+                  <div className="d-flex align-items-center gap-3">
+                    <i
+                      className="fa-solid fa-building-columns fs-4 text-secondary"
+                      style={{ width: "35px" }}
+                    ></i>
+                    <span className="fw-medium fs-6">Net Banking</span>
+                  </div>
+                  <input
+                    className="form-check-input border-secondary m-0"
+                    type="radio"
+                    name="paymentMethod"
+                    value="netbanking"
+                    style={{ width: "1.4rem", height: "1.4rem" }}
+                  />
+                </label>
+              </div>
+
+              <button
+                className="btn w-100 mt-4 py-3 fw-bold text-white fs-5"
+                style={{ backgroundColor: "#043948", borderRadius: "8px" }}
+              >
+                Pay Now
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
+  );
+};
 
-      </>
-
-)  }
-
-export default Paymentpage
-
+export default Paymentpage;

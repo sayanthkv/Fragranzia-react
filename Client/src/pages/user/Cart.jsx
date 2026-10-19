@@ -1,4 +1,3 @@
-
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./Cart.css";
@@ -8,7 +7,7 @@ import { useState, useEffect } from "react";
 import UserService from "../../services/user-api-services/UserService";
 
 const Cart = () => {
-  const { getCart, removeProductFromCart } = UserService();
+  const { getCart, removeProductFromCart, updateCartQuantity } = UserService();
 
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,19 +19,15 @@ const Cart = () => {
       maximumFractionDigits: 2,
     });
 
-  // Normalize cart data received from the backend.
+  // Normalize cart data received from the backend
   const normalizeCartItem = (item) => {
     const product = item.product || {};
-
     const quantity = Math.max(1, Number(item.quantity || 1));
 
-    // The current product price is used as the selling price.
     const price = Number(
       item.price ?? product.price ?? product.saleprice ?? 0
     );
 
-    // Use saleprice as the original price if your product schema stores
-    // the discounted selling price in price and the original in saleprice.
     const originalPrice = Number(
       item.originalPrice ??
         product.originalPrice ??
@@ -56,7 +51,7 @@ const Cart = () => {
     };
   };
 
-  // Fetch the user's cart.
+  // Fetch the user's cart
   const fetchCart = async () => {
     try {
       setLoading(true);
@@ -86,34 +81,48 @@ const Cart = () => {
     fetchCart();
   }, []);
 
+  // Update quantity in local state and synchronize with backend
+  const handleQuantityChange = async (productId, delta) => {
+    const targetItem = cartItems.find((item) => item.id === String(productId));
+    if (!targetItem) return;
 
-  const handleQuantityChange = (productId, delta) => {
-  setCartItems((previousItems) =>
-    previousItems.map((item) => {
-      if (item.id !== String(productId)) {
-        return item;
+    const stock = Number(targetItem.product?.quantity ?? 0);
+    const newQuantity = targetItem.quantity + delta;
+
+    if (newQuantity < 1 || (stock > 0 && newQuantity > stock)) return;
+
+    // Optimistic UI update
+    setCartItems((previousItems) =>
+      previousItems.map((item) =>
+        item.id === String(productId)
+          ? { ...item, quantity: newQuantity }
+          : item
+      )
+    );
+
+    try {
+      if (typeof updateCartQuantity === "function") {
+        await updateCartQuantity(productId, newQuantity);
       }
-
-      const stock = Number(item.product?.quantity ?? 0);
-      const newQuantity = item.quantity + delta;
-
-      if (newQuantity < 1 || newQuantity > stock) {
-        return item;
-      }
-
-      return {
-        ...item,
-        quantity: newQuantity,
-      };
-    })
-  );
-};
-
-  // Delete a product from the backend and then update the UI.
-  const handleDelete = async (productId) => {
-    if (!productId || deletingId !== null) {
-      return;
+    } catch (error) {
+      console.error("Failed to update cart quantity:", error);
+      // Revert back on server error
+      setCartItems((previousItems) =>
+        previousItems.map((item) =>
+          item.id === String(productId)
+            ? { ...item, quantity: targetItem.quantity }
+            : item
+        )
+      );
+      setErrorMessage(
+        error.response?.data?.message || "Failed to update item quantity."
+      );
     }
+  };
+
+  // Delete a product from backend and update UI
+  const handleDelete = async (productId) => {
+    if (!productId || deletingId !== null) return;
 
     try {
       setDeletingId(String(productId));
@@ -122,9 +131,7 @@ const Cart = () => {
       await removeProductFromCart(productId);
 
       setCartItems((previousItems) =>
-        previousItems.filter(
-          (item) => item.id !== String(productId)
-        )
+        previousItems.filter((item) => item.id !== String(productId))
       );
     } catch (error) {
       console.error(
@@ -141,7 +148,7 @@ const Cart = () => {
     }
   };
 
-  // Share a product using the browser's native sharing feature.
+  // Share product link
   const handleShare = async (product) => {
     const title = product.name || product.title || "Fragranzia product";
     const url = `${window.location.origin}/SpecificProduct/${product._id}`;
@@ -162,7 +169,7 @@ const Cart = () => {
     }
   };
 
-  // Dynamic calculations based on the current quantity values.
+  // Dynamic calculations
   const totalItemsCount = cartItems.reduce(
     (total, item) => total + item.quantity,
     0
@@ -179,15 +186,6 @@ const Cart = () => {
   );
 
   const totalDiscount = Math.max(0, subtotal - totalAmount);
-
-  const handleProceedToBuy = () => {
-    if (cartItems.length === 0) {
-      alert("Your cart is empty. Add a product before checkout.");
-      return;
-    }
-
-   
-  };
 
   return (
     <>
@@ -229,7 +227,7 @@ const Cart = () => {
 
               <li className="nav-item">
                 <span className="nav-link homepage-nav-link">
-                  <Link to='/Wishlist'>Wishlist</Link>
+                  <Link to="/Wishlist">Wishlist</Link>
                 </span>
               </li>
 
@@ -287,7 +285,7 @@ const Cart = () => {
         </div>
       </nav>
 
-      {/* Cart content */}
+      {/* Cart Content */}
       <div className="container my-4">
         <div className="row g-4">
           <div className="col-12 col-lg-8">
@@ -330,7 +328,7 @@ const Cart = () => {
                   Explore our fragrance collection and add items to your cart.
                 </p>
                 <Link to="/Products" className="btn cart-btn-proceed">
-                 <p> Explore Products</p>
+                  Explore Products
                 </Link>
               </div>
             ) : (
@@ -338,9 +336,7 @@ const Cart = () => {
                 <div className="cart-item-card mb-3" key={item.id}>
                   <div className="row align-items-center g-3">
                     <div className="col-12 col-sm-3 text-center">
-                      <Link
-                        to={`/SpecificProduct/${item.product._id}`}
-                      >
+                      <Link to={`/SpecificProduct/${item.product._id}`}>
                         <img
                           src={`http://localhost:5000/uploads/${item.product.image}`}
                           alt={item.product.name || "Fragrance"}
@@ -364,49 +360,52 @@ const Cart = () => {
                       </Link>
 
                       {/* Quantity controls */}
-                      <div className="d-flex align-items-center cart-qty-container mb-3">
-  <button
-    type="button"
-    className="cart-qty-btn"
-    onClick={() => handleQuantityChange(item.id, -1)}
-    disabled={item.quantity <= 1}
-    aria-label="Decrease quantity"
-  >
-    −
-  </button>
+                      <div className="d-flex align-items-center cart-qty-container mb-2 mt-2">
+                        <button
+                          type="button"
+                          className="cart-qty-btn"
+                          onClick={() => handleQuantityChange(item.id, -1)}
+                          disabled={item.quantity <= 1}
+                          aria-label="Decrease quantity"
+                        >
+                          −
+                        </button>
 
-  <input
-    type="text"
-    className="cart-qty-input"
-    value={item.quantity}
-    readOnly
-    aria-label="Product quantity"
-  />
+                        <input
+                          type="text"
+                          className="cart-qty-input"
+                          value={item.quantity}
+                          readOnly
+                          aria-label="Product quantity"
+                        />
 
-  <button
-    type="button"
-    className="cart-qty-btn"
-    onClick={() => handleQuantityChange(item.id, 1)}
-    disabled={item.quantity >= Number(item.product?.quantity ?? 0)}
-    aria-label="Increase quantity"
-  >
-    +
-  </button>
-</div>
+                        <button
+                          type="button"
+                          className="cart-qty-btn"
+                          onClick={() => handleQuantityChange(item.id, 1)}
+                          disabled={
+                            Number(item.product?.quantity ?? 0) > 0 &&
+                            item.quantity >= Number(item.product.quantity)
+                          }
+                          aria-label="Increase quantity"
+                        >
+                          +
+                        </button>
+                      </div>
 
-{Number(item.product?.quantity ?? 0) > 0 && (
-  <small className="text-danger d-block mb-2 ">
-    Available stock: {item.product.quantity}
-  </small>
-)}
+                      {Number(item.product?.quantity ?? 0) > 0 && (
+                        <small className="text-muted d-block mb-2">
+                          Available stock: {item.product.quantity}
+                        </small>
+                      )}
 
-{Number(item.product?.quantity ?? 0) === 0 && (
-  <small className="text-danger d-block mb-2">
-    Out of stock
-  </small>
-)}
+                      {Number(item.product?.quantity ?? 0) === 0 && (
+                        <small className="text-danger d-block mb-2">
+                          Out of stock
+                        </small>
+                      )}
 
-                      {/* Item pricing */}
+                      {/* Pricing */}
                       <div className="mb-3 d-flex flex-wrap align-items-baseline gap-2">
                         <span className="fw-bold fs-5">
                           Rs {formatPrice(item.price)}
@@ -444,14 +443,6 @@ const Cart = () => {
                         >
                           Share
                         </button>
-
-                        <button
-                          type="button"
-                          className="btn cart-action-btn cart-btn-buy"
-                          onClick={handleProceedToBuy}
-                        >
-                          Buy
-                        </button>
                       </div>
 
                       <div className="small text-muted mt-2">
@@ -465,7 +456,7 @@ const Cart = () => {
             )}
           </div>
 
-          {/* Order summary */}
+          {/* Order Summary */}
           <div className="col-12 col-lg-4 mt-lg-5 pt-lg-3">
             <div className="cart-summary-box">
               <h4 className="fw-bold mb-4">Check Out</h4>
@@ -507,20 +498,17 @@ const Cart = () => {
                 </span>
               </div>
 
-              <button
-                type="button"
-                className="btn cart-btn-proceed"
-                onClick={handleProceedToBuy}
-                disabled={loading || cartItems.length === 0}
+              <Link
+                to="/paymentpage"
+                className={`btn cart-btn-proceed text-center w-100 ${
+                  loading || cartItems.length === 0 ? "disabled" : ""
+                }`}
               >
-               <Link to='/paymentpage'> Proceed to Buy
-               </Link>
-              </button>
+                Proceed to Buy
+              </Link>
 
-              <div className="cart-trust-text">
-                Safe and Secure Payments. Easy
-                <br />
-                returns. 100% Authentic products.
+              <div className="cart-trust-text text-center mt-3">
+                Safe and Secure Payments. Easy returns. 100% Authentic products.
               </div>
             </div>
           </div>
@@ -549,7 +537,6 @@ const Cart = () => {
                   >
                     <b>Pages</b>
                   </h5>
-
                   <ul className="list list-unstyled lh-lg homepage-footer-list">
                     <li><Link to="/">Home</Link></li>
                     <li><Link to="/Products">Products</Link></li>
@@ -566,7 +553,6 @@ const Cart = () => {
                   >
                     <b>Quick Links</b>
                   </h5>
-
                   <ul className="list-unstyled lh-lg homepage-footer-list">
                     <li><a href="privacy.html">Privacy Policy</a></li>
                     <li><a href="terms.html">Terms and Conditions</a></li>
@@ -582,21 +568,17 @@ const Cart = () => {
                   >
                     <b>Contact &amp; Social</b>
                   </h5>
-
                   <p className="mb-1 homepage-footer-contact">
                     <i className="fa-regular fa-envelope me-2"></i>
                     ftrafurniture@gmail.com
                   </p>
-
                   <p className="mb-3 homepage-footer-contact">
                     <i className="fa-solid fa-phone me-2"></i>
                     +91 9876543210
                   </p>
-
                   <p className="mb-2 homepage-footer-social-title">
                     <b>Social Media</b>
                   </p>
-
                   <div className="d-flex gap-3 homepage-footer-social-icons">
                     <i className="fa-brands fa-instagram fa-lg"></i>
                     <i className="fa-brands fa-facebook fa-lg"></i>
