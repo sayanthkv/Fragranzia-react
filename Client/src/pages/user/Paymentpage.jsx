@@ -191,42 +191,43 @@ const Paymentpage = () => {
       </nav>
 
       <div className="container py-4">
-        <div className="main row">
+        <div className="main row g-4 align-items-stretch">
           {/* Left Section */}
-          <div className="left-section col-12 col-md-7">
-            <div className="sec1main row">
-              {/* Product Slider */}
+          <div className="left-section col-12 col-md-7 d-flex flex-column justify-content-between">
+            <div className="sec1main d-flex flex-column h-100 justify-content-between">
+              {/* Product Slider - Centered and flexibly sized */}
               {loading ? (
                 <div className="p-3 text-center">Loading cart...</div>
               ) : errorMessage ? (
                 <div className="p-3 text-danger text-center">{errorMessage}</div>
               ) : cartItems.length > 0 ? (
                 <div
-                  className="d-flex flex-column overflow-auto gap-3 py-2"
+                  className="d-flex flex-column align-items-center overflow-auto gap-3 py-2 flex-grow-1"
                   style={{
-                    maxHeight: "340px",
+                    maxHeight: "480px",
                     scrollSnapType: "y mandatory",
                     scrollbarWidth: "thin",
                   }}
                 >
                   {cartItems.map((item) => (
                     <div
-                      className="section1 p-3 flex-shrink-0"
+                      className="section1 p-3 flex-shrink-0 mx-auto"
                       key={item.id}
                       style={{
                         scrollSnapAlign: "start",
+                        width: "100%",
                       }}
                     >
                       <div className="row align-items-center g-3">
-                        <div className="col-12 col-sm-4 text-center text-sm-start">
+                        <div className="col-12 col-sm-4 text-center">
                           <img
                             src={`http://localhost:5000/uploads/${item.image}`}
                             alt={item.name}
-                            className="img-fluid product-img"
+                            className="img-fluid product-img mx-auto"
                           />
                         </div>
 
-                        <div className="col-12 col-sm-8">
+                        <div className="col-12 col-sm-8 text-center text-sm-start">
                           <span className="fw-bolder fs-5 d-block">
                             {item.name}
                           </span>
@@ -238,7 +239,6 @@ const Paymentpage = () => {
                             ></i>
                           </span>
 
-                          {/* Dynamic Quantity Display */}
                           <div className="mt-3">
                             <span className="fw-bold text-dark">
                               Qty: <span className="fs-6">{item.quantity}</span>
@@ -286,25 +286,13 @@ const Paymentpage = () => {
                 <div className="p-3 text-center">Your cart is empty.</div>
               )}
 
-              {/* Personal Details Section */}
-              <div className="H1 col-12 mt-3">
-                <h3 className="fw-bold my-3 mx-0">Personal Details</h3>
-                <div className="button d-flex gap-4 flex-wrap">
-                  <button type="button" className="icon-btn a">
-                    <b>
-                      <Link to="/Newaddress">Add Address+</Link>
-                    </b>
-                  </button>
-                </div>
-              </div>
-
-              {/* Delivery Address Section */}
-              <div className="col-12 my-3">
+              {/* Delivery Address Section - Placed at the very bottom */}
+              <div className="col-12 mt-auto pt-3">
                 <div className="d-flex justify-content-between align-items-center mb-2">
                   <h3 className="fw-bold fs-5 text-dark mb-0">Delivery Address</h3>
-                  <Link to="/Profile" className="address-change-btn">
-                    <i className="fa-solid fa-pen-to-square me-1"></i> Change
-                  </Link>
+                  <Link to="/Profile?tab=address" className="address-change-btn">
+  <i className="fa-solid fa-pen-to-square me-1"></i> Change
+</Link>
                 </div>
 
                 <div className="section-address p-3">
@@ -351,9 +339,9 @@ const Paymentpage = () => {
           </div>
 
           {/* Right Section */}
-          <div className="Right-section col-12 col-md-5">
+          <div className="Right-section col-12 col-md-5 d-flex flex-column justify-content-between">
             {/* Price Breakdown */}
-            <div className="section21 p-3 mt-3">
+            <div className="section21 p-3">
               <div className="row align-items-center g-3">
                 <h3 className="fw-bold mb-4 fs-4 text-dark">Price Details</h3>
 
@@ -399,99 +387,101 @@ const Paymentpage = () => {
             </div>
 
             {/* Payment Methods */}
-            <div className="section22 p-4 mt-3">
-              <h3 className="fw-bold mb-4 fs-4 text-dark">Payment Methods</h3>
+            <div className="section22 p-4 mt-3 flex-grow-1 d-flex flex-column justify-content-between">
+              <div>
+                <h3 className="fw-bold mb-4 fs-4 text-dark">Payment Methods</h3>
 
-              <div className="d-flex flex-column gap-4">
-                <label className="d-flex justify-content-between align-items-center w-100 cursor-pointer">
-                  <div className="d-flex align-items-center gap-3">
-                    <i
-                      className="fa-brands fa-google-pay fs-2 text-dark"
-                      style={{ width: "35px" }}
-                    ></i>
-                    <span className="fw-medium fs-6">Google Pay</span>
-                  </div>
-                  <input
-                    className="form-check-input border-secondary m-0"
-                    type="radio"
-                    name="paymentMethod"
-                    value="gpay"
-                    defaultChecked
-                    style={{ width: "1.4rem", height: "1.4rem" }}
-                  />
-                </label>
+                <div className="d-flex flex-column gap-4">
+                  <label className="d-flex justify-content-between align-items-center w-100 cursor-pointer">
+                    <div className="d-flex align-items-center gap-3">
+                      <i
+                        className="fa-brands fa-google-pay fs-2 text-dark"
+                        style={{ width: "35px" }}
+                      ></i>
+                      <span className="fw-medium fs-6">Google Pay</span>
+                    </div>
+                    <input
+                      className="form-check-input border-secondary m-0"
+                      type="radio"
+                      name="paymentMethod"
+                      value="gpay"
+                      defaultChecked
+                      style={{ width: "1.4rem", height: "1.4rem" }}
+                    />
+                  </label>
 
-                <label className="d-flex justify-content-between align-items-center w-100 cursor-pointer">
-                  <div className="d-flex align-items-center gap-3">
-                    <i
-                      className="fa-solid fa-money-bill-wave fs-4 text-secondary"
-                      style={{ width: "35px" }}
-                    ></i>
-                    <span className="fw-medium fs-6">
-                      Cash on delivery (cash/UPI)
-                    </span>
-                  </div>
-                  <input
-                    className="form-check-input border-secondary m-0"
-                    type="radio"
-                    name="paymentMethod"
-                    value="cod"
-                    style={{ width: "1.4rem", height: "1.4rem" }}
-                  />
-                </label>
+                  <label className="d-flex justify-content-between align-items-center w-100 cursor-pointer">
+                    <div className="d-flex align-items-center gap-3">
+                      <i
+                        className="fa-solid fa-money-bill-wave fs-4 text-secondary"
+                        style={{ width: "35px" }}
+                      ></i>
+                      <span className="fw-medium fs-6">
+                        Cash on delivery (cash/UPI)
+                      </span>
+                    </div>
+                    <input
+                      className="form-check-input border-secondary m-0"
+                      type="radio"
+                      name="paymentMethod"
+                      value="cod"
+                      style={{ width: "1.4rem", height: "1.4rem" }}
+                    />
+                  </label>
 
-                <label className="d-flex justify-content-between align-items-center w-100 cursor-pointer">
-                  <div className="d-flex align-items-center gap-3">
-                    <i
-                      className="fa-solid fa-wallet fs-4 text-secondary"
-                      style={{ width: "35px" }}
-                    ></i>
-                    <span className="fw-medium fs-6">
-                      Paytm/Phone Pay/Amazon Pay etc
-                    </span>
-                  </div>
-                  <input
-                    className="form-check-input border-secondary m-0"
-                    type="radio"
-                    name="paymentMethod"
-                    value="wallets"
-                    style={{ width: "1.4rem", height: "1.4rem" }}
-                  />
-                </label>
+                  <label className="d-flex justify-content-between align-items-center w-100 cursor-pointer">
+                    <div className="d-flex align-items-center gap-3">
+                      <i
+                        className="fa-solid fa-wallet fs-4 text-secondary"
+                        style={{ width: "35px" }}
+                      ></i>
+                      <span className="fw-medium fs-6">
+                        Paytm/Phone Pay/Amazon Pay etc
+                      </span>
+                    </div>
+                    <input
+                      className="form-check-input border-secondary m-0"
+                      type="radio"
+                      name="paymentMethod"
+                      value="wallets"
+                      style={{ width: "1.4rem", height: "1.4rem" }}
+                    />
+                  </label>
 
-                <label className="d-flex justify-content-between align-items-center w-100 cursor-pointer">
-                  <div className="d-flex align-items-center gap-3">
-                    <i
-                      className="fa-regular fa-credit-card fs-4 text-secondary"
-                      style={{ width: "35px" }}
-                    ></i>
-                    <span className="fw-medium fs-6">Credit/Debit card</span>
-                  </div>
-                  <input
-                    className="form-check-input border-secondary m-0"
-                    type="radio"
-                    name="paymentMethod"
-                    value="card"
-                    style={{ width: "1.4rem", height: "1.4rem" }}
-                  />
-                </label>
+                  <label className="d-flex justify-content-between align-items-center w-100 cursor-pointer">
+                    <div className="d-flex align-items-center gap-3">
+                      <i
+                        className="fa-regular fa-credit-card fs-4 text-secondary"
+                        style={{ width: "35px" }}
+                      ></i>
+                      <span className="fw-medium fs-6">Credit/Debit card</span>
+                    </div>
+                    <input
+                      className="form-check-input border-secondary m-0"
+                      type="radio"
+                      name="paymentMethod"
+                      value="card"
+                      style={{ width: "1.4rem", height: "1.4rem" }}
+                    />
+                  </label>
 
-                <label className="d-flex justify-content-between align-items-center w-100 cursor-pointer">
-                  <div className="d-flex align-items-center gap-3">
-                    <i
-                      className="fa-solid fa-building-columns fs-4 text-secondary"
-                      style={{ width: "35px" }}
-                    ></i>
-                    <span className="fw-medium fs-6">Net Banking</span>
-                  </div>
-                  <input
-                    className="form-check-input border-secondary m-0"
-                    type="radio"
-                    name="paymentMethod"
-                    value="netbanking"
-                    style={{ width: "1.4rem", height: "1.4rem" }}
-                  />
-                </label>
+                  <label className="d-flex justify-content-between align-items-center w-100 cursor-pointer">
+                    <div className="d-flex align-items-center gap-3">
+                      <i
+                        className="fa-solid fa-building-columns fs-4 text-secondary"
+                        style={{ width: "35px" }}
+                      ></i>
+                      <span className="fw-medium fs-6">Net Banking</span>
+                    </div>
+                    <input
+                      className="form-check-input border-secondary m-0"
+                      type="radio"
+                      name="paymentMethod"
+                      value="netbanking"
+                      style={{ width: "1.4rem", height: "1.4rem" }}
+                    />
+                  </label>
+                </div>
               </div>
 
               <button

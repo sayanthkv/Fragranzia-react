@@ -288,7 +288,7 @@ const Cart = () => {
       {/* Cart Content */}
       <div className="container my-4">
         <div className="row g-4">
-          <div className="col-12 col-lg-8">
+          <div className="col-12">
             <h2 className="fw-bold mb-1">Cart</h2>
             <div className="text-muted small mb-4">
               <Link to="/" className="text-decoration-none text-muted">
@@ -332,132 +332,137 @@ const Cart = () => {
                 </Link>
               </div>
             ) : (
-              cartItems.map((item) => (
-                <div className="cart-item-card mb-3" key={item.id}>
-                  <div className="row align-items-center g-3">
-                    <div className="col-12 col-sm-3 text-center">
-                      <Link to={`/SpecificProduct/${item.product._id}`}>
-                        <img
-                          src={`http://localhost:5000/uploads/${item.product.image}`}
-                          alt={item.product.name || "Fragrance"}
-                          className="img-fluid"
-                          style={{
-                            maxHeight: "120px",
-                            objectFit: "contain",
-                          }}
-                        />
-                      </Link>
-                    </div>
-
-                    <div className="col-12 col-sm-9">
-                      <Link
-                        to={`/SpecificProduct/${item.product._id}`}
-                        className="text-decoration-none text-dark"
-                      >
-                        <div className="cart-product-title">
-                          {item.product.name || item.product.title}
+              /* Grid for Cart Items: 2 items per row on medium screens and up */
+              <div className="row row-cols-1 row-cols-md-2 g-3">
+                {cartItems.map((item) => (
+                  <div className="col" key={item.id}>
+                    <div className="cart-item-card h-100 mb-0">
+                      <div className="row align-items-center g-3">
+                        <div className="col-12 col-sm-4 text-center">
+                          <Link to={`/SpecificProduct/${item.product._id}`}>
+                            <img
+                              src={`http://localhost:5000/uploads/${item.product.image}`}
+                              alt={item.product.name || "Fragrance"}
+                              className="img-fluid"
+                              style={{
+                                maxHeight: "120px",
+                                objectFit: "contain",
+                              }}
+                            />
+                          </Link>
                         </div>
-                      </Link>
 
-                      {/* Quantity controls */}
-                      <div className="d-flex align-items-center cart-qty-container mb-2 mt-2">
-                        <button
-                          type="button"
-                          className="cart-qty-btn"
-                          onClick={() => handleQuantityChange(item.id, -1)}
-                          disabled={item.quantity <= 1}
-                          aria-label="Decrease quantity"
-                        >
-                          −
-                        </button>
+                        <div className="col-12 col-sm-8">
+                          <Link
+                            to={`/SpecificProduct/${item.product._id}`}
+                            className="text-decoration-none text-dark"
+                          >
+                            <div className="cart-product-title">
+                              {item.product.name || item.product.title}
+                            </div>
+                          </Link>
 
-                        <input
-                          type="text"
-                          className="cart-qty-input"
-                          value={item.quantity}
-                          readOnly
-                          aria-label="Product quantity"
-                        />
+                          {/* Quantity controls */}
+                          <div className="d-flex align-items-center cart-qty-container mb-2 mt-2">
+                            <button
+                              type="button"
+                              className="cart-qty-btn"
+                              onClick={() => handleQuantityChange(item.id, -1)}
+                              disabled={item.quantity <= 1}
+                              aria-label="Decrease quantity"
+                            >
+                              −
+                            </button>
 
-                        <button
-                          type="button"
-                          className="cart-qty-btn"
-                          onClick={() => handleQuantityChange(item.id, 1)}
-                          disabled={
-                            Number(item.product?.quantity ?? 0) > 0 &&
-                            item.quantity >= Number(item.product.quantity)
-                          }
-                          aria-label="Increase quantity"
-                        >
-                          +
-                        </button>
-                      </div>
+                            <input
+                              type="text"
+                              className="cart-qty-input"
+                              value={item.quantity}
+                              readOnly
+                              aria-label="Product quantity"
+                            />
 
-                      {Number(item.product?.quantity ?? 0) > 0 && (
-                        <small className="text-muted d-block mb-2">
-                          Available stock: {item.product.quantity}
-                        </small>
-                      )}
+                            <button
+                              type="button"
+                              className="cart-qty-btn"
+                              onClick={() => handleQuantityChange(item.id, 1)}
+                              disabled={
+                                Number(item.product?.quantity ?? 0) > 0 &&
+                                item.quantity >= Number(item.product.quantity)
+                              }
+                              aria-label="Increase quantity"
+                            >
+                              +
+                            </button>
+                          </div>
 
-                      {Number(item.product?.quantity ?? 0) === 0 && (
-                        <small className="text-danger d-block mb-2">
-                          Out of stock
-                        </small>
-                      )}
+                          {Number(item.product?.quantity ?? 0) > 0 && (
+                            <small className="text-muted d-block mb-2">
+                              Available stock: {item.product.quantity}
+                            </small>
+                          )}
 
-                      {/* Pricing */}
-                      <div className="mb-3 d-flex flex-wrap align-items-baseline gap-2">
-                        <span className="fw-bold fs-5">
-                          Rs {formatPrice(item.price)}
-                        </span>
+                          {Number(item.product?.quantity ?? 0) === 0 && (
+                            <small className="text-danger d-block mb-2">
+                              Out of stock
+                            </small>
+                          )}
 
-                        {item.originalPrice > item.price && (
-                          <>
-                            <span className="text-muted text-decoration-line-through small">
-                              Rs {formatPrice(item.originalPrice)}
+                          {/* Pricing */}
+                          <div className="mb-3 d-flex flex-wrap align-items-baseline gap-2">
+                            <span className="fw-bold fs-5">
+                              Rs {formatPrice(item.price)}
                             </span>
 
-                            <span className="fw-bold text-success small">
-                              {item.discountPercent}% off
-                            </span>
-                          </>
-                        )}
-                      </div>
+                            {item.originalPrice > item.price && (
+                              <>
+                                <span className="text-muted text-decoration-line-through small">
+                                  Rs {formatPrice(item.originalPrice)}
+                                </span>
 
-                      <div className="d-flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          className="btn cart-action-btn cart-btn-delete"
-                          onClick={() => handleDelete(item.id)}
-                          disabled={deletingId === item.id}
-                        >
-                          {deletingId === item.id
-                            ? "Removing..."
-                            : "Delete"}
-                        </button>
+                                <span className="fw-bold text-success small">
+                                  {item.discountPercent}% off
+                                </span>
+                              </>
+                            )}
+                          </div>
 
-                        <button
-                          type="button"
-                          className="btn cart-action-btn cart-btn-share"
-                          onClick={() => handleShare(item.product)}
-                        >
-                          Share
-                        </button>
-                      </div>
+                          <div className="d-flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              className="btn cart-action-btn cart-btn-delete"
+                              onClick={() => handleDelete(item.id)}
+                              disabled={deletingId === item.id}
+                            >
+                              {deletingId === item.id
+                                ? "Removing..."
+                                : "Delete"}
+                            </button>
 
-                      <div className="small text-muted mt-2">
-                        Item total: Rs{" "}
-                        {formatPrice(item.price * item.quantity)}
+                            <button
+                              type="button"
+                              className="btn cart-action-btn cart-btn-share"
+                              onClick={() => handleShare(item.product)}
+                            >
+                              Share
+                            </button>
+                          </div>
+
+                          <div className="small text-muted mt-2">
+                            Item total: Rs{" "}
+                            {formatPrice(item.price * item.quantity)}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </div>
 
-          {/* Order Summary */}
-          <div className="col-12 col-lg-4 mt-lg-5 pt-lg-3">
+          {/* Order Summary placed at the bottom */}
+          <div className="col-12 mt-4">
             <div className="cart-summary-box">
               <h4 className="fw-bold mb-4">Check Out</h4>
 

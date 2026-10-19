@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom"; // 1. Added useSearchParams
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "@fortawesome/fontawesome-free/css/all.min.css";
@@ -7,7 +7,16 @@ import "./Profile.css";
 import UserService from "../../services/user-api-services/UserService";
 
 export default function Profile() {
+  const [searchParams] = useSearchParams(); // 2. Read search params
   const [activeTab, setActiveTab] = useState("profile");
+
+  // 3. Set activeTab based on URL query param (e.g. /Profile?tab=address)
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   const orders = [
     {
@@ -89,8 +98,8 @@ export default function Profile() {
 
   const [showModal, setShowModal] = useState(false);
   const [addresses, setAddresses] = useState([]);
-const [selectedAddress, setSelectedAddress] = useState(null);
-const [loading, setLoading] = useState(true);
+  const [selectedAddress, setSelectedAddress] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editAddressType, setEditAddressType] = useState("Home");
@@ -105,9 +114,8 @@ const [loading, setLoading] = useState(true);
     alternativePhone: "",
   });
   const [addressType, setAddressType] = useState("Home");
-  const [primaryAddress,setPrimaryAddress] = useState()
 
-   const { saveaddress,fetchdata: fetchAddressesFromService,updateaddress,setprimary } = UserService();
+  const { saveaddress, fetchdata: fetchAddressesFromService, updateaddress, setprimary } = UserService();
 
   const [addressFormData, setAddressFormData] = useState({
     fullName: "",
@@ -117,398 +125,380 @@ const [loading, setLoading] = useState(true);
     state: "",
     country: "",
     zip: "",
-    
   });
 
   const handleAddressChange = (event) => {
     const { name, value } = event.target;
-
     setAddressFormData((previousData) => ({
       ...previousData,
       [name]: value,
     }));
   };
 
- const handleSave = async (event) => {
-  event.preventDefault();
+  const handleSave = async (event) => {
+    event.preventDefault();
 
-  try {
-    await saveaddress(addressFormData);
+    try {
+      await saveaddress(addressFormData);
+      setShowModal(false);
+      setAddressFormData({
+        fullName: "",
+        phone: "",
+        street: "",
+        city: "",
+        state: "",
+        country: "",
+        zip: "",
+      });
 
-    setShowModal(false);
-
-    setAddressFormData({
-      fullName: "",
-      phone: "",
-      street: "",
-      city: "",
-      state: "",
-      country: "",
-      zip: "",
-    });
-
-    await getAddresses();
-
-    alert("Address saved successfully!");
-  } catch (error) {
-    console.error(
-      "Failed to save address:",
-      error.response?.data || error.message
-    );
-
-    alert(
-      error.response?.data?.message ||
-      "Failed to save address. Please try again."
-    );
-  }
-};
+      await getAddresses();
+      alert("Address saved successfully!");
+    } catch (error) {
+      console.error(
+        "Failed to save address:",
+        error.response?.data || error.message
+      );
+      alert(
+        error.response?.data?.message ||
+        "Failed to save address. Please try again."
+      );
+    }
+  };
 
   const getAddresses = async () => {
-  try {
-    setLoading(true);
-
-    const response = await fetchAddressesFromService();
-
-    setAddresses(response.addresses || []);
-  } catch (error) {
-    console.error(
-      "Failed to fetch addresses:",
-      error.response?.data || error.message
-    );
-
-    setAddresses([]);
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      setLoading(true);
+      const response = await fetchAddressesFromService();
+      setAddresses(response.addresses || []);
+    } catch (error) {
+      console.error(
+        "Failed to fetch addresses:",
+        error.response?.data || error.message
+      );
+      setAddresses([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleEditChange = (event) => {
     const { name, value } = event.target;
     setEditFormData((previousData) => ({ ...previousData, [name]: value }));
   };
 
- 
-
   const closeModal = () => {
     setShowModal(false);
   };
 
   const handleEditSave = async (event) => {
-  event.preventDefault();
+    event.preventDefault();
 
-  if (!selectedAddress?._id) {
-    alert("Please select an address to edit.");
-    return;
-  }
+    if (!selectedAddress?._id) {
+      alert("Please select an address to edit.");
+      return;
+    }
 
-  try {
-    await updateaddress(selectedAddress._id, {
-      fullName: editFormData.fullName,
-      phone: editFormData.phone,
-      address: editFormData.address,
-      city: editFormData.city,
-      state: editFormData.state,
-      pincode: editFormData.pincode,
-      country: selectedAddress.country,
-    });
+    try {
+      await updateaddress(selectedAddress._id, {
+        fullName: editFormData.fullName,
+        phone: editFormData.phone,
+        address: editFormData.address,
+        city: editFormData.city,
+        state: editFormData.state,
+        pincode: editFormData.pincode,
+        country: selectedAddress.country,
+      });
 
+      await getAddresses();
+      setShowEditModal(false);
+      setShowViewModal(false);
+      alert("Address updated successfully!");
+    } catch (error) {
+      console.error(
+        "Failed to update address:",
+        error.response?.data || error.message
+      );
+      alert(
+        error.response?.data?.message ||
+          "Failed to update address. Please try again."
+      );
+    }
+  };
+
+  const handleprimarybutton = async (id) => {
+    await setprimary(id);
     await getAddresses();
+  };
 
-    setShowEditModal(false);
-    setShowViewModal(false);
-
-    alert("Address updated successfully!");
-  } catch (error) {
-    console.error(
-      "Failed to update address:",
-      error.response?.data || error.message
-    );
-
-    alert(
-      error.response?.data?.message ||
-        "Failed to update address. Please try again."
-    );
-  }
-};
-
-const handleprimarybutton = async (id)=>{
-  await setprimary(id)
-  await getAddresses()
-}
-
-  
-   useEffect(() => {
-      getAddresses();
-    }, []);
-  
+  useEffect(() => {
+    getAddresses();
+  }, []);
 
   return (
     <>
-          <nav className="navbar navbar-expand-lg navbar-light shadow-sm homepage-navbar">
-            <div className="container-fluid px-0">
-              <span className="navbar-brand homepage-navbar-brand">
-                <Link to='/'>Fragranzia</Link>
-              </span>
-              <button
-                className="navbar-toggler"
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#navbarContent"
-                aria-controls="navbarContent"
-                aria-expanded="false"
-                aria-label="Toggle navigation"
-              >
-                <span className="navbar-toggler-icon"></span>
-              </button>
-              <div className="collapse navbar-collapse justify-content-end" id="navbarContent">
-                <ul className="navbar-nav align-items-center gap-2">
-                  <li className="nav-item">
-                    <span className="nav-link  homepage-nav-link" >
-                       <Link to='/'>Home</Link>
-                    </span>
-                  </li>
-                  <li className="nav-item">
-                    <span className="nav-link homepage-nav-link" >
-                      <Link to='/Products'>Products</Link>
-                    </span>
-                  </li>
-                  <li className="nav-item">
-                    <span className="nav-link homepage-nav-link" >
-                       <Link to='/Wishlist'>Wishlist</Link>
-                    </span>
-                  </li>
-                  <li className="nav-item me-3">
-                    <span className="nav-link homepage-nav-link" >
-                      <Link to='/About'>About</Link>
-                    </span>
-                  </li>
-                  <li className="nav-item me-2">
-                    <div className="search-wrapper homepage-search-wrapper">
-                      <i className="fa-solid fa-magnifying-glass fa-search"></i>
-                      <input
-                        className="form-control"
-                        type="search"
-                        placeholder="Search Here"
-                        aria-label="Search"
-                      />
-                    </div>
-                  </li>
-                  <li className="nav-item">
-                    <span className="icon-btn homepage-icon-btn"  aria-label="Cart">
-                      <Link to='/Cart'><i className="fa-solid fa-cart-shopping"></i></Link>
-                    </span>
-                  </li>
-                  <li className="nav-item">
-                    <button
-                      className="icon-btn homepage-icon-btn"
-                      type="button"
-                      aria-label="Notifications"
-                    >
-                      <i className="fa-regular fa-bell"></i>
-                    </button>
-                  </li>
-                  <li className="nav-item">
-                    <span
-                      className="icon-btn homepage-icon-btn active"
-                      
-                      aria-label="Profile"
-                    >
-                     <Link to='/Profile'><i className="fa-regular fa-user"></i></Link>
-                   </span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </nav>
+      <nav className="navbar navbar-expand-lg navbar-light shadow-sm homepage-navbar">
+        <div className="container-fluid px-0">
+          <span className="navbar-brand homepage-navbar-brand">
+            <Link to='/'>Fragranzia</Link>
+          </span>
+          <button
+            className="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarContent"
+            aria-controls="navbarContent"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            <span className="navbar-toggler-icon"></span>
+          </button>
+          <div className="collapse navbar-collapse justify-content-end" id="navbarContent">
+            <ul className="navbar-nav align-items-center gap-2">
+              <li className="nav-item">
+                <span className="nav-link homepage-nav-link">
+                  <Link to='/'>Home</Link>
+                </span>
+              </li>
+              <li className="nav-item">
+                <span className="nav-link homepage-nav-link">
+                  <Link to='/Products'>Products</Link>
+                </span>
+              </li>
+              <li className="nav-item">
+                <span className="nav-link homepage-nav-link">
+                  <Link to='/Wishlist'>Wishlist</Link>
+                </span>
+              </li>
+              <li className="nav-item me-3">
+                <span className="nav-link homepage-nav-link">
+                  <Link to='/About'>About</Link>
+                </span>
+              </li>
+              <li className="nav-item me-2">
+                <div className="search-wrapper homepage-search-wrapper">
+                  <i className="fa-solid fa-magnifying-glass fa-search"></i>
+                  <input
+                    className="form-control"
+                    type="search"
+                    placeholder="Search Here"
+                    aria-label="Search"
+                  />
+                </div>
+              </li>
+              <li className="nav-item">
+                <span className="icon-btn homepage-icon-btn" aria-label="Cart">
+                  <Link to='/Cart'><i className="fa-solid fa-cart-shopping"></i></Link>
+                </span>
+              </li>
+              <li className="nav-item">
+                <button
+                  className="icon-btn homepage-icon-btn"
+                  type="button"
+                  aria-label="Notifications"
+                >
+                  <i className="fa-regular fa-bell"></i>
+                </button>
+              </li>
+              <li className="nav-item">
+                <span className="icon-btn homepage-icon-btn active" aria-label="Profile">
+                  <Link to='/Profile'><i className="fa-regular fa-user"></i></Link>
+                </span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+
       <div className="profile-root-wrapper">
         <div className="container-fluid px-md-5 px-3">
           <div className="mx-2 py-4">
             <h1 className="mb-1" style={{ fontWeight: 700, fontSize: "2.2rem" }}>Profile</h1>
             <nav aria-label="breadcrumb" className="mb-4">
-              <span className="text-muted" style={{ fontSize: "0.9rem" }}>Home &gt; {activeTab === "profile" ? "Profile" : activeTab === "address" ? "Address" : "My Order"}</span>
+              <span className="text-muted" style={{ fontSize: "0.9rem" }}>
+                Home &gt; {activeTab === "profile" ? "Profile" : activeTab === "address" ? "Address" : "My Order"}
+              </span>
             </nav>
             <div className="tab-container">
-              <button className={`tab-btn ${activeTab === "profile" ? "profile-btn" : "other-btn"}`} type="button" onClick={() => setActiveTab("profile")}>Profile</button>
-              <button className={`tab-btn ${activeTab === "address" ? "profile-btn" : "other-btn"}`} type="button" onClick={() => setActiveTab("address")}>Address</button>
-              <button className={`tab-btn ${activeTab === "orders" ? "profile-btn" : "other-btn"}`} type="button" onClick={() => setActiveTab("orders")}>My Order</button>
+              <button
+                className={`tab-btn ${activeTab === "profile" ? "profile-btn" : "other-btn"}`}
+                type="button"
+                onClick={() => setActiveTab("profile")}
+              >
+                Profile
+              </button>
+              <button
+                className={`tab-btn ${activeTab === "address" ? "profile-btn" : "other-btn"}`}
+                type="button"
+                onClick={() => setActiveTab("address")}
+              >
+                Address
+              </button>
+              <button
+                className={`tab-btn ${activeTab === "orders" ? "profile-btn" : "other-btn"}`}
+                type="button"
+                onClick={() => setActiveTab("orders")}
+              >
+                My Order
+              </button>
             </div>
+
             {activeTab === "profile" && (
               <div className="profile-tab-content">
-          <form className="row g-4" onSubmit={(e) => e.preventDefault()}>
-            <div className="col-12 col-md-4">
-              <label className="profile-form-label">Full Name</label>
-              <input
-                type="text"
-                className="profile-custom-control"
-                value={formData.name}
-                readOnly
-              />
-            </div>
+                <form className="row g-4" onSubmit={(e) => e.preventDefault()}>
+                  <div className="col-12 col-md-4">
+                    <label className="profile-form-label">Full Name</label>
+                    <input
+                      type="text"
+                      className="profile-custom-control"
+                      value={formData.name}
+                      readOnly
+                    />
+                  </div>
 
-            <div className="col-12 col-md-4">
-              <label className="profile-form-label">Email</label>
-              <input
-                type="email"
-                className="profile-custom-control"
-                value={formData.email}
-                readOnly
-              />
-            </div>
+                  <div className="col-12 col-md-4">
+                    <label className="profile-form-label">Email</label>
+                    <input
+                      type="email"
+                      className="profile-custom-control"
+                      value={formData.email}
+                      readOnly
+                    />
+                  </div>
 
+                  <div className="col-12 col-md-4">
+                    <label className="profile-form-label">Phone Number</label>
+                    <input
+                      type="text"
+                      className="profile-custom-control"
+                      value={formData.phone}
+                      readOnly
+                    />
+                  </div>
 
+                  <div className="col-12 col-md-4">
+                    <label className="profile-form-label">Date of Birth</label>
+                    <input
+                      type="text"
+                      className="profile-custom-control"
+                      value={formData.dob}
+                      readOnly
+                    />
+                  </div>
 
-            <div className="col-12 col-md-4">
-              <label className="profile-form-label">Phone Number</label>
-              <input
-                type="text"
-                className="profile-custom-control"
-                value={formData.phone}
-                readOnly
-              />
-            </div>
+                  <div className="col-12 col-md-4">
+                    <label className="profile-form-label">Gender</label>
+                    <input
+                      type="text"
+                      className="profile-custom-control"
+                      value={formData.gender}
+                      readOnly
+                    />
+                  </div>
 
-            <div className="col-12 col-md-4">
-              <label className="profile-form-label">Date of Birth</label>
-              <input
-                type="text"
-                className="profile-custom-control"
-                value={formData.dob}
-                readOnly
-              />
-            </div>
+                  <div className="col-12 col-md-4">
+                    <label className="profile-form-label">Password</label>
+                    <div className="profile-input-group">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        className="profile-custom-control"
+                        value={formData.password}
+                        readOnly
+                        style={{ letterSpacing: showPassword ? 'normal' : '3px' }}
+                      />
+                    </div>
+                  </div>
 
-            <div className="col-12 col-md-4">
-              <label className="profile-form-label">Gender</label>
-              <input
-                type="text"
-                className="profile-custom-control"
-                value={formData.gender}
-                readOnly
-              />
-            </div>
-
-            <div className="col-12 col-md-4">
-              <label className="profile-form-label">Password</label>
-              <div className="profile-input-group">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  className="profile-custom-control"
-                  value={formData.password}
-                  readOnly
-                  style={{ letterSpacing: showPassword ? 'normal' : '3px' }}
-                />
-                {/* <button
-                  type="button"
-                  className="profile-password-toggle"
-                  onClick={togglePasswordVisibility}
-                  aria-label="Toggle password visibility"
-                >
-                  <i className={`fa-regular ${showPassword ? 'fa-eye' : 'fa-eye-slash'}`}></i>
-                </button> */}
-              </div>
-            </div>
-
-            <div className="col-12 text-end">
-              <button type="button" className="profile-btn-edit" onClick={()=>{setShowEdit(true)}}>
-                Edit
-              </button>
-            </div>
-          </form>
+                  <div className="col-12 text-end">
+                    <button
+                      type="button"
+                      className="profile-btn-edit"
+                      onClick={() => setShowEdit(true)}
+                    >
+                      Edit
+                    </button>
+                  </div>
+                </form>
               </div>
             )}
+
             {activeTab === "address" && (
-      <main
-        className={`alladdress-content ${
-          showModal ? "alladdress-content-blurred" : ""
-        }`}
-      >
-        <div className="address-section-inner">
-            <div className="address-toolbar">
-              <button type="button" className="btn-address" onClick={() => setShowModal(true)}>
-                <i className="fa-solid fa-plus"></i> Add Address
-              </button>
-            </div>
-            {loading ? (
-  <p>Loading addresses...</p>
-) : addresses.length === 0 ? (
-  <p>No saved addresses found. Click Add Address to save one.</p>
-) : (
-  <div className="row g-4">
-  {addresses.map((address, index) => {
-    const isPrimary = address.isPrimary;
+              <main className={`alladdress-content ${showModal ? "alladdress-content-blurred" : ""}`}>
+                <div className="address-section-inner">
+                  <div className="address-toolbar">
+                    <button type="button" className="btn-address" onClick={() => setShowModal(true)}>
+                      <i className="fa-solid fa-plus"></i> Add Address
+                    </button>
+                  </div>
+                  {loading ? (
+                    <p>Loading addresses...</p>
+                  ) : addresses.length === 0 ? (
+                    <p>No saved addresses found. Click Add Address to save one.</p>
+                  ) : (
+                    <div className="row g-4">
+                      {addresses.map((address, index) => {
+                        const isPrimary = address.isPrimary;
+                        return (
+                          <div className="col-12 col-md-6 col-xl-4" key={address._id}>
+                            <div
+                              className={`address-card h-100 ${isPrimary ? 'primary-card' : ''}`}
+                              style={
+                                isPrimary
+                                  ? {
+                                      borderColor: '#198754',
+                                      boxShadow: '0 0.5rem 1rem rgba(25, 135, 84, 0.25)',
+                                      backgroundColor: '#f8fff9',
+                                    }
+                                  : {}
+                              }
+                            >
+                              <div className="d-flex justify-content-between align-items-center">
+                                <h2 className="address-title">Address {index + 1}</h2>
+                                <div className="primary-actions d-flex align-items-center gap-2">
+                                  {isPrimary ? (
+                                    <span className="badge bg-success">
+                                      <i className="fa-solid fa-circle-check me-1"></i> Primary
+                                    </span>
+                                  ) : (
+                                    <button
+                                      onClick={() => handleprimarybutton(address._id)}
+                                      className="btn btn-outline-success btn-sm setprimary"
+                                    >
+                                      Set as primary
+                                    </button>
+                                  )}
+                                  <span className="badge-tag">
+                                    <i className="fa-solid fa-location-dot"></i> Saved
+                                  </span>
+                                </div>
+                              </div>
 
-    return (
-      <div className="col-12 col-md-6 col-xl-4" key={address._id}>
-        <div
-          className={`address-card h-100 ${isPrimary ? 'primary-card' : ''}`}
-          style={
-            isPrimary
-              ? {
-                  borderColor: '#198754', // Bootstrap green accent
-                  boxShadow: '0 0.5rem 1rem rgba(25, 135, 84, 0.25)', // Green subtle shadow
-                  backgroundColor: '#f8fff9', // Optional soft green background tint
-                }
-              : {}
-          }
-        >
-          <div className="d-flex justify-content-between align-items-center">
-            <h2 className="address-title">
-              Address {index + 1}
-            </h2>
+                              <div className="fw-bold my-2 address-name">{address.fullName}</div>
+                              <p className="address-text">
+                                {address.street}, {address.city}, {address.state}, {address.country} {address.zip}
+                              </p>
 
-            <div className="primary-actions d-flex align-items-center gap-2">
-              {isPrimary ? (
-                <span className="badge bg-success">
-                  <i className="fa-solid fa-circle-check me-1"></i> Primary
-                </span>
-              ) : (
-                <button
-                  onClick={() => handleprimarybutton(address._id)}
-                  className="btn btn-outline-success btn-sm setprimary"
-                >
-                  Set as primary
-                </button>
-              )}
-
-              <span className="badge-tag">
-                <i className="fa-solid fa-location-dot"></i> Saved
-              </span>
-            </div>
-          </div>
-
-          <div className="fw-bold my-2 address-name">
-            {address.fullName}
-          </div>
-
-          <p className="address-text">
-            {address.street}, {address.city}, {address.state}, {address.country} - {address.zip}
-          </p>
-
-          <div className="alladdress-card-actions">
-            <button
-              type="button"
-              className="alladdress-small-edit"
-              onClick={() => {
-                setSelectedAddress(address);
-                setShowViewModal(true);
-              }}
-            >
-              <i className="fa-solid fa-eye"></i> View
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  })}
-</div>
-)}
-            
-               
-
-             
-            </div>
-      </main>
+                              <div className="alladdress-card-actions">
+                                <button
+                                  type="button"
+                                  className="alladdress-small-edit"
+                                  onClick={() => {
+                                    setSelectedAddress(address);
+                                    setShowViewModal(true);
+                                  }}
+                                >
+                                  <i className="fa-solid fa-eye"></i> View
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </main>
             )}
+
             {activeTab === "orders" && (
               <section className="profile-orders-section">
                 <div className="profile-orders-grid">
@@ -540,97 +530,87 @@ const handleprimarybutton = async (id)=>{
           </div>
         </div>
       </div>
-    { showEdit && (
-     <div className="alladdress-edit-overlay">
-      <div className="profile-edit-modal">
-         <form className="row g-4" onSubmit={handleSubmit}>
-            {/* Row 1 */}
-            <div className="col-12 col-md-4">
-              <label className="profileedit-form-label">Full Name</label>
-              <input
-                type="text"
-                name="name"
-                className="profileedit-custom-control"
-                value={formData.name}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="col-12 col-md-4">
-              <label className="profileedit-form-label">Email</label>
-              <input
-                type="email"
-                name="email"
-                className="profileedit-custom-control"
-                value={formData.email}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="col-12 col-md-4">
-              <label className="profileedit-form-label">Phone Number</label>
-              <input
-                type="text"
-                name="phone"
-                className="profileedit-custom-control"
-                value={formData.phone}
-                onChange={handleChange}
-              />
-            </div>
 
-            {/* Row 2 */}
-            <div className="col-12 col-md-4">
-              <label className="profileedit-form-label">Date of Birth</label>
-              <input
-                type="text"
-                name="dob"
-                className="profileedit-custom-control"
-                value={formData.dob}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="col-12 col-md-4">
-              <label className="profileedit-form-label">Gender</label>
-              <input
-                type="text"
-                name="gender"
-                className="profileedit-custom-control"
-                value={formData.gender}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="col-12 col-md-4">
-              <label className="profileedit-form-label">Password</label>
-              <div className="profileedit-custom-input-group">
+      {showEdit && (
+        <div className="alladdress-edit-overlay">
+          <div className="profile-edit-modal">
+            <form className="row g-4" onSubmit={handleSubmit}>
+              <div className="col-12 col-md-4">
+                <label className="profileedit-form-label">Full Name</label>
                 <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
+                  type="text"
+                  name="name"
                   className="profileedit-custom-control"
-                  value={formData.password}
+                  value={formData.name}
                   onChange={handleChange}
-                  readOnly
-                  style={{ letterSpacing: showPassword ? 'normal' : '3px' }}
                 />
-                {/* <button
-                  type="button"
-                  className="profileedit-password-toggle"
-                  onClick={togglePasswordVisibility}
-                  aria-label="Toggle password visibility"
-                >
-                  <i className={`fa-regular ${showPassword ? 'fa-eye' : 'fa-eye-slash'}`}></i>
-                </button> */}
               </div>
-            </div>
+              <div className="col-12 col-md-4">
+                <label className="profileedit-form-label">Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  className="profileedit-custom-control"
+                  value={formData.email}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="col-12 col-md-4">
+                <label className="profileedit-form-label">Phone Number</label>
+                <input
+                  type="text"
+                  name="phone"
+                  className="profileedit-custom-control"
+                  value={formData.phone}
+                  onChange={handleChange}
+                />
+              </div>
 
-            {/* Action Button Row */}
-            <div className="col-12 text-end">
-              <button type="submit" className="profileedit-btn-save">
-                Save
-              </button>
-            </div>
-          </form>
-      </div>
-     </div>
-    )}
-      {/* Read-only Address Details Modal converted from the supplied HTML page */}
+              <div className="col-12 col-md-4">
+                <label className="profileedit-form-label">Date of Birth</label>
+                <input
+                  type="text"
+                  name="dob"
+                  className="profileedit-custom-control"
+                  value={formData.dob}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="col-12 col-md-4">
+                <label className="profileedit-form-label">Gender</label>
+                <input
+                  type="text"
+                  name="gender"
+                  className="profileedit-custom-control"
+                  value={formData.gender}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="col-12 col-md-4">
+                <label className="profileedit-form-label">Password</label>
+                <div className="profileedit-custom-input-group">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    className="profileedit-custom-control"
+                    value={formData.password}
+                    onChange={handleChange}
+                    readOnly
+                    style={{ letterSpacing: showPassword ? 'normal' : '3px' }}
+                  />
+                </div>
+              </div>
+
+              <div className="col-12 text-end">
+                <button type="submit" className="profileedit-btn-save">
+                  Save
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {showViewModal && (
         <div
           className="alladdress-view-overlay"
@@ -661,194 +641,165 @@ const handleprimarybutton = async (id)=>{
             </div>
 
             <form onSubmit={(event) => event.preventDefault()}>
-  {selectedAddress && (
-    <>
-      <div className="modal-section-title">Address Type</div>
+              {selectedAddress && (
+                <>
+                  <div className="modal-section-title">Address Type</div>
+                  <div className="type-radio-group alladdress-view-type-group">
+                    <div>
+                      <input
+                        type="radio"
+                        name="viewAddressType"
+                        id="viewTypeHome"
+                        className="type-input"
+                        checked={true}
+                        readOnly
+                      />
+                      <label htmlFor="viewTypeHome" className="type-label home-active">
+                        <i className="fa-solid fa-house-chimney"></i> Home
+                      </label>
+                    </div>
+                    <div>
+                      <input
+                        type="radio"
+                        name="viewAddressType"
+                        id="viewTypeOffice"
+                        className="type-input"
+                        checked={false}
+                        readOnly
+                      />
+                      <label htmlFor="viewTypeOffice" className="type-label">
+                        <i className="fa-solid fa-building"></i> Office
+                      </label>
+                    </div>
+                    <div>
+                      <input
+                        type="radio"
+                        name="viewAddressType"
+                        id="viewTypeOther"
+                        className="type-input"
+                        checked={false}
+                        readOnly
+                      />
+                      <label htmlFor="viewTypeOther" className="type-label">
+                        <i className="fa-solid fa-address-book"></i> Other
+                      </label>
+                    </div>
+                  </div>
 
-      <div className="type-radio-group alladdress-view-type-group">
-        <div>
-          <input
-            type="radio"
-            name="viewAddressType"
-            id="viewTypeHome"
-            className="type-input"
-            checked={true}
-            readOnly
-          />
-          <label
-            htmlFor="viewTypeHome"
-            className="type-label home-active"
-          >
-            <i className="fa-solid fa-house-chimney"></i> Home
-          </label>
-        </div>
+                  <div className="row g-3 mb-3">
+                    <div className="col-md-6">
+                      <label htmlFor="viewFullName" className="form-label-custom">Full Name</label>
+                      <input
+                        id="viewFullName"
+                        className="form-control-custom alladdress-view-input"
+                        value={selectedAddress.fullName || ""}
+                        readOnly
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label htmlFor="viewPhone" className="form-label-custom">Phone Number</label>
+                      <input
+                        id="viewPhone"
+                        className="form-control-custom alladdress-view-input"
+                        value={selectedAddress.phone || ""}
+                        readOnly
+                      />
+                    </div>
+                  </div>
 
-        <div>
-          <input
-            type="radio"
-            name="viewAddressType"
-            id="viewTypeOffice"
-            className="type-input"
-            checked={false}
-            readOnly
-          />
-          <label htmlFor="viewTypeOffice" className="type-label">
-            <i className="fa-solid fa-building"></i> Office
-          </label>
-        </div>
+                  <div className="mb-3">
+                    <label htmlFor="viewAddress" className="form-label-custom">Address</label>
+                    <textarea
+                      id="viewAddress"
+                      className="form-control-custom textarea-custom alladdress-view-input"
+                      value={selectedAddress.street || ""}
+                      readOnly
+                    />
+                  </div>
 
-        <div>
-          <input
-            type="radio"
-            name="viewAddressType"
-            id="viewTypeOther"
-            className="type-input"
-            checked={false}
-            readOnly
-          />
-          <label htmlFor="viewTypeOther" className="type-label">
-            <i className="fa-solid fa-address-book"></i> Other
-          </label>
-        </div>
-      </div>
+                  <div className="row g-3 mb-3">
+                    <div className="col-md-4">
+                      <label htmlFor="viewCity" className="form-label-custom">City/District</label>
+                      <input
+                        id="viewCity"
+                        className="form-control-custom alladdress-view-input"
+                        value={selectedAddress.city || ""}
+                        readOnly
+                      />
+                    </div>
+                    <div className="col-md-4">
+                      <label htmlFor="viewState" className="form-label-custom">State</label>
+                      <input
+                        id="viewState"
+                        className="form-control-custom alladdress-view-input"
+                        value={selectedAddress.state || ""}
+                        readOnly
+                      />
+                    </div>
+                    <div className="col-md-4">
+                      <label htmlFor="viewLandmark" className="form-label-custom">Land Mark</label>
+                      <input
+                        id="viewLandmark"
+                        className="form-control-custom alladdress-view-input"
+                        value={selectedAddress.landmark || ""}
+                        readOnly
+                      />
+                    </div>
+                  </div>
 
-      <div className="row g-3 mb-3">
-        <div className="col-md-6">
-          <label htmlFor="viewFullName" className="form-label-custom">
-            Full Name
-          </label>
-          <input
-            id="viewFullName"
-            className="form-control-custom alladdress-view-input"
-            value={selectedAddress.fullName || ""}
-            readOnly
-          />
-        </div>
+                  <div className="row g-3 mb-4">
+                    <div className="col-md-4">
+                      <label htmlFor="viewPincode" className="form-label-custom">PinCode</label>
+                      <input
+                        id="viewPincode"
+                        className="form-control-custom alladdress-view-input"
+                        value={selectedAddress.zip || ""}
+                        readOnly
+                      />
+                    </div>
+                    <div className="col-md-4">
+                      <label htmlFor="viewAlternativePhone" className="form-label-custom">
+                        Alternative Phone number (Optional)
+                      </label>
+                      <input
+                        id="viewAlternativePhone"
+                        className="form-control-custom alladdress-view-input"
+                        value={selectedAddress.alternativePhone || ""}
+                        placeholder="Not provided"
+                        readOnly
+                      />
+                    </div>
+                  </div>
 
-        <div className="col-md-6">
-          <label htmlFor="viewPhone" className="form-label-custom">
-            Phone Number
-          </label>
-          <input
-            id="viewPhone"
-            className="form-control-custom alladdress-view-input"
-            value={selectedAddress.phone || ""}
-            readOnly
-          />
-        </div>
-      </div>
-
-      <div className="mb-3">
-        <label htmlFor="viewAddress" className="form-label-custom">
-          Address
-        </label>
-        <textarea
-          id="viewAddress"
-          className="form-control-custom textarea-custom alladdress-view-input"
-          value={selectedAddress.street || ""}
-          readOnly
-        />
-      </div>
-
-      <div className="row g-3 mb-3">
-        <div className="col-md-4">
-          <label htmlFor="viewCity" className="form-label-custom">
-            City/District
-          </label>
-          <input
-            id="viewCity"
-            className="form-control-custom alladdress-view-input"
-            value={selectedAddress.city || ""}
-            readOnly
-          />
-        </div>
-
-        <div className="col-md-4">
-          <label htmlFor="viewState" className="form-label-custom">
-            State
-          </label>
-          <input
-            id="viewState"
-            className="form-control-custom alladdress-view-input"
-            value={selectedAddress.state || ""}
-            readOnly
-          />
-        </div>
-
-        <div className="col-md-4">
-          <label htmlFor="viewLandmark" className="form-label-custom">
-            Land Mark
-          </label>
-          <input
-            id="viewLandmark"
-            className="form-control-custom alladdress-view-input"
-            value={selectedAddress.landmark || ""}
-            readOnly
-          />
-        </div>
-      </div>
-
-      <div className="row g-3 mb-4">
-        <div className="col-md-4">
-          <label htmlFor="viewPincode" className="form-label-custom">
-            PinCode
-          </label>
-          <input
-            id="viewPincode"
-            className="form-control-custom alladdress-view-input"
-            value={selectedAddress.zip || ""}
-            readOnly
-          />
-        </div>
-
-        <div className="col-md-4">
-          <label
-            htmlFor="viewAlternativePhone"
-            className="form-label-custom"
-          >
-            Alternative Phone number (Optional)
-          </label>
-          <input
-            id="viewAlternativePhone"
-            className="form-control-custom alladdress-view-input"
-            value={selectedAddress.alternativePhone || ""}
-            placeholder="Not provided"
-            readOnly
-          />
-        </div>
-      </div>
-
-      <div className="alladdress-view-actions">
-        <button
-          type="button"
-          className="btn-modal-edit"
-          onClick={() => {
-            setEditFormData({
-              fullName: selectedAddress.fullName || "",
-              phone: selectedAddress.phone || "",
-              address: selectedAddress.street || "",
-              city: selectedAddress.city || "",
-              state: selectedAddress.state || "",
-              landmark: selectedAddress.landmark || "",
-              pincode: selectedAddress.zip || "",
-              alternativePhone: selectedAddress.alternativePhone || "",
-            });
-
-            setShowViewModal(false);
-            setShowEditModal(true);
-          }}
-        >
-          Edit
-        </button>
-      </div>
-    </>
-  )}
-</form>
+                  <div className="alladdress-view-actions">
+                    <button
+                      type="button"
+                      className="btn-modal-edit"
+                      onClick={() => {
+                        setEditFormData({
+                          fullName: selectedAddress.fullName || "",
+                          phone: selectedAddress.phone || "",
+                          address: selectedAddress.street || "",
+                          city: selectedAddress.city || "",
+                          state: selectedAddress.state || "",
+                          landmark: selectedAddress.landmark || "",
+                          pincode: selectedAddress.zip || "",
+                          alternativePhone: selectedAddress.alternativePhone || "",
+                        });
+                        setShowViewModal(false);
+                        setShowEditModal(true);
+                      }}
+                    >
+                      Edit
+                    </button>
+                  </div>
+                </>
+              )}
+            </form>
           </div>
         </div>
       )}
 
-      {/* Edit Address Modal converted from the supplied HTML document */}
       {showEditModal && (
         <div
           className="alladdress-edit-overlay"
@@ -956,7 +907,6 @@ const handleprimarybutton = async (id)=>{
         </div>
       )}
 
-      {/* Add Address Modal */}
       {showModal && (
         <div
           className="alladdress-modal-overlay"
@@ -973,13 +923,9 @@ const handleprimarybutton = async (id)=>{
             aria-labelledby="add-address-title"
           >
             <div className="alladdress-modal-header">
-              <h2
-                id="add-address-title"
-                className="alladdress-modal-heading"
-              >
+              <h2 id="add-address-title" className="alladdress-modal-heading">
                 Add Address
               </h2>
-
               <button
                 type="button"
                 className="alladdress-modal-close"
@@ -991,11 +937,7 @@ const handleprimarybutton = async (id)=>{
             </div>
 
             <form onSubmit={handleSave}>
-              {/* Address Type */}
-              <div className="modal-section-title">
-                Address Type
-              </div>
-
+              <div className="modal-section-title">Address Type</div>
               <div className="type-radio-group">
                 <div>
                   <input
@@ -1006,18 +948,10 @@ const handleprimarybutton = async (id)=>{
                     checked={addressType === "Home"}
                     onChange={() => setAddressType("Home")}
                   />
-
-                  <label
-                    htmlFor="typeHome"
-                    className={`type-label ${
-                      addressType === "Home" ? "home-active" : ""
-                    }`}
-                  >
-                    <i className="fa-solid fa-house-chimney"></i>
-                    Home
+                  <label htmlFor="typeHome" className={`type-label ${addressType === "Home" ? "home-active" : ""}`}>
+                    <i className="fa-solid fa-house-chimney"></i> Home
                   </label>
                 </div>
-
                 <div>
                   <input
                     type="radio"
@@ -1027,18 +961,10 @@ const handleprimarybutton = async (id)=>{
                     checked={addressType === "Office"}
                     onChange={() => setAddressType("Office")}
                   />
-
-                  <label
-                    htmlFor="typeOffice"
-                    className={`type-label ${
-                      addressType === "Office" ? "home-active" : ""
-                    }`}
-                  >
-                    <i className="fa-solid fa-building"></i>
-                    Office
+                  <label htmlFor="typeOffice" className={`type-label ${addressType === "Office" ? "home-active" : ""}`}>
+                    <i className="fa-solid fa-building"></i> Office
                   </label>
                 </div>
-
                 <div>
                   <input
                     type="radio"
@@ -1048,29 +974,15 @@ const handleprimarybutton = async (id)=>{
                     checked={addressType === "Other"}
                     onChange={() => setAddressType("Other")}
                   />
-
-                  <label
-                    htmlFor="typeOther"
-                    className={`type-label ${
-                      addressType === "Other" ? "home-active" : ""
-                    }`}
-                  >
-                    <i className="fa-solid fa-address-book"></i>
-                    Other
+                  <label htmlFor="typeOther" className={`type-label ${addressType === "Other" ? "home-active" : ""}`}>
+                    <i className="fa-solid fa-address-book"></i> Other
                   </label>
                 </div>
               </div>
 
-              {/* Full Name and Phone */}
               <div className="row g-3 mb-3">
                 <div className="col-md-6">
-                  <label
-                    htmlFor="fullName"
-                    className="form-label-custom"
-                  >
-                    Full Name
-                  </label>
-
+                  <label htmlFor="fullName" className="form-label-custom">Full Name</label>
                   <input
                     id="fullName"
                     name="fullName"
@@ -1082,15 +994,8 @@ const handleprimarybutton = async (id)=>{
                     required
                   />
                 </div>
-
                 <div className="col-md-6">
-                  <label
-                    htmlFor="phone"
-                    className="form-label-custom"
-                  >
-                    Phone Number
-                  </label>
-
+                  <label htmlFor="phone" className="form-label-custom">Phone Number</label>
                   <input
                     id="phone"
                     name="phone"
@@ -1106,15 +1011,8 @@ const handleprimarybutton = async (id)=>{
                 </div>
               </div>
 
-              {/* Address */}
               <div className="mb-3">
-                <label
-                  htmlFor="address"
-                  className="form-label-custom"
-                >
-                  Address
-                </label>
-
+                <label htmlFor="address" className="form-label-custom">Address</label>
                 <textarea
                   id="address"
                   name="street"
@@ -1126,16 +1024,9 @@ const handleprimarybutton = async (id)=>{
                 ></textarea>
               </div>
 
-              {/* City, State and Landmark */}
               <div className="row g-3 mb-3">
                 <div className="col-md-4">
-                  <label
-                    htmlFor="city"
-                    className="form-label-custom"
-                  >
-                    City/District
-                  </label>
-
+                  <label htmlFor="city" className="form-label-custom">City/District</label>
                   <input
                     id="city"
                     name="city"
@@ -1147,15 +1038,8 @@ const handleprimarybutton = async (id)=>{
                     required
                   />
                 </div>
-
                 <div className="col-md-4">
-                  <label
-                    htmlFor="state"
-                    className="form-label-custom"
-                  >
-                    State
-                  </label>
-
+                  <label htmlFor="state" className="form-label-custom">State</label>
                   <input
                     id="state"
                     name="state"
@@ -1167,15 +1051,8 @@ const handleprimarybutton = async (id)=>{
                     required
                   />
                 </div>
-
                 <div className="col-md-4">
-                  <label
-                    htmlFor="landmark"
-                    className="form-label-custom"
-                  >
-                    Land Mark
-                  </label>
-
+                  <label htmlFor="landmark" className="form-label-custom">Land Mark</label>
                   <input
                     id="landmark"
                     name="country"
@@ -1188,16 +1065,9 @@ const handleprimarybutton = async (id)=>{
                 </div>
               </div>
 
-              {/* Pincode and Alternative Phone */}
               <div className="row g-3 mb-4">
                 <div className="col-md-4">
-                  <label
-                    htmlFor="pincode"
-                    className="form-label-custom"
-                  >
-                    PinCode
-                  </label>
-
+                  <label htmlFor="pincode" className="form-label-custom">PinCode</label>
                   <input
                     id="pincode"
                     name="zip"
@@ -1211,15 +1081,10 @@ const handleprimarybutton = async (id)=>{
                     required
                   />
                 </div>
-
                 <div className="col-md-4">
-                  <label
-                    htmlFor="alternativePhone"
-                    className="form-label-custom"
-                  >
+                  <label htmlFor="alternativePhone" className="form-label-custom">
                     Alternative Phone Number (Optional)
                   </label>
-
                   <input
                     id="alternativePhone"
                     name="alternativePhone"
@@ -1234,16 +1099,10 @@ const handleprimarybutton = async (id)=>{
                 </div>
               </div>
 
-              {/* Modal Buttons */}
               <div className="alladdress-modal-actions">
-                <button
-                  type="button"
-                  className="btn-modal-cancel"
-                  onClick={closeModal}
-                >
+                <button type="button" className="btn-modal-cancel" onClick={closeModal}>
                   Cancel
                 </button>
-
                 <button type="submit" className="btn-modal-save">
                   Save
                 </button>
