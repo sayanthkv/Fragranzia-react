@@ -105,8 +105,9 @@ const [loading, setLoading] = useState(true);
     alternativePhone: "",
   });
   const [addressType, setAddressType] = useState("Home");
+  const [primaryAddress,setPrimaryAddress] = useState()
 
-   const { saveaddress,fetchdata: fetchAddressesFromService,updateaddress } = UserService();
+   const { saveaddress,fetchdata: fetchAddressesFromService,updateaddress,setprimary } = UserService();
 
   const [addressFormData, setAddressFormData] = useState({
     fullName: "",
@@ -229,6 +230,11 @@ const [loading, setLoading] = useState(true);
     );
   }
 };
+
+const handleprimarybutton = async (id)=>{
+  await setprimary(id)
+  await getAddresses()
+}
 
   
    useEffect(() => {
@@ -428,18 +434,46 @@ const [loading, setLoading] = useState(true);
   <p>No saved addresses found. Click Add Address to save one.</p>
 ) : (
   <div className="row g-4">
-    {addresses.map((address, index) => (
+  {addresses.map((address, index) => {
+    const isPrimary = address.isPrimary;
+
+    return (
       <div className="col-12 col-md-6 col-xl-4" key={address._id}>
-        <div className="address-card h-100">
+        <div
+          className={`address-card h-100 ${isPrimary ? 'primary-card' : ''}`}
+          style={
+            isPrimary
+              ? {
+                  borderColor: '#198754', // Bootstrap green accent
+                  boxShadow: '0 0.5rem 1rem rgba(25, 135, 84, 0.25)', // Green subtle shadow
+                  backgroundColor: '#f8fff9', // Optional soft green background tint
+                }
+              : {}
+          }
+        >
           <div className="d-flex justify-content-between align-items-center">
             <h2 className="address-title">
               Address {index + 1}
             </h2>
 
-            <span className="badge-tag">
-              <i className="fa-solid fa-location-dot"></i>
-              Saved
-            </span>
+            <div className="primary-actions d-flex align-items-center gap-2">
+              {isPrimary ? (
+                <span className="badge bg-success">
+                  <i className="fa-solid fa-circle-check me-1"></i> Primary
+                </span>
+              ) : (
+                <button
+                  onClick={() => handleprimarybutton(address._id)}
+                  className="btn btn-outline-success btn-sm setprimary"
+                >
+                  Set as primary
+                </button>
+              )}
+
+              <span className="badge-tag">
+                <i className="fa-solid fa-location-dot"></i> Saved
+              </span>
+            </div>
           </div>
 
           <div className="fw-bold my-2 address-name">
@@ -447,8 +481,7 @@ const [loading, setLoading] = useState(true);
           </div>
 
           <p className="address-text">
-            {address.street}, {address.city}, {address.state},
-            {address.country} - {address.zip}
+            {address.street}, {address.city}, {address.state}, {address.country} - {address.zip}
           </p>
 
           <div className="alladdress-card-actions">
@@ -465,8 +498,9 @@ const [loading, setLoading] = useState(true);
           </div>
         </div>
       </div>
-    ))}
-  </div>
+    );
+  })}
+</div>
 )}
             
                

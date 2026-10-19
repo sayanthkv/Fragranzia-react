@@ -136,4 +136,25 @@ const updateAddress = async (req, res) => {
 };
 
 
-module.exports = { addAddress,getaddress,updateAddress };
+const primaryaddress = async (req,res)=>{
+
+  const {id} = req.params
+  const userId = req.userId;
+  
+  await Address.findOneAndUpdate(
+      { user: userId, isPrimary: true },
+      { $set: { isPrimary: false } }
+    );
+    
+  const updateprimary = await Address.findOneAndUpdate({ _id: id, user: userId },
+    {isPrimary:true},
+    {new:true}
+  )
+
+  return res.status(200).json(updateprimary)
+
+
+
+}
+
+module.exports = { addAddress,getaddress,updateAddress,primaryaddress };

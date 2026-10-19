@@ -9,7 +9,10 @@ const addressSchema = new mongoose.Schema({
   state: { type: String, required: true },
   zip: { type: String, required: true },
   country: { type: String, required: true },
-  isDefault: { type: Boolean, default: false }, // If this is the user's default address
+  isPrimary: {
+    type: Boolean,
+    default: false
+  } // If this is the user's default address
 },
   { timestamps: true });
 module.exports = {

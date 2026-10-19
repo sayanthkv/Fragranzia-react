@@ -9,13 +9,11 @@ import React from "react";
 import Profile from "./pages/user/Profile.jsx";
 import Profileedit from "./pages/user/Profileedit.jsx";
 import { Route,Routes } from "react-router-dom";
-// import Alladdressview from "./pages/user/Alladdressview.jsx"
 import Newaddress from "./pages/user/Newaddress.jsx";
-import OrderTracking from "./pages/user/OrderTracking.jsx";
+
 import Category from "./pages/admin/Category.jsx"
 import Adminproducts from "./pages/admin/Adminproducts.jsx"
 import Adminaddproducts from "./pages/admin/Adminaddproducts.jsx";
-import Paymentpagetwo from "./pages/user/Paymentpagetwo.jsx";
 import Ordersuccess from "./pages/user/Ordersuccess.jsx"
 import Orderfailure from "./pages/user/Orderfailure.jsx"
 import AdminCustomerdetails from "./pages/admin/AdminCustomerdetails.jsx"
@@ -38,13 +36,10 @@ function App(){
                 <Route path="/About" element={<About/>}/>
                 <Route path="/Profile" element={<Profile/>}/>
                 <Route path="/Profileedit" element={<Profileedit/>}/>
-                {/* <Route path="/Alladdressview" element={<Alladdressview/>}/> */}
                 <Route path="/Newaddress" element={<Newaddress/>}/>      
-                <Route path="/OrderTracking" element={<OrderTracking/>}/>
                 <Route path="/AdminCategory" element={<Category/>}/>
                 <Route path="/AdminProducts" element={<Adminproducts/>}/>
                 <Route path="/AdminaddProducts" element={<Adminaddproducts/>}/>
-                <Route path="/Paymentpagetwo" element={<Paymentpagetwo/>}/>
                 <Route path="/Ordersuccess" element={<Ordersuccess/>}/>
                 <Route path="/Orderfailure" element={<Orderfailure/>}/>
                 <Route path='/AdminCustomerdetails' element={<AdminCustomerdetails/>}/>

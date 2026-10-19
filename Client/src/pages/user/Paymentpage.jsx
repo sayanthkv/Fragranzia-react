@@ -196,39 +196,23 @@ const Paymentpage = () => {
             </div>
 
             {/* Personal Details & Categories */}
-            <div className="H1 col-12">
-              <h3 className="fw-bold my-5 mx-0">Personal Details</h3>
+            <div className="H1 col-12 my-3">
+              <h3 className="fw-bold my-3 mx-0">Personal Details</h3>
               <div className="button d-flex gap-4 flex-wrap">
                 <button type="button" className="icon-btn a">
                   <b>
                     <a href="Profile-address.html">Add Address+</a>
                   </b>
                 </button>
-                <button
-                  type="button"
-                  style={{ backgroundColor: '#043948', color: 'white' }}
-                >
-                  <b>
-                    <i className="fa-solid fa-house"></i> Home
-                  </b>
-                </button>
-                <button type="button">
-                  <b>
-                    <i className="fa-solid fa-building"></i> Office
-                  </b>
-                </button>
-                <button type="button">
-                  <b>
-                    <i className="fa-solid fa-address-book"></i> Other
-                  </b>
-                </button>
+                
+                
               </div>
             </div>
 
             {/* Address Overflow Container */}
             <div className="addressoverflow mt-4">
               
-                    <h4 className="fw-bold my-3 mx-0">Address</h4>
+                  
                     {details.map((Content,ind)=>(
                   <div className="H2 col-12 mb-3" key={ind}>
                 <div className="section2 p-3">

@@ -186,9 +186,7 @@ const Cart = () => {
       return;
     }
 
-    alert(
-      "Your cart is ready! Connect your checkout and payment flow to continue."
-    );
+   
   };
 
   return (
@@ -515,7 +513,8 @@ const Cart = () => {
                 onClick={handleProceedToBuy}
                 disabled={loading || cartItems.length === 0}
               >
-                Proceed to Buy
+               <Link to='/paymentpage'> Proceed to Buy
+               </Link>
               </button>
 
               <div className="cart-trust-text">

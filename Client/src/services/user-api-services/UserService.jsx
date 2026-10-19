@@ -95,7 +95,10 @@ const updateaddress = async (id, data) => {
   return response.data
  }
 
-
+const setprimary = async (id) => {
+  const response = await axiosPrivate.put(`/address/primaryaddress/${id}`);
+  return response.data;
+};
 
 return{
   regUser,
@@ -112,7 +115,8 @@ return{
   fetchdata,
   updateaddress,
   getUserdata,
-  updatedetails
+  updatedetails,
+  setprimary
 }
 
  }
