@@ -9,7 +9,7 @@ import React from "react";
 import Profile from "./pages/user/Profile.jsx";
 import Profileedit from "./pages/user/Profileedit.jsx";
 import { Route,Routes } from "react-router-dom";
-import Alladdressview from "./pages/user/Alladdressview.jsx"
+// import Alladdressview from "./pages/user/Alladdressview.jsx"
 import Newaddress from "./pages/user/Newaddress.jsx";
 import OrderTracking from "./pages/user/OrderTracking.jsx";
 import Category from "./pages/admin/Category.jsx"
@@ -38,7 +38,7 @@ function App(){
                 <Route path="/About" element={<About/>}/>
                 <Route path="/Profile" element={<Profile/>}/>
                 <Route path="/Profileedit" element={<Profileedit/>}/>
-                <Route path="/Alladdressview" element={<Alladdressview/>}/>
+                {/* <Route path="/Alladdressview" element={<Alladdressview/>}/> */}
                 <Route path="/Newaddress" element={<Newaddress/>}/>      
                 <Route path="/OrderTracking" element={<OrderTracking/>}/>
                 <Route path="/AdminCategory" element={<Category/>}/>

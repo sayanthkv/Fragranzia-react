@@ -83,10 +83,18 @@ const updatedata = async (req, res) => {
   }
 };
 
+const getallusers = async (req,res) =>{
+
+  const alluser = await User.find()
+
+  return res.status(200).json(alluser)
+}
+
 module.exports = {
   register,
   login,
   home,
   getdata,
-  updatedata
+  updatedata,
+  getallusers
 };

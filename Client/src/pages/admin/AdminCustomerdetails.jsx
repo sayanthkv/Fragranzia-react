@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   LuLayoutDashboard,
   LuShoppingBag,
@@ -17,6 +17,8 @@ import {
 import './AdminCustomerdetails.css';
 import { Link } from 'react-router-dom';
 
+import AdminService from '../../services/admin-api-services/AdminService';
+
 
 
 const AdminCustomerdetails = () => {
@@ -25,26 +27,33 @@ const AdminCustomerdetails = () => {
   const [usersDetails, setUsersDetails] = useState([
 
     {
-      name: 'abcd',
-      phone: 9993590,
-      email: 'hdedd',
+      name: '',
+      phone: '',
+      email: '',
       action: '',
       status: 'Blocked'
     }, {
-      name: 'abcd',
-      phone: 9993590,
-      email: 'hdedd',
+      name: '',
+      phone: '',
+      email: '',
       action: '',
       status: 'Blocked'
     }, {
-      name: 'abcd',
-      phone: 9993590,
-      email: 'hdedd',
+      name: '',
+      phone: '',
+      email: '',
       action: '',
       status: 'Blocked'
     }
 
   ])
+
+  const {fetchUserdetails} = AdminService
+
+  const fetchUsers = async ()=>{
+   let res = await fetchUserdetails()
+   setUsersDetails(res.data)
+  }
 
   const [selectedCustomer, setSelectedCustomer] = useState(null)
 
@@ -73,6 +82,10 @@ const AdminCustomerdetails = () => {
   const handleCloseProduct = () => {
     setSelectedCustomer(null)
   }
+
+  useEffect(()=>{
+    fetchUsers
+  },[])
   return (
     <>
       <div className="product-main-container">

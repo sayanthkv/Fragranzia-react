@@ -54,6 +54,11 @@ const AdminService = () => {
         return response?.data
     };
 
+     const fetchUsers = async ()=>{
+  const response = await axiosPrivate.get("/api/auth/getallusers")
+  return response.data
+ }
+
     return {
         // getHomePageData,
         // postRegister,
@@ -64,7 +69,8 @@ const AdminService = () => {
         getCategory,
         editStatus,
         getProduct,
-        editProductStatus
+        editProductStatus,
+        fetchUsers
         // handleToggleProduct,
         // handleToggleCategory,
         // handleToggleUser,
