@@ -324,11 +324,11 @@ const Products = () => {
 
                     <p className="productpage-card-text card-text mt-2">
                       <span className="productpage-price">
-                        Rs {products.price}
+                        Rs {products.saleprice}
                       </span>
 
                       <span className="productpage-old-price">
-                        <s>Rs {products.saleprice}</s>
+                        <s>Rs {products.price}</s>
                       </span>
                     </p>
                   </div>

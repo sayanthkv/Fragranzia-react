@@ -536,7 +536,7 @@ export default function Profile() {
                               <small className="text-muted d-block">Quantity: {item.quantity}</small>
                             </div>
                             <div className="text-end fw-bold fs-6">
-                              Rs {item.product?.price ? (item.product.price * item.quantity).toLocaleString("en-IN") : 0}
+                              Rs {order.totalPrice ? (order.totalPrice * item.quantity).toLocaleString("en-IN") : 0}
                             </div>
                           </div>
                         ))}
@@ -546,7 +546,7 @@ export default function Profile() {
                             Payment: <strong>{order.paymentMethod?.toUpperCase()}</strong> ({order.paymentStatus})
                           </span>
                           <span className="fs-5 fw-bold text-dark">
-                            Total: Rs {Number(order.totalPrice || 0).toLocaleString("en-IN")}
+                            Total: Rs {Number(order.totalPrice * order.quantity || 0).toLocaleString("en-IN")}
                           </span>
                         </div>
                       </div>

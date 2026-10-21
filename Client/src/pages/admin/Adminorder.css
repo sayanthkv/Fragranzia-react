@@ -282,6 +282,7 @@ a {
     display: flex;
     flex-direction: column;
     gap: 5px;
+   
 }
 
 .order-product-info strong {

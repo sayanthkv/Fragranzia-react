@@ -2,7 +2,6 @@ const { Order } = require("../models/Order");
 const { User } = require("../models/User");
 const { Products } = require("../models/productModel");
 
-// 1. User: Place a new order
 const placeOrder = async (req, res) => {
   try {
     const userId = req.userId || req.user?._id || req.user?.id;
@@ -44,11 +43,31 @@ const placeOrder = async (req, res) => {
       });
     }
 
+    // 1. Stock Validation Check
+    for (const item of orderItems) {
+      const product = await Products.findById(item.product);
+
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+          message: `Product not found for ID: ${item.product}`,
+        });
+      }
+
+      if (product.quantity < item.quantity) {
+        return res.status(400).json({
+          success: false,
+          message: `Insufficient stock for "${product.name}". Available: ${product.quantity}, Requested: ${item.quantity}`,
+        });
+      }
+    }
+
+    // 2. Prepare Payment & Balance Parameters
     const isCOD = paymentMethod.toLowerCase() === "cod";
-    const computedPaymentStatus =
-      paymentStatus || (isCOD ? "Pending" : "Paid");
+    const computedPaymentStatus = paymentStatus || (isCOD ? "Pending" : "Paid");
     const computedBalance = balanceTotal ?? (isCOD ? totalPrice : 0);
 
+    // 3. Create and Save the New Order
     const newOrder = new Order({
       user: userId,
       orderItems,
@@ -62,14 +81,25 @@ const placeOrder = async (req, res) => {
 
     const savedOrder = await newOrder.save();
 
-    // Clear cart and reset cart total inside the User document
+    // 4. Reduce Quantity in Database using findByIdAndUpdate in parallel
+    await Promise.all(
+      orderItems.map((item) =>
+        Products.findByIdAndUpdate(
+          item.product,
+          { $inc: { quantity: -item.quantity } }, // Decrement stock quantity
+          { new: true }
+        )
+      )
+    );
+
+    // 5. Clear Cart inside User Document
     await User.findByIdAndUpdate(userId, {
       $set: { cart: [], cart_total: 0 },
     });
 
     return res.status(201).json({
       success: true,
-      message: "Order placed successfully!",
+      message: "Order placed successfully and product stock updated!",
       order: savedOrder,
     });
   } catch (error) {
@@ -80,8 +110,7 @@ const placeOrder = async (req, res) => {
       error: error.message,
     });
   }
-};
-
+}
 // 2. User: Get orders for logged-in user
 const getMyOrders = async (req, res) => {
   try {

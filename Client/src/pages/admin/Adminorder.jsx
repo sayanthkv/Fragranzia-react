@@ -219,7 +219,7 @@ const Adminorder = () => {
                                                     <td>
                                                         <div className="order-id-wrapper">
                                                             <span className="order-id">
-                                                                #{data._id?.slice(-8)}
+                                                                #{data._id?.slice(-8)}...
                                                             </span>
                                                             <LuCopy
                                                                 className="order-copy-icon"
@@ -475,12 +475,12 @@ const Adminorder = () => {
 
                                         <div className="ordered-price">
                                             <span>Pricing</span>
-                                            <strong>₹{item.product?.price || 0} x {item.quantity}</strong>
+                                            <strong>₹{item.product?.saleprice || 0} x {item.quantity}</strong>
                                         </div>
 
                                         <div className="ordered-total">
                                             <span>Total Price</span>
-                                            <strong>₹{(item.product?.price || 0) * item.quantity}</strong>
+                                            <strong>₹{(item.product?.saleprice || 0) * item.quantity}</strong>
                                         </div>
                                     </div>
                                 ))}
