@@ -1,134 +1,152 @@
-import React from 'react'
-
-
+import React from 'react';
 import useAxiosPrivate from '../../hooks/useAxiosprivate';
 
 const UserService = () => {
+  const axiosPrivate = useAxiosPrivate();
 
-     const axiosPrivate = useAxiosPrivate()
-
-     const getProduct = async () => {
+  const getProduct = async () => {
     const response = await axiosPrivate.get("/Products");
     return response.data;
-    
   };
 
   const getDetailedProduct = async (id) => {
-  const response = await axiosPrivate.get(`/Products/${id}`);
-  return response.data;
-};
-  
-const Addproducttocart = async (id, quantity = 1) => {
-  const response = await axiosPrivate.post(`/Cart/add/${id}`, {
-    quantity,
-  });
-
-  return response.data;
-};
-
- const regUser = async (data)=>{
-    const response = await axiosPrivate.post("/api/auth/register",data);
-    return response.data
-  }
-
-  const logUser = async (data) => {
-    const response = await axiosPrivate.post("/api/auth/login",data);
+    const response = await axiosPrivate.get(`/Products/${id}`);
     return response.data;
-    
   };
 
-const getCart = async () => {
-  const response = await axiosPrivate.get("/Cart/");
-  return response.data;
-};
+  const Addproducttocart = async (id, quantity = 1) => {
+    const response = await axiosPrivate.post(`/Cart/add/${id}`, {
+      quantity,
+    });
+    return response.data;
+  };
 
+  const regUser = async (data) => {
+    const response = await axiosPrivate.post("/api/auth/register", data);
+    return response.data;
+  };
 
-const removeProductFromCart = async (id) => {
-  const response = await axiosPrivate.delete(`/Cart/remove/${id}`);
-  return response.data;
-};
+  const logUser = async (data) => {
+    const response = await axiosPrivate.post("/api/auth/login", data);
+    return response.data;
+  };
 
+  const getCart = async () => {
+    const response = await axiosPrivate.get("/Cart/");
+    return response.data;
+  };
 
-  const addToWishlist = async (id)=>{
+  const removeProductFromCart = async (id) => {
+    const response = await axiosPrivate.delete(`/Cart/remove/${id}`);
+    return response.data;
+  };
+
+  const addToWishlist = async (id) => {
     const response = await axiosPrivate.post(`/Wishlist/add/${id}`);
-    return response.data
-  }
+    return response.data;
+  };
 
   const getWishlist = async () => {
-  const response = await axiosPrivate.get("/Wishlist/");
-  return response.data;
-};
+    const response = await axiosPrivate.get("/Wishlist/");
+    return response.data;
+  };
 
-const removeProductFromWishlist = async (id) => {
-  const response = await axiosPrivate.delete(`/Wishlist/remove/${id}`);
-  return response.data;
-};
+  const removeProductFromWishlist = async (id) => {
+    const response = await axiosPrivate.delete(`/Wishlist/remove/${id}`);
+    return response.data;
+  };
 
+  const saveaddress = async (data) => {
+    const response = await axiosPrivate.post("/address/saveaddress", data);
+    return response.data;
+  };
 
-const saveaddress = async (data) => {
+  const fetchdata = async () => {
+    const response = await axiosPrivate.get("/address/getdata");
+    return response.data;
+  };
 
-        const response = await axiosPrivate.post("/address/saveaddress",data);
-        return response.data;
-    };
+  const updateaddress = async (id, data) => {
+    const response = await axiosPrivate.put(
+      `/address/updateaddress/${id}`,
+      data
+    );
+    return response.data;
+  };
 
-    const fetchdata = async () => {
-  const response = await axiosPrivate.get("/address/getdata");
-  return response.data;}
+  const getUserdata = async () => {
+    const response = await axiosPrivate.get("/api/auth/getdata");
+    return response.data;
+  };
 
-  
-const updateaddress = async (id, data) => {
-  const response = await axiosPrivate.put(
-    `/address/updateaddress/${id}`,
-    data
-  );
+  const updatedetails = async (data) => {
+    const response = await axiosPrivate.put("/api/auth/updatedata", data);
+    return response.data;
+  };
 
-  return response.data;
-};
+  const setprimary = async (id) => {
+    const response = await axiosPrivate.put(`/address/primaryaddress/${id}`);
+    return response.data;
+  };
 
- const getUserdata = async () => {
-  const response = await axiosPrivate.get("/api/auth/getdata");
-  return response.data
- }
+  const fetchprimaryaddress = async () => {
+    const response = await axiosPrivate.get("/address/getprimaryaddress");
+    return response.data;
+  };
 
- const updatedetails = async (data)=>{
-  const response = await axiosPrivate.put("/api/auth/updatedata",data)
-  return response.data
- }
+  const updateCartQuantity = async (id, quantity) => {
+    const response = await axiosPrivate.put(`/Cart/update/${id}`, { quantity });
+    return response.data;
+  };
 
-const setprimary = async (id) => {
-  const response = await axiosPrivate.put(`/address/primaryaddress/${id}`);
-  return response.data;
-};
+  // Accepts order payload (orderItems, shippingAddress, paymentMethod, totalPrice, balanceTotal, paymentStatus)
+  const placeorder = async (orderData) => {
+    const response = await axiosPrivate.post("/Order/placeorder", orderData);
+    return response.data;
+  };
 
-const fetchprimaryaddress = async () => {
-  const response = await axiosPrivate.get("/address/getprimaryaddress")
-  return response.data
-}
-const updateCartQuantity = async (id, quantity) => {
-  const response = await axiosPrivate.put(`/Cart/update/${id}`, { quantity });
-  return response.data;
-};
-return{
-  regUser,
-  logUser,
+  // Fetch all orders for current logged-in user
+  const getOrders = async () => {
+    const response = await axiosPrivate.get("/Order/my-orders");
+    return response.data;
+  };
+
+  // Fetch specific order by ID
+  const getOrderById = async (id) => {
+    const response = await axiosPrivate.get(`/Order/${id}`);
+    return response.data;
+  };
+
+  // Cancel order by ID
+  const cancelOrder = async (id) => {
+    const response = await axiosPrivate.put(`/Order/cancel/${id}`);
+    return response.data;
+  };
+
+  return {
+    regUser,
+    logUser,
     getProduct,
-  getDetailedProduct,
-  Addproducttocart,
-  getCart,
-  removeProductFromCart,
-  addToWishlist,
-  getWishlist,
-  removeProductFromWishlist,
-  saveaddress,
-  fetchdata,
-  updateaddress,
-  getUserdata,
-  updatedetails,
-  setprimary,
-  fetchprimaryaddress,
-  updateCartQuantity
-}
+    getDetailedProduct,
+    Addproducttocart,
+    getCart,
+    removeProductFromCart,
+    addToWishlist,
+    getWishlist,
+    removeProductFromWishlist,
+    saveaddress,
+    fetchdata,
+    updateaddress,
+    getUserdata,
+    updatedetails,
+    setprimary,
+    fetchprimaryaddress,
+    updateCartQuantity,
+    placeorder,
+    getOrders,
+    getOrderById,
+    cancelOrder,
+  };
+};
 
- }
-
- export default UserService
+export default UserService;

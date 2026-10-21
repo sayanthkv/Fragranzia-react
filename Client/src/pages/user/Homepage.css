@@ -676,6 +676,7 @@ section {
   border-radius: 8px;
   border: none;
   transition: background-color 0.2s ease, transform 0.1s ease;
+  
 }
 
 .homepage-btn-banner-shop:hover {

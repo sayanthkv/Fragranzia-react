@@ -2,24 +2,26 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./Paymentpage.css";
 
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import UserService from "../../services/user-api-services/UserService";
 
 const Paymentpage = () => {
-  const { fetchprimaryaddress, getCart } = UserService();
+  const navigate = useNavigate();
+  const { fetchprimaryaddress, getCart, placeorder } = UserService();
 
   const [details, setDetails] = useState(null);
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("gpay");
 
   const formatPrice = (amount) =>
     Number(amount || 0).toLocaleString("en-IN", {
       maximumFractionDigits: 2,
     });
 
-  // Dynamically normalize database cart items and quantities
   const normalizeCartItem = (item) => {
     const product = item.product || {};
     const price = Number(item.price ?? product.price ?? product.saleprice ?? 0);
@@ -29,6 +31,7 @@ const Paymentpage = () => {
 
     return {
       id: String(item._id || item.id || product._id || ""),
+      productId: String(product._id || item.product || ""),
       name: product.name || product.title || "Fragranzia Eau De Parfum",
       image: product.image || "default.png",
       rating: product.rating || 4.5,
@@ -57,11 +60,7 @@ const Paymentpage = () => {
 
       setCartItems(items.map(normalizeCartItem));
     } catch (error) {
-      console.error(
-        "Failed to fetch cart:",
-        error.response?.data || error.message
-      );
-
+      console.error("Failed to fetch cart:", error.response?.data || error.message);
       setErrorMessage(
         error.response?.status === 401
           ? "Please log in to view your cart."
@@ -77,17 +76,17 @@ const Paymentpage = () => {
     fetchCart();
   }, []);
 
-  // Calculate dynamic pricing across all updated cart items
-  const totalOriginalPrice = cartItems.reduce(
-    (acc, item) => acc + item.originalPrice * item.quantity,
-    0
-  );
   const totalSellingPrice = cartItems.reduce(
     (acc, item) => acc + item.price * item.quantity,
     0
   );
-  const totalDiscount = Math.max(0, totalOriginalPrice - totalSellingPrice);
 
+  const totalOriginalPrice = cartItems.reduce(
+    (acc, item) => acc + item.originalPrice * item.quantity,
+    0
+  );
+
+  const totalDiscount = Math.max(0, totalOriginalPrice - totalSellingPrice);
   const discountPercentage =
     totalOriginalPrice > 0
       ? Math.round((totalDiscount / totalOriginalPrice) * 100)
@@ -97,6 +96,48 @@ const Paymentpage = () => {
     (acc, item) => acc + item.quantity,
     0
   );
+
+  const handlePlaceOrder = async () => {
+    if (!details || !details._id) {
+      alert("Please select a primary shipping address before placing your order.");
+      return;
+    }
+
+    if (cartItems.length === 0) {
+      alert("Your cart is empty.");
+      return;
+    }
+
+    try {
+      setIsPlacingOrder(true);
+
+      const orderPayload = {
+        orderItems: cartItems.map((item) => ({
+          product: item.productId,
+          quantity: item.quantity,
+        })),
+        shippingAddress: details._id,
+        paymentMethod: selectedPaymentMethod,
+        totalPrice: totalSellingPrice,
+        balanceTotal: selectedPaymentMethod === "cod" ? totalSellingPrice : 0,
+        paymentStatus: selectedPaymentMethod === "cod" ? "Pending" : "Paid",
+      };
+
+      const response = await placeorder(orderPayload);
+
+      if (response?.success) {
+        alert("Order placed successfully!");
+        navigate("/Profile?tab=orders");
+      } else {
+        alert(response?.message || "Failed to place order. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error placing order:", error);
+      alert(error.response?.data?.message || "Something went wrong while placing your order.");
+    } finally {
+      setIsPlacingOrder(false);
+    }
+  };
 
   return (
     <>
@@ -112,42 +153,32 @@ const Paymentpage = () => {
             type="button"
             data-bs-toggle="collapse"
             data-bs-target="#navbarContent"
-            aria-controls="navbarContent"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
           >
             <span className="navbar-toggler-icon"></span>
           </button>
 
-          <div
-            className="collapse navbar-collapse justify-content-end"
-            id="navbarContent"
-          >
+          <div className="collapse navbar-collapse justify-content-end" id="navbarContent">
             <ul className="navbar-nav align-items-center gap-2">
               <li className="nav-item">
                 <span className="nav-link active homepage-nav-link">
                   <Link to="/">Home</Link>
                 </span>
               </li>
-
               <li className="nav-item">
                 <span className="nav-link homepage-nav-link">
                   <Link to="/Products">Products</Link>
                 </span>
               </li>
-
               <li className="nav-item">
                 <span className="nav-link homepage-nav-link">
                   <Link to="/Wishlist">Wishlist</Link>
                 </span>
               </li>
-
               <li className="nav-item me-3">
                 <span className="nav-link homepage-nav-link">
                   <Link to="/About">About</Link>
                 </span>
               </li>
-
               <li className="nav-item me-2">
                 <div className="search-wrapper homepage-search-wrapper">
                   <i className="fa-solid fa-magnifying-glass fa-search"></i>
@@ -155,31 +186,23 @@ const Paymentpage = () => {
                     className="form-control"
                     type="search"
                     placeholder="Search Here"
-                    aria-label="Search"
                   />
                 </div>
               </li>
-
               <li className="nav-item">
-                <span className="icon-btn homepage-icon-btn" aria-label="Cart">
+                <span className="icon-btn homepage-icon-btn">
                   <Link to="/Cart">
                     <i className="fa-solid fa-cart-shopping"></i>
                   </Link>
                 </span>
               </li>
-
               <li className="nav-item">
-                <button
-                  className="icon-btn homepage-icon-btn"
-                  type="button"
-                  aria-label="Notifications"
-                >
+                <button className="icon-btn homepage-icon-btn" type="button">
                   <i className="fa-regular fa-bell"></i>
                 </button>
               </li>
-
               <li className="nav-item">
-                <span className="icon-btn homepage-icon-btn" aria-label="Profile">
+                <span className="icon-btn homepage-icon-btn">
                   <Link to="/Profile">
                     <i className="fa-regular fa-user"></i>
                   </Link>
@@ -195,7 +218,6 @@ const Paymentpage = () => {
           {/* Left Section */}
           <div className="left-section col-12 col-md-7 d-flex flex-column justify-content-between">
             <div className="sec1main d-flex flex-column h-100 justify-content-between">
-              {/* Product Slider - Centered and flexibly sized */}
               {loading ? (
                 <div className="p-3 text-center">Loading cart...</div>
               ) : errorMessage ? (
@@ -213,10 +235,7 @@ const Paymentpage = () => {
                     <div
                       className="section1 p-3 flex-shrink-0 mx-auto"
                       key={item.id}
-                      style={{
-                        scrollSnapAlign: "start",
-                        width: "100%",
-                      }}
+                      style={{ scrollSnapAlign: "start", width: "100%" }}
                     >
                       <div className="row align-items-center g-3">
                         <div className="col-12 col-sm-4 text-center">
@@ -228,9 +247,7 @@ const Paymentpage = () => {
                         </div>
 
                         <div className="col-12 col-sm-8 text-center text-sm-start">
-                          <span className="fw-bolder fs-5 d-block">
-                            {item.name}
-                          </span>
+                          <span className="fw-bolder fs-5 d-block">{item.name}</span>
                           <span>
                             Autograph {item.rating}{" "}
                             <i
@@ -257,9 +274,7 @@ const Paymentpage = () => {
                                 </span>
                                 <span className="text-success fw-bold">
                                   {Math.round(
-                                    ((item.originalPrice - item.price) /
-                                      item.originalPrice) *
-                                    100
+                                    ((item.originalPrice - item.price) / item.originalPrice) * 100
                                   )}
                                   % Off
                                 </span>
@@ -269,8 +284,7 @@ const Paymentpage = () => {
 
                           <div className="mt-2 text-muted small">
                             <span>
-                              Free delivery{" "}
-                              <i className="fa-solid fa-truck fa-xs"></i>
+                              Free delivery <i className="fa-solid fa-truck fa-xs"></i>
                             </span>
                             <br />
                             <span className="text-success fw-medium">
@@ -286,7 +300,7 @@ const Paymentpage = () => {
                 <div className="p-3 text-center">Your cart is empty.</div>
               )}
 
-              {/* Delivery Address Section - Placed at the very bottom */}
+              {/* Delivery Address Section */}
               <div className="col-12 mt-auto pt-3">
                 <div className="d-flex justify-content-between align-items-center mb-2">
                   <h3 className="fw-bold fs-5 text-dark mb-0">Delivery Address</h3>
@@ -394,10 +408,7 @@ const Paymentpage = () => {
                 <div className="d-flex flex-column gap-4">
                   <label className="d-flex justify-content-between align-items-center w-100 cursor-pointer">
                     <div className="d-flex align-items-center gap-3">
-                      <i
-                        className="fa-brands fa-google-pay fs-2 text-dark"
-                        style={{ width: "35px" }}
-                      ></i>
+                      <i className="fa-brands fa-google-pay fs-2 text-dark" style={{ width: "35px" }}></i>
                       <span className="fw-medium fs-6">Google Pay</span>
                     </div>
                     <input
@@ -405,55 +416,47 @@ const Paymentpage = () => {
                       type="radio"
                       name="paymentMethod"
                       value="gpay"
-                      defaultChecked
+                      checked={selectedPaymentMethod === "gpay"}
+                      onChange={(e) => setSelectedPaymentMethod(e.target.value)}
                       style={{ width: "1.4rem", height: "1.4rem" }}
                     />
                   </label>
 
                   <label className="d-flex justify-content-between align-items-center w-100 cursor-pointer">
                     <div className="d-flex align-items-center gap-3">
-                      <i
-                        className="fa-solid fa-money-bill-wave fs-4 text-secondary"
-                        style={{ width: "35px" }}
-                      ></i>
-                      <span className="fw-medium fs-6">
-                        Cash on delivery (cash/UPI)
-                      </span>
+                      <i className="fa-solid fa-money-bill-wave fs-4 text-secondary" style={{ width: "35px" }}></i>
+                      <span className="fw-medium fs-6">Cash on delivery (cash/UPI)</span>
                     </div>
                     <input
                       className="form-check-input border-secondary m-0"
                       type="radio"
                       name="paymentMethod"
                       value="cod"
+                      checked={selectedPaymentMethod === "cod"}
+                      onChange={(e) => setSelectedPaymentMethod(e.target.value)}
                       style={{ width: "1.4rem", height: "1.4rem" }}
                     />
                   </label>
 
                   <label className="d-flex justify-content-between align-items-center w-100 cursor-pointer">
                     <div className="d-flex align-items-center gap-3">
-                      <i
-                        className="fa-solid fa-wallet fs-4 text-secondary"
-                        style={{ width: "35px" }}
-                      ></i>
-                      <span className="fw-medium fs-6">
-                        Paytm/Phone Pay/Amazon Pay etc
-                      </span>
+                      <i className="fa-solid fa-wallet fs-4 text-secondary" style={{ width: "35px" }}></i>
+                      <span className="fw-medium fs-6">Paytm/Phone Pay/Amazon Pay etc</span>
                     </div>
                     <input
                       className="form-check-input border-secondary m-0"
                       type="radio"
                       name="paymentMethod"
                       value="wallets"
+                      checked={selectedPaymentMethod === "wallets"}
+                      onChange={(e) => setSelectedPaymentMethod(e.target.value)}
                       style={{ width: "1.4rem", height: "1.4rem" }}
                     />
                   </label>
 
                   <label className="d-flex justify-content-between align-items-center w-100 cursor-pointer">
                     <div className="d-flex align-items-center gap-3">
-                      <i
-                        className="fa-regular fa-credit-card fs-4 text-secondary"
-                        style={{ width: "35px" }}
-                      ></i>
+                      <i className="fa-regular fa-credit-card fs-4 text-secondary" style={{ width: "35px" }}></i>
                       <span className="fw-medium fs-6">Credit/Debit card</span>
                     </div>
                     <input
@@ -461,16 +464,15 @@ const Paymentpage = () => {
                       type="radio"
                       name="paymentMethod"
                       value="card"
+                      checked={selectedPaymentMethod === "card"}
+                      onChange={(e) => setSelectedPaymentMethod(e.target.value)}
                       style={{ width: "1.4rem", height: "1.4rem" }}
                     />
                   </label>
 
                   <label className="d-flex justify-content-between align-items-center w-100 cursor-pointer">
                     <div className="d-flex align-items-center gap-3">
-                      <i
-                        className="fa-solid fa-building-columns fs-4 text-secondary"
-                        style={{ width: "35px" }}
-                      ></i>
+                      <i className="fa-solid fa-building-columns fs-4 text-secondary" style={{ width: "35px" }}></i>
                       <span className="fw-medium fs-6">Net Banking</span>
                     </div>
                     <input
@@ -478,6 +480,8 @@ const Paymentpage = () => {
                       type="radio"
                       name="paymentMethod"
                       value="netbanking"
+                      checked={selectedPaymentMethod === "netbanking"}
+                      onChange={(e) => setSelectedPaymentMethod(e.target.value)}
                       style={{ width: "1.4rem", height: "1.4rem" }}
                     />
                   </label>
@@ -487,8 +491,10 @@ const Paymentpage = () => {
               <button
                 className="btn w-100 mt-4 py-3 fw-bold text-white fs-5"
                 style={{ backgroundColor: "#043948", borderRadius: "8px" }}
+                onClick={handlePlaceOrder}
+                disabled={isPlacingOrder || cartItems.length === 0}
               >
-                Pay Now
+                {isPlacingOrder ? "Placing Order..." : "Pay Now"}
               </button>
             </div>
           </div>
