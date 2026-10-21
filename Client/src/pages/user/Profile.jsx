@@ -510,7 +510,7 @@ export default function Profile() {
                 {Array.isArray(orders) && orders.length > 0 ? (
                   <div className="d-flex flex-column gap-3">
                     {orders.map((order) => (
-                      <div key={order._id} className="card shadow-sm border-0 p-3">
+                      <div key={order._id} className="card shadow-lg border-0 p-3">
                         <div className="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
                           <div>
                             <span className="fw-bold text-dark me-2">Order ID: #{order._id}</span>

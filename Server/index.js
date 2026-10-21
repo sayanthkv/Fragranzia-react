@@ -9,13 +9,11 @@ const productsRoutes = require('./routes/productsRoutes');
 const authRoutes = require("./routes/authRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 const wishlistRoutes = require("./routes/wishlistRoutes");
-const addressRoutes = require("./routes/addressRoutes")
-const OrderRoutes = require("./routes/OrderRoutes")
+const addressRoutes = require("./routes/addressRoutes");
+const OrderRoutes = require("./routes/OrderRoutes");
 
 const app = express();
-
 const PORT = process.env.PORT || 5000;
-
 
 connectDb();
 
@@ -28,9 +26,10 @@ app.use('/Products', productsRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/Cart", cartRoutes);
 app.use("/Wishlist", wishlistRoutes);
-app.use("/address",addressRoutes)
-app.use("/Order",OrderRoutes)
+app.use("/address", addressRoutes);
 
+// Mounted under /api/orders to match Axios endpoints
+app.use("/api/orders", OrderRoutes);
 
 app.listen(PORT, () => {
   console.log(`Backend running on http://localhost:${PORT}`);

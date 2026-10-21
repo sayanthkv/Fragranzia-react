@@ -54,6 +54,20 @@ const AdminService = () => {
     return response.data;
   };
 
+  
+
+ // AdminService.jsx
+const getOrders = async () => {
+  // Update to /api/orders/admin/all
+  const response = await axiosPrivate.get("/api/orders/admin/all"); 
+  return response.data;
+};
+
+const updateStatus = async (orderId, data) => {
+  // Update to /api/orders/admin/status/:id
+  const response = await axiosPrivate.put(`/api/orders/admin/status/${orderId}`, data);
+  return response.data;
+};
   return {
     addToProduct,
     AddCategory,
@@ -66,6 +80,8 @@ const AdminService = () => {
     fetchUsers,
     fetchUserdetails: fetchUsers, // Exported as fetchUserdetails to resolve the undefined error
     toggleUserBlockStatus,
+    getOrders,
+    updateStatus 
   };
 };
 

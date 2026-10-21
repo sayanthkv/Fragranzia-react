@@ -99,27 +99,27 @@ const UserService = () => {
     return response.data;
   };
 
-  // Accepts order payload (orderItems, shippingAddress, paymentMethod, totalPrice, balanceTotal, paymentStatus)
+  // Place order -> Updated prefix to /api/orders
   const placeorder = async (orderData) => {
-    const response = await axiosPrivate.post("/Order/placeorder", orderData);
+    const response = await axiosPrivate.post("/api/orders/placeorder", orderData);
     return response.data;
   };
 
-  // Fetch all orders for current logged-in user
+  // Fetch all orders for current user -> Updated prefix to /api/orders
   const getOrders = async () => {
-    const response = await axiosPrivate.get("/Order/my-orders");
+    const response = await axiosPrivate.get("/api/orders/my-orders");
     return response.data;
   };
 
-  // Fetch specific order by ID
+  // Fetch specific order details -> Updated prefix to /api/orders
   const getOrderById = async (id) => {
-    const response = await axiosPrivate.get(`/Order/${id}`);
+    const response = await axiosPrivate.get(`/api/orders/${id}`);
     return response.data;
   };
 
-  // Cancel order by ID
+  // Cancel order by ID -> Updated prefix to /api/orders
   const cancelOrder = async (id) => {
-    const response = await axiosPrivate.put(`/Order/cancel/${id}`);
+    const response = await axiosPrivate.put(`/api/orders/cancel/${id}`);
     return response.data;
   };
 

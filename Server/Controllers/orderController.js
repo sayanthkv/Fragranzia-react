@@ -2,9 +2,9 @@ const { Order } = require("../models/Order");
 const { User } = require("../models/User");
 const { Products } = require("../models/productModel");
 
+// 1. User: Place a new order
 const placeOrder = async (req, res) => {
   try {
-    
     const userId = req.userId || req.user?._id || req.user?.id;
 
     if (!userId) {
@@ -23,7 +23,6 @@ const placeOrder = async (req, res) => {
       paymentStatus,
     } = req.body;
 
-  
     if (!orderItems || orderItems.length === 0) {
       return res.status(400).json({
         success: false,
@@ -50,7 +49,6 @@ const placeOrder = async (req, res) => {
       paymentStatus || (isCOD ? "Pending" : "Paid");
     const computedBalance = balanceTotal ?? (isCOD ? totalPrice : 0);
 
-    
     const newOrder = new Order({
       user: userId,
       orderItems,
@@ -84,7 +82,7 @@ const placeOrder = async (req, res) => {
   }
 };
 
-
+// 2. User: Get orders for logged-in user
 const getMyOrders = async (req, res) => {
   try {
     const userId = req.userId || req.user?._id || req.user?.id;
@@ -108,7 +106,7 @@ const getMyOrders = async (req, res) => {
   }
 };
 
-
+// 3. User: Get single order details by ID
 const getOrderById = async (req, res) => {
   try {
     const userId = req.userId || req.user?._id || req.user?.id;
@@ -141,7 +139,7 @@ const getOrderById = async (req, res) => {
   }
 };
 
-
+// 4. User: Cancel an order
 const cancelOrder = async (req, res) => {
   try {
     const userId = req.userId || req.user?._id || req.user?.id;
@@ -158,7 +156,6 @@ const cancelOrder = async (req, res) => {
       });
     }
 
-   
     if (["Shipped", "Out for Delivery", "Delivered"].includes(order.deliveryStatus)) {
       return res.status(400).json({
         success: false,
@@ -184,9 +181,76 @@ const cancelOrder = async (req, res) => {
   }
 };
 
+// 5. Admin: Fetch ALL orders across all users
+const getAllOrdersAdmin = async (req, res) => {
+  try {
+    const orders = await Order.find()
+      .populate("user", "name email phone")
+      .populate("orderItems.product")
+      .populate("shippingAddress")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      orders,
+    });
+  } catch (error) {
+    console.error("Error in getAllOrdersAdmin:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch all orders.",
+      error: error.message,
+    });
+  }
+};
+
+// 6. Admin: Update order delivery status
+const updateOrderStatusAdmin = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const { id } = req.params;
+
+    const order = await Order.findById(id);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found.",
+      });
+    }
+
+    order.deliveryStatus = status;
+
+    // Automatically update payment parameters if COD is delivered
+    if (status === "Delivered" && order.paymentMethod?.toLowerCase() === "cod") {
+      order.paymentStatus = "Paid";
+      order.paidAt = new Date();
+      order.balanceTotal = 0;
+    }
+
+    await order.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Order status updated successfully.",
+      order,
+    });
+  } catch (error) {
+    console.error("Error in updateOrderStatusAdmin:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update order status.",
+      error: error.message,
+    });
+  }
+};
+
+// Export all controller functions cleanly
 module.exports = {
   placeOrder,
   getMyOrders,
   getOrderById,
   cancelOrder,
+  getAllOrdersAdmin,
+  updateOrderStatusAdmin,
 };
