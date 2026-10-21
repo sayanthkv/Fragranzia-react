@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom"; // 1. Added useSearchParams
+import { Link, useSearchParams } from "react-router-dom"; 
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "@fortawesome/fontawesome-free/css/all.min.css";
@@ -7,10 +7,9 @@ import "./Profile.css";
 import UserService from "../../services/user-api-services/UserService";
 
 export default function Profile() {
-  const [searchParams] = useSearchParams(); // 2. Read search params
+  const [searchParams] = useSearchParams(); 
   const [activeTab, setActiveTab] = useState("profile");
 
-  // 3. Set activeTab based on URL query param (e.g. /Profile?tab=address)
   useEffect(() => {
     const tabParam = searchParams.get("tab");
     if (tabParam) {
@@ -18,26 +17,7 @@ export default function Profile() {
     }
   }, [searchParams]);
 
-  const orders = [
-    {
-      id: "#FRG10234",
-      status: "Delivered",
-      statusClass: "status-delivered",
-      title: "Autograph eau de parfum 100ml for men",
-      qty: 1,
-      price: "₹2,499",
-      image: "bc3f99636b9c6b0ac4018141c1cce56e3c9bfd36.jpg",
-    },
-    {
-      id: "#FRG10235",
-      status: "Out for Delivery",
-      statusClass: "status-out-for-delivery",
-      title: "Autograph eau de parfum 100ml for men",
-      qty: 1,
-      price: "₹2,499",
-      image: "bc3f99636b9c6b0ac4018141c1cce56e3c9bfd36.jpg",
-    },
-  ];
+  const [orders, setOrders] = useState([]);
   const [showEdit, setShowEdit] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -49,7 +29,7 @@ export default function Profile() {
     password: "",
   });
 
-  const { getUserdata, updatedetails } = UserService();
+  const { getUserdata, updatedetails, getOrders } = UserService();
 
   const togglePasswordVisibility = () => setShowPassword((previous) => !previous);
 
@@ -94,7 +74,26 @@ export default function Profile() {
     }
   };
 
-  useEffect(() => { fetchdata(); }, []);
+  const getorderedproducts = async () => {
+    try {
+      const res = await getOrders();
+      if (Array.isArray(res?.orders)) {
+        setOrders(res.orders);
+      } else if (Array.isArray(res)) {
+        setOrders(res);
+      } else {
+        setOrders([]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch user orders:", error);
+      setOrders([]);
+    }
+  };
+
+  useEffect(() => { 
+    fetchdata(); 
+    getorderedproducts();
+  }, []);
 
   const [showModal, setShowModal] = useState(false);
   const [addresses, setAddresses] = useState([]);
@@ -233,6 +232,20 @@ export default function Profile() {
   useEffect(() => {
     getAddresses();
   }, []);
+
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case "Delivered":
+        return "bg-success";
+      case "Cancelled":
+        return "bg-danger";
+      case "Shipped":
+      case "Out for Delivery":
+        return "bg-info text-dark";
+      default:
+        return "bg-warning text-dark";
+    }
+  };
 
   return (
     <>
@@ -501,30 +514,57 @@ export default function Profile() {
 
             {activeTab === "orders" && (
               <section className="profile-orders-section">
-                <div className="profile-orders-grid">
-                  {orders.map((order) => (
-                    <div key={order.id} className="profile-order-column">
-                      <article className="profile-order-card">
-                        <div className="profile-order-top">
-                          <p className="profile-order-id">Order ID: {order.id}</p>
-                          <span className={`profile-order-status ${order.statusClass}`}>
-                            {order.status}
+                {Array.isArray(orders) && orders.length > 0 ? (
+                  <div className="d-flex flex-column gap-3">
+                    {orders.map((order) => (
+                      <div key={order._id} className="card shadow-sm border-0 p-3">
+                        <div className="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                          <div>
+                            <span className="fw-bold text-dark me-2">Order ID: #{order._id}</span>
+                            <small className="text-muted">
+                              Placed on {new Date(order.createdAt).toLocaleDateString("en-IN")}
+                            </small>
+                          </div>
+                          <span className={`badge ${getStatusBadge(order.deliveryStatus)} px-3 py-2 fs-6`}>
+                            {order.deliveryStatus}
                           </span>
                         </div>
-                        <div className="profile-order-product">
-                          <div className="profile-order-image">
-                            <img src={order.image} alt={order.title} />
+
+                        {/* Iterating through order items */}
+                        {Array.isArray(order.orderItems) && order.orderItems.map((item, idx) => (
+                          <div key={item._id || idx} className="d-flex align-items-center gap-3 py-2 border-bottom">
+                            <img
+                              src={`http://localhost:5000/uploads/${item.product?.image || "default.png"}`}
+                              alt={item.product?.name || "Product"}
+                              style={{ width: "70px", height: "70px", objectFit: "cover", borderRadius: "8px" }}
+                            />
+                            <div className="flex-grow-1">
+                              <h6 className="mb-1 fw-bold">{item.product?.name || "Product Title"}</h6>
+                              <small className="text-muted d-block">Quantity: {item.quantity}</small>
+                            </div>
+                            <div className="text-end fw-bold fs-6">
+                              Rs {item.product?.price ? (item.product.price * item.quantity).toLocaleString("en-IN") : 0}
+                            </div>
                           </div>
-                          <div className="profile-order-details">
-                            <p className="profile-order-title">{order.title}</p>
-                            <small>Qty: {order.qty}</small>
-                            <p className="profile-order-price">{order.price}</p>
-                          </div>
+                        ))}
+
+                        <div className="d-flex justify-content-between align-items-center pt-3">
+                          <span className="text-muted">
+                            Payment: <strong>{order.paymentMethod?.toUpperCase()}</strong> ({order.paymentStatus})
+                          </span>
+                          <span className="fs-5 fw-bold text-dark">
+                            Total: Rs {Number(order.totalPrice || 0).toLocaleString("en-IN")}
+                          </span>
                         </div>
-                      </article>
-                    </div>
-                  ))}
-                </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-5 text-muted">
+                    <i className="fa-solid fa-box-open fs-1 mb-2 d-block"></i>
+                    <p className="fs-5">No orders placed yet.</p>
+                  </div>
+                )}
               </section>
             )}
           </div>
