@@ -103,14 +103,7 @@ export default function Profile() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editAddressType, setEditAddressType] = useState("Home");
   const [editFormData, setEditFormData] = useState({
-    fullName: "Priyesh",
-    phone: "98785 43210",
-    address: "Rumban villa kochi, Ruther road",
-    city: "Kochi",
-    state: "Kerala",
-    landmark: "Near Lulu Mall",
-    pincode: "675433",
-    alternativePhone: "",
+    
   });
   const [addressType, setAddressType] = useState("Home");
 
