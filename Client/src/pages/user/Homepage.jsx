@@ -1,175 +1,149 @@
-import React,{useState,useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import "./Homepage.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
-import axios from "axios";
 import UserService from "../../services/user-api-services/UserService";
 import MosqueSilhouetteBackground from "../../assets/MosqueSilhouetteBackground.png";
-import photo1 from "../../assets/photo1.png"
-import photo2 from "../../assets/photo2.png"
-import PerfumeBottleLarge from "../../assets/Perfume Bottle Large.png"
-import PerfumeBottleSmall from "../../assets/Perfume Bottle Small.png"
-import PerfumeBottleLarge2 from "../../assets/PerfumeBottleLarge2.png"
-import PerfumeBottleSmall2 from "../../assets/PerfumeBottleSmall2.png"
-import photo3 from "../../assets/photo3.png"
-import photo10 from "../../assets/photo10.png"
-import photo11 from "../../assets/photo11.png"
-
-import photo13 from "../../assets/photo13.png"
-import photo14 from "../../assets/photo14.png"
-import photo15 from "../../assets/photo15.png"
-import photo16 from "../../assets/photo16.png"
-import photo17 from "../../assets/photo17.png"
-
-
-import S1 from "../../assets/S1.png"
-import S2 from "../../assets/S2.png"
-import S3 from "../../assets/S3.png"
-import c1 from "../../assets/c1.png"
-import c2 from "../../assets/c2.png"
-import c3 from "../../assets/c3.png"
-import c4 from "../../assets/c4.png"
-import c5 from "../../assets/c5.png"
-import b1 from "../../assets/b1.png"
+import photo1 from "../../assets/photo1.png";
+import photo2 from "../../assets/photo2.png";
+import PerfumeBottleLarge from "../../assets/Perfume Bottle Large.png";
+import PerfumeBottleSmall from "../../assets/Perfume Bottle Small.png";
+import PerfumeBottleLarge2 from "../../assets/PerfumeBottleLarge2.png";
+import PerfumeBottleSmall2 from "../../assets/PerfumeBottleSmall2.png";
+import photo3 from "../../assets/photo3.png";
+import S1 from "../../assets/S1.png";
+import S2 from "../../assets/S2.png";
+import S3 from "../../assets/S3.png";
+import c1 from "../../assets/c1.png";
+import c2 from "../../assets/c2.png";
+import c3 from "../../assets/c3.png";
+import c4 from "../../assets/c4.png";
+import c5 from "../../assets/c5.png";
+import b1 from "../../assets/b1.png";
 import { Link } from "react-router-dom";
 
-
-
-
 const Homepage = () => {
+  const {
+    getProduct,
+    Addproducttocart,
+    addToWishlist,
+    getWishlist,
+    removeProductFromWishlist,
+  } = UserService();
 
+  const [Productsitems, setProductsitems] = useState([]);
+  const [wishlistIds, setWishlistIds] = useState(() => new Set());
+  const [wishlistLoadingId, setWishlistLoadingId] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [actionMessage, setActionMessage] = useState("");
 
-const {
-  getProduct,
-  Addproducttocart,
-  addToWishlist,
-  getWishlist,
-  removeProductFromWishlist,
-} = UserService();
+  const fetchproduct = async () => {
+    let res = await getProduct();
+    setProductsitems(res);
+  };
 
-const [Productsitems, setProductsitems] = useState([]);
-const [wishlistIds, setWishlistIds] = useState(() => new Set());
-const [wishlistLoadingId, setWishlistLoadingId] = useState(null);
-const [errorMessage, setErrorMessage] = useState("");
-const [actionMessage, setActionMessage] = useState("");
-
-   
-  
-  const fetchproduct =  async () => {
-      let res = await getProduct();
-      setProductsitems(res)
-    }
-
-  
   const Addtocart = async (id) => {
-  try {
-    const response = await Addproducttocart(id);
-
-    alert(response.message || "Product added to cart successfully!");
-  } catch (error) {
-    console.error("Add to cart error:", error.response?.data || error.message);
-
-    if (error.response?.status === 401) {
-      alert("Please login to add products to your cart.");
-    } else {
-      alert(
-        error.response?.data?.message ||
-        "Unable to add product to cart."
-      );
-    }
-  }
-};
-    
-      useEffect(() => {
-          fetchproduct();
-          
-
-  const loadHomepage = async () => {
     try {
-      const products = await getProduct();
-      setProductsitems(Array.isArray(products) ? products : []);
+      const response = await Addproducttocart(id);
+      alert(response.message || "Product added to cart successfully!");
     } catch (error) {
-      console.error("Failed to load products:", error);
-    }
-
-    try {
-      const response = await getWishlist();
-      const wishlist = response?.wishlist || [];
-
-      const savedIds = wishlist.map((item) =>
-        String(item.productId || item.id || item._id)
-      );
-
-      setWishlistIds(new Set(savedIds));
-    } catch (error) {
-      console.error(
-        "Failed to load wishlist:",
-        error.response?.data || error.message
-      );
+      console.error("Add to cart error:", error.response?.data || error.message);
+      if (error.response?.status === 401) {
+        alert("Please login to add products to your cart.");
+      } else {
+        alert(
+          error.response?.data?.message ||
+            "Unable to add product to cart."
+        );
+      }
     }
   };
 
-  loadHomepage();
-}, []);
+  useEffect(() => {
+    fetchproduct();
 
-      
+    const loadHomepage = async () => {
+      try {
+        const products = await getProduct();
+        setProductsitems(Array.isArray(products) ? products : []);
+      } catch (error) {
+        console.error("Failed to load products:", error);
+      }
 
-  
-const addTotheWishlist = async (productId) => {
-  const id = String(productId);
+      try {
+        const response = await getWishlist();
+        const wishlist = response?.wishlist || [];
 
-  if (wishlistLoadingId !== null) return;
+        const savedIds = wishlist.map((item) =>
+          String(item.productId || item.id || item._id)
+        );
 
-  const alreadyFavorite = wishlistIds.has(id);
+        setWishlistIds(new Set(savedIds));
+      } catch (error) {
+        console.error(
+          "Failed to load wishlist:",
+          error.response?.data || error.message
+        );
+      }
+    };
 
-  try {
-    setWishlistLoadingId(id);
-    setErrorMessage("");
-    setActionMessage("");
+    loadHomepage();
+  }, []);
 
-    if (alreadyFavorite) {
-      await removeProductFromWishlist(id);
+  const addTotheWishlist = async (productId) => {
+    const id = String(productId);
 
-      setWishlistIds((previous) => {
-        const updated = new Set(previous);
-        updated.delete(id);
-        return updated;
-      });
+    if (wishlistLoadingId !== null) return;
 
-      setActionMessage("Product removed from wishlist.");
-    } else {
-      await addToWishlist(id);
+    const alreadyFavorite = wishlistIds.has(id);
 
-      setWishlistIds((previous) => {
-        const updated = new Set(previous);
-        updated.add(id);
-        return updated;
-      });
+    try {
+      setWishlistLoadingId(id);
+      setErrorMessage("");
+      setActionMessage("");
 
-      setActionMessage("Product added to wishlist.");
+      if (alreadyFavorite) {
+        await removeProductFromWishlist(id);
+
+        setWishlistIds((previous) => {
+          const updated = new Set(previous);
+          updated.delete(id);
+          return updated;
+        });
+
+        setActionMessage("Product removed from wishlist.");
+      } else {
+        await addToWishlist(id);
+
+        setWishlistIds((previous) => {
+          const updated = new Set(previous);
+          updated.add(id);
+          return updated;
+        });
+
+        setActionMessage("Product added to wishlist.");
+      }
+    } catch (error) {
+      console.error(
+        "Wishlist error:",
+        error.response?.data || error.message
+      );
+
+      setErrorMessage(
+        error.response?.data?.message ||
+          "Unable to update wishlist. Please try again."
+      );
+    } finally {
+      setWishlistLoadingId(null);
     }
-  } catch (error) {
-    console.error(
-      "Wishlist error:",
-      error.response?.data || error.message
-    );
-
-    setErrorMessage(
-      error.response?.data?.message ||
-        "Unable to update wishlist. Please try again."
-    );
-  } finally {
-    setWishlistLoadingId(null);
-  }
-};
+  };
 
   return (
     <>
-      
       <nav className="navbar navbar-expand-lg navbar-light shadow-sm homepage-navbar">
         <div className="container-fluid px-0">
           <span className="navbar-brand homepage-navbar-brand">
-            <Link to='/'>Fragranzia</Link>
+            <Link to="/">Fragranzia</Link>
           </span>
           <button
             className="navbar-toggler"
@@ -182,26 +156,29 @@ const addTotheWishlist = async (productId) => {
           >
             <span className="navbar-toggler-icon"></span>
           </button>
-          <div className="collapse navbar-collapse justify-content-end" id="navbarContent">
+          <div
+            className="collapse navbar-collapse justify-content-end"
+            id="navbarContent"
+          >
             <ul className="navbar-nav align-items-center gap-2">
               <li className="nav-item">
-                <span className="nav-link active homepage-nav-link" >
-                   <Link to='/'>Home</Link>
+                <span className="nav-link active homepage-nav-link">
+                  <Link to="/">Home</Link>
                 </span>
               </li>
               <li className="nav-item">
-                <span className="nav-link homepage-nav-link" >
-                  <Link to='/Products'>Products</Link>
+                <span className="nav-link homepage-nav-link">
+                  <Link to="/Products">Products</Link>
                 </span>
               </li>
               <li className="nav-item">
-                <span className="nav-link homepage-nav-link" >
-                   <Link to='/Wishlist'>Wishlist</Link>
+                <span className="nav-link homepage-nav-link">
+                  <Link to="/Wishlist">Wishlist</Link>
                 </span>
               </li>
               <li className="nav-item me-3">
-                <span className="nav-link homepage-nav-link" >
-                  <Link to='/About'>About</Link>
+                <span className="nav-link homepage-nav-link">
+                  <Link to="/About">About</Link>
                 </span>
               </li>
               <li className="nav-item me-2">
@@ -216,8 +193,10 @@ const addTotheWishlist = async (productId) => {
                 </div>
               </li>
               <li className="nav-item">
-                <span className="icon-btn homepage-icon-btn"  aria-label="Cart">
-                  <Link to='/Cart'><i className="fa-solid fa-cart-shopping"></i></Link>
+                <span className="icon-btn homepage-icon-btn" aria-label="Cart">
+                  <Link to="/Cart">
+                    <i className="fa-solid fa-cart-shopping"></i>
+                  </Link>
                 </span>
               </li>
               <li className="nav-item">
@@ -230,13 +209,11 @@ const addTotheWishlist = async (productId) => {
                 </button>
               </li>
               <li className="nav-item">
-                <span
-                  className="icon-btn homepage-icon-btn"
-                  
-                  aria-label="Profile"
-                >
-                 <Link to='/Profile'><i className="fa-regular fa-user"></i></Link>
-               </span>
+                <span className="icon-btn homepage-icon-btn" aria-label="Profile">
+                  <Link to="/Profile">
+                    <i className="fa-regular fa-user"></i>
+                  </Link>
+                </span>
               </li>
             </ul>
           </div>
@@ -248,10 +225,13 @@ const addTotheWishlist = async (productId) => {
           <b>ENJOY FESTIVE DISCOUNTS! FREE SHIPPING ABOVE 999 !</b>
         </span>
       </section>
-      
 
       <section className="hero-section homepage-hero-section">
-        <div id="carouselExampleIndicators" className="carousel slide" data-bs-ride="carousel">
+        <div
+          id="carouselExampleIndicators"
+          className="carousel slide"
+          data-bs-ride="carousel"
+        >
           <div className="carousel-indicators">
             <button
               type="button"
@@ -270,7 +250,10 @@ const addTotheWishlist = async (productId) => {
           </div>
 
           <div className="carousel-inner">
-            <div className="carousel-item active" style={{ backgroundColor: "#0b3c4d" }}>
+            <div
+              className="carousel-item active"
+              style={{ backgroundColor: "#0b3c4d" }}
+            >
               <img
                 src={MosqueSilhouetteBackground}
                 className="d-block hero-bg homepage-hero-bg"
@@ -286,7 +269,7 @@ const addTotheWishlist = async (productId) => {
                   <p className="homepage-hero-text-paragraph">
                     Every moment with an unforgettable essence.
                   </p>
-                  <span  className="btn-shop homepage-btn-shop">
+                  <span className="homepage-carousel-shop-btn">
                     <Link to="/Products">Shop Now</Link>
                   </span>
                 </div>
@@ -307,7 +290,10 @@ const addTotheWishlist = async (productId) => {
               </div>
             </div>
 
-            <div className="carousel-item" style={{ backgroundColor: "rgba(195, 116, 0, 1)" }}>
+            <div
+              className="carousel-item"
+              style={{ backgroundColor: "rgba(195, 116, 0, 1)" }}
+            >
               <img
                 src={MosqueSilhouetteBackground}
                 className="d-block hero-bg homepage-hero-bg"
@@ -323,8 +309,8 @@ const addTotheWishlist = async (productId) => {
                   <p className="homepage-hero-text-paragraph">
                     Every moment with an unforgettable essence.
                   </p>
-                  <span className="btn-shop homepage-btn-shop">
-                   <Link to="/Products">Shop Now</Link>
+                  <span className="homepage-carousel-shop-btn">
+                    <Link to="/Products">Shop Now</Link>
                   </span>
                 </div>
                 <div className="hero-image-side homepage-hero-image-side">
@@ -353,7 +339,9 @@ const addTotheWishlist = async (productId) => {
             <div className="col-12 col-lg-4">
               <div className="promo-card homepage-promo-card">
                 <div className="col-7 pe-2">
-                  <h3 className="homepage-promo-card-title">Unlock Exclusive Offers</h3>
+                  <h3 className="homepage-promo-card-title">
+                    Unlock Exclusive Offers
+                  </h3>
                   <p className="homepage-promo-card-text">
                     Discover special deals tailored just for you!
                   </p>
@@ -372,11 +360,14 @@ const addTotheWishlist = async (productId) => {
                   <h3 className="homepage-promo-card-title">
                     Gift a Scents to your loved one.
                   </h3>
-                  <p className="homepage-promo-card-text">Make your love more beautiful</p>
+                  <p className="homepage-promo-card-text">
+                    Make your love more beautiful
+                  </p>
                 </div>
                 <img
                   src={photo2}
                   className="card-img-bottom homepage-card-img-bottom"
+                  alt="Gift Perfumes"
                 />
               </div>
             </div>
@@ -411,7 +402,9 @@ const addTotheWishlist = async (productId) => {
                   <i className="fa-solid fa-truck-fast"></i>
                 </div>
                 <div className="feature-content homepage-feature-content">
-                  <h4 className="homepage-feature-title">Fast & Reliable Delivery</h4>
+                  <h4 className="homepage-feature-title">
+                    Fast & Reliable Delivery
+                  </h4>
                   <p className="homepage-feature-text">
                     Get your orders delivered on time, every time.
                   </p>
@@ -439,7 +432,9 @@ const addTotheWishlist = async (productId) => {
                   <i className="fa-solid fa-headset"></i>
                 </div>
                 <div className="feature-content homepage-feature-content">
-                  <h4 className="homepage-feature-title">24/7 Customer Support</h4>
+                  <h4 className="homepage-feature-title">
+                    24/7 Customer Support
+                  </h4>
                   <p className="homepage-feature-text">
                     We are here to assist you anytime, anywhere.
                   </p>
@@ -476,80 +471,85 @@ const addTotheWishlist = async (productId) => {
 
           <div
             className="product-slider-container homepage-product-slider-container d-flex gap-4"
-            id="featuredSlider">{Productsitems.map((products,index)=>(
-                  <div className="product-card-custom homepage-product-card-custom" key={index}>
-             
-              <div className="product-image-frame homepage-product-image-frame mb-3">
-                
-                <div className="new-badge homepage-new-badge">New</div>
-                <Link to={`/SpecificProduct/${products._id}`}>
-                <img src={`http://localhost:5000/uploads/${products.image}`}
-                 alt={products.name}/>
-                </Link>
-                
-                     
+            id="featuredSlider"
+          >
+            {Productsitems.map((products, index) => (
+              <div
+                className="product-card-custom homepage-product-card-custom"
+                key={index}
+              >
+                <div className="product-image-frame homepage-product-image-frame mb-3">
+                  <div className="new-badge homepage-new-badge">New</div>
+                  <Link to={`/SpecificProduct/${products._id}`}>
+                    <img
+                      src={`http://localhost:5000/uploads/${products.image}`}
+                      alt={products.name}
+                    />
+                  </Link>
+                </div>
+
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <h5 className="product-title homepage-product-title mb-0">
+                    {products.name}
+                  </h5>
+                  <button
+                    className="specificproduct-action-btn"
+                    type="button"
+                    onClick={() => addTotheWishlist(products._id)}
+                    disabled={wishlistLoadingId === String(products._id)}
+                    aria-label={
+                      wishlistIds.has(String(products._id))
+                        ? "Remove from wishlist"
+                        : "Add to wishlist"
+                    }
+                    aria-pressed={wishlistIds.has(String(products._id))}
+                    style={{
+                      border: "none",
+                      background: "transparent",
+                      cursor: "pointer",
+                      flexShrink: 0,
+                      fontSize: "20px",
+                      padding: "4px 8px",
+                    }}
+                  >
+                    <i
+                      className={
+                        wishlistIds.has(String(products._id))
+                          ? "bi bi-heart-fill"
+                          : "bi bi-heart"
+                      }
+                      style={{
+                        color: wishlistIds.has(String(products._id))
+                          ? "#e63946"
+                          : "#555",
+                        transition: "color 0.2s ease",
+                      }}
+                    ></i>
+                  </button>
+                </div>
+
+                <div className="mb-3 homepage-product-price">
+                  <span className="fw-bold fs-5">Rs {products.saleprice}</span>
+                  <span className="text-decoration-line-through text-muted ms-2 fs-6 small">
+                    Rs {products.price}
+                  </span>
+                </div>
+                <button
+                  onClick={() => Addtocart(products._id)}
+                  className="btn-add-cart homepage-btn-add-cart"
+                >
+                  Add to Cart
+                </button>
               </div>
-              
-<div className="d-flex justify-content-between align-items-center mb-2">
-  <h5 className="product-title homepage-product-title mb-0">
-    {products.name}
-  </h5>
-  <button
-    className="specificproduct-action-btn"
-    type="button"
-    onClick={() => addTotheWishlist(products._id)}
-    disabled={wishlistLoadingId === String(products._id)}
-    aria-label={
-      wishlistIds.has(String(products._id))
-        ? "Remove from wishlist"
-        : "Add to wishlist"
-    }
-    aria-pressed={wishlistIds.has(String(products._id))}
-    style={{
-      border: "none",
-      background: "transparent",
-      cursor: "pointer",
-      flexShrink: 0,
-      fontSize: "20px",
-      padding: "4px 8px",
-    }}
-  >
-    <i
-      className={
-        wishlistIds.has(String(products._id))
-          ? "bi bi-heart-fill"
-          : "bi bi-heart"
-      }
-      style={{
-        color: wishlistIds.has(String(products._id))
-          ? "#e63946"
-          : "#555",
-        transition: "color 0.2s ease",
-      }}
-    ></i>
-  </button>
-</div>
-
-              <div className="mb-3 homepage-product-price">
-                <span className="fw-bold fs-5">Rs {products.saleprice}</span>
-                <span className="text-decoration-line-through text-muted ms-2 fs-6 small">
-                  Rs {products.price}
-                </span>
-              </div>
-              <button onClick={()=>Addtocart(products._id)} className="btn-add-cart homepage-btn-add-cart">Add to Cart</button>
-              
-
-
-            </div>
             ))}
-            
           </div>
         </div>
 
         <div className="quote-section homepage-quote-section">
           <p className="mb-0 homepage-quote-text">
-            It is an art. A craft. A science. At Fragranzia, we are in the business of creating
-            memories that last forever through our fragrances.
+            It is an art. A craft. A science. At Fragranzia, we are in the
+            business of creating memories that last forever through our
+            fragrances.
           </p>
         </div>
 
@@ -562,7 +562,9 @@ const addTotheWishlist = async (productId) => {
                   alt="New Arrivals"
                   className="homepage-offer-card-img"
                 />
-                <h3 className="offer-card-title homepage-offer-card-title">New Arrivals</h3>
+                <h3 className="offer-card-title homepage-offer-card-title">
+                  New Arrivals
+                </h3>
               </div>
             </div>
             <div className="col-12 col-sm-6 col-md-4">
@@ -572,7 +574,9 @@ const addTotheWishlist = async (productId) => {
                   alt="Limited Edition"
                   className="homepage-offer-card-img"
                 />
-                <h3 className="offer-card-title homepage-offer-card-title">Limited Edition</h3>
+                <h3 className="offer-card-title homepage-offer-card-title">
+                  Limited Edition
+                </h3>
               </div>
             </div>
             <div className="col-12 col-sm-6 col-md-4">
@@ -582,7 +586,9 @@ const addTotheWishlist = async (productId) => {
                   alt="Best Sellers"
                   className="homepage-offer-card-img"
                 />
-                <h3 className="offer-card-title homepage-offer-card-title">Best Sellers</h3>
+                <h3 className="offer-card-title homepage-offer-card-title">
+                  Best Sellers
+                </h3>
               </div>
             </div>
           </div>
@@ -595,9 +601,12 @@ const addTotheWishlist = async (productId) => {
             </h2>
             <div>
               <span
-                
                 className="homepage-see-all-link"
-                style={{ color: "black", fontWeight: 500, textDecoration: "none" }}
+                style={{
+                  color: "black",
+                  fontWeight: 500,
+                  textDecoration: "none",
+                }}
               >
                 <Link to="/Products">See All</Link>
               </span>
@@ -608,47 +617,57 @@ const addTotheWishlist = async (productId) => {
             <div className="col">
               <div className="category-item homepage-category-item">
                 <div className="category-circle-frame homepage-category-circle-frame">
-                  <img src={c1}/>
+                  <img src={c1} alt="Eau De Parfum" />
                 </div>
-                <span className="category-label homepage-category-label">Eau De Parfum</span>
+                <span className="category-label homepage-category-label">
+                  Eau De Parfum
+                </span>
               </div>
             </div>
             <div className="col">
               <div className="category-item homepage-category-item">
                 <div className="category-circle-frame homepage-category-circle-frame">
-                  <img src={c2}/>
+                  <img src={c2} alt="Concentrated" />
                 </div>
-                <span className="category-label homepage-category-label">Concentrated</span>
+                <span className="category-label homepage-category-label">
+                  Concentrated
+                </span>
               </div>
             </div>
             <div className="col">
               <div className="category-item homepage-category-item">
                 <div className="category-circle-frame homepage-category-circle-frame">
-                  <img src={c3} />
+                  <img src={c3} alt="Deodorants" />
                 </div>
-                <span className="category-label homepage-category-label">Deodorants</span>
+                <span className="category-label homepage-category-label">
+                  Deodorants
+                </span>
               </div>
             </div>
             <div className="col">
               <div className="category-item homepage-category-item">
                 <div className="category-circle-frame homepage-category-circle-frame">
-                  <img src={c4} />
+                  <img src={c4} alt="Body Mist" />
                 </div>
-                <span className="category-label homepage-category-label">Body Mist</span>
+                <span className="category-label homepage-category-label">
+                  Body Mist
+                </span>
               </div>
             </div>
             <div className="col">
               <div className="category-item homepage-category-item">
                 <div className="category-circle-frame homepage-category-circle-frame">
-                  <img src={c5} />
+                  <img src={c5} alt="Combo" />
                 </div>
-                <span className="category-label homepage-category-label">Combo</span>
+                <span className="category-label homepage-category-label">
+                  Combo
+                </span>
               </div>
             </div>
           </div>
         </div>
 
-       <div className="container-fluid my-5">
+        <div className="container-fluid my-5">
           <div className="d-flex justify-content-between align-items-center mb-4">
             <h2 className="fw-bold homepage-section-title homepage-featured-title">
               Offer <span>Zone</span>
@@ -675,101 +694,110 @@ const addTotheWishlist = async (productId) => {
 
           <div
             className="product-slider-container homepage-product-slider-container d-flex gap-4"
-            id="featuredSlider">{Productsitems.map((products,index)=>(
-                  <div className="product-card-custom homepage-product-card-custom" key={index}>
-             
-              <div className="product-image-frame homepage-product-image-frame mb-3">
-                
-                
-                <Link to={`/SpecificProduct/${products._id}`}>
-                <img src={`http://localhost:5000/uploads/${products.image}`}
-                 alt={products.name}/>
-                </Link>
-                
-                     
+            id="featuredSlider"
+          >
+            {Productsitems.map((products, index) => (
+              <div
+                className="product-card-custom homepage-product-card-custom"
+                key={index}
+              >
+                <div className="product-image-frame homepage-product-image-frame mb-3">
+                  <Link to={`/SpecificProduct/${products._id}`}>
+                    <img
+                      src={`http://localhost:5000/uploads/${products.image}`}
+                      alt={products.name}
+                    />
+                  </Link>
+                </div>
+
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <h5 className="product-title homepage-product-title mb-0">
+                    {products.name}
+                  </h5>
+
+                  <button
+                    className="specificproduct-action-btn"
+                    type="button"
+                    onClick={() => addTotheWishlist(products._id)}
+                    disabled={wishlistLoadingId === String(products._id)}
+                    aria-label={
+                      wishlistIds.has(String(products._id))
+                        ? "Remove from wishlist"
+                        : "Add to wishlist"
+                    }
+                    aria-pressed={wishlistIds.has(String(products._id))}
+                    style={{
+                      border: "none",
+                      background: "transparent",
+                      cursor: "pointer",
+                      flexShrink: 0,
+                      fontSize: "20px",
+                      padding: "4px 8px",
+                    }}
+                  >
+                    <i
+                      className={
+                        wishlistIds.has(String(products._id))
+                          ? "bi bi-heart-fill"
+                          : "bi bi-heart"
+                      }
+                      style={{
+                        color: wishlistIds.has(String(products._id))
+                          ? "#e63946"
+                          : "#555",
+                        transition: "color 0.2s ease",
+                      }}
+                    ></i>
+                  </button>
+                </div>
+
+                <div className="mb-3 homepage-product-price">
+                  <span className="fw-bold fs-5">Rs {products.saleprice}</span>
+                  <span className="text-decoration-line-through text-muted ms-2 fs-6 small">
+                    Rs {products.price}
+                  </span>
+                </div>
+                <button
+                  onClick={() => Addtocart(products._id)}
+                  className="btn-add-cart homepage-btn-add-cart"
+                >
+                  Add to Cart
+                </button>
               </div>
-              
-<div className="d-flex justify-content-between align-items-center mb-2">
-  <h5 className="product-title homepage-product-title mb-0">
-    {products.name}
-  </h5>
-
-  <button
-    className="specificproduct-action-btn"
-    type="button"
-    onClick={() => addTotheWishlist(products._id)}
-    disabled={wishlistLoadingId === String(products._id)}
-    aria-label={
-      wishlistIds.has(String(products._id))
-        ? "Remove from wishlist"
-        : "Add to wishlist"
-    }
-    aria-pressed={wishlistIds.has(String(products._id))}
-    style={{
-      border: "none",
-      background: "transparent",
-      cursor: "pointer",
-      flexShrink: 0,
-      fontSize: "20px",
-      padding: "4px 8px",
-    }}
-  >
-    <i
-      className={
-        wishlistIds.has(String(products._id))
-          ? "bi bi-heart-fill"
-          : "bi bi-heart"
-      }
-      style={{
-        color: wishlistIds.has(String(products._id))
-          ? "#e63946"
-          : "#555",
-        transition: "color 0.2s ease",
-      }}
-    ></i>
-  </button>
-</div>
-
-              <div className="mb-3 homepage-product-price">
-                <span className="fw-bold fs-5">Rs {products.saleprice}</span>
-                <span className="text-decoration-line-through text-muted ms-2 fs-6 small">
-                  Rs {products.price}
-                </span>
-              </div>
-              <button onClick={()=>Addtocart(products._id)} className="btn-add-cart homepage-btn-add-cart">Add to Cart</button>
-              
-
-
-            </div>
             ))}
-            
           </div>
         </div>
-      <div className="container-fluid my-5">
-  <div className="elegance-banner homepage-elegance-banner row g-0">
-    <div className="col-12 col-md-7 banner-text-side homepage-banner-text-side d-flex flex-column justify-content-center">
-      <h1 className="homepage-banner-title">Elegance in Every Bottle</h1>
-      <p className="homepage-banner-text">
-        Discover timeless fragrances crafted for every moment
-      </p>
-      <div>
-        <button className="btn-banner-shop homepage-btn-banner-shop shadow-sm">
-          <Link to="/Products">Shop Now</Link>
-        </button>
-      </div>
-    </div>
-    <div className="banner-img-side homepage-banner-img-side">
-      <img src={b1} alt="Perfume bottle" />
-    </div>
-  </div>
-</div>
+
+        <div className="container-fluid my-5">
+          <div className="elegance-banner homepage-elegance-banner row g-0">
+            <div className="col-12 col-md-7 banner-text-side homepage-banner-text-side d-flex flex-column justify-content-center">
+              <h1 className="homepage-banner-title">
+                Elegance in Every Bottle
+              </h1>
+              <p className="homepage-banner-text">
+                Discover timeless fragrances crafted for every moment
+              </p>
+              <div>
+                <button className="homepage-banner-shop-btn shadow-sm">
+                  <Link to="/Products">Shop Now</Link>
+                </button>
+              </div>
+            </div>
+            <div className="banner-img-side homepage-banner-img-side">
+              <img src={b1} alt="Perfume bottle" />
+            </div>
+          </div>
+        </div>
       </section>
 
       <footer className="py-5 mt-5 homepage-footer">
         <div className="container">
           <div className="row g-4 align-items-start">
             <div className="col-12 col-md-3 pt-5 mt-4">
-              <h1 className="homepage-footer-brand" style={{ color: "#043948" }}>
+              <h1
+                className="homepage-footer-brand"
+                style={{ color: "#043948" }}
+              >
                 <b>Fragranzia</b>
               </h1>
             </div>
@@ -777,29 +805,45 @@ const addTotheWishlist = async (productId) => {
             <div className="col-12 col-md-9">
               <div className="row g-4">
                 <div className="col-6 col-sm-4">
-                  <h5 className="homepage-footer-heading" style={{ color: "#043948" }}>
+                  <h5
+                    className="homepage-footer-heading"
+                    style={{ color: "#043948" }}
+                  >
                     <b>Pages</b>
                   </h5>
                   <ul className="list list-unstyled lh-lg homepage-footer-list">
                     <li>
-                      <span><Link to='/' >Home</Link></span>
+                      <span>
+                        <Link to="/">Home</Link>
+                      </span>
                     </li>
                     <li>
-                      <span><Link to='/Products' >Products</Link></span>
+                      <span>
+                        <Link to="/Products">Products</Link>
+                      </span>
                     </li>
                     <li>
-                      <span><Link to='/Gifting' >Gifting</Link></span>
+                      <span>
+                        <Link to="/Gifting">Gifting</Link>
+                      </span>
                     </li>
                     <li>
-                      <span><Link to='/About' >About</Link></span>
+                      <span>
+                        <Link to="/About">About</Link>
+                      </span>
                     </li>
                     <li>
-                      <span><Link to='/Profile' >Profile</Link></span>
+                      <span>
+                        <Link to="/Profile">Profile</Link>
+                      </span>
                     </li>
                   </ul>
                 </div>
                 <div className="col-6 col-sm-4">
-                  <h5 className="homepage-footer-heading" style={{ color: "#043948" }}>
+                  <h5
+                    className="homepage-footer-heading"
+                    style={{ color: "#043948" }}
+                  >
                     <b>Quick Links</b>
                   </h5>
                   <ul className="list-unstyled lh-lg homepage-footer-list">
@@ -818,7 +862,10 @@ const addTotheWishlist = async (productId) => {
                   </ul>
                 </div>
                 <div className="col-12 col-sm-4">
-                  <h5 className="homepage-footer-heading" style={{ color: "#043948" }}>
+                  <h5
+                    className="homepage-footer-heading"
+                    style={{ color: "#043948" }}
+                  >
                     <b>Contact & Social</b>
                   </h5>
                   <p className="mb-1 homepage-footer-contact">

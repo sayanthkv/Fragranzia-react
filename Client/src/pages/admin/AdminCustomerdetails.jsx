@@ -25,7 +25,6 @@ const AdminCustomerdetails = () => {
     try {
       setLoading(true);
       const res = await fetchUserdetails();
-      // Adjust res.data or res.users depending on API response structure
       const users = Array.isArray(res?.data)
         ? res.data
         : Array.isArray(res?.users)
@@ -61,7 +60,6 @@ const AdminCustomerdetails = () => {
       setSelectedCustomer((prev) => ({ ...prev, status: updatedStatus }));
     }
 
-    // Call API persistence if implemented in AdminService
     try {
       if (typeof toggleUserBlockStatus === 'function') {
         await toggleUserBlockStatus(userId, { status: updatedStatus });
@@ -80,7 +78,7 @@ const AdminCustomerdetails = () => {
   };
 
   useEffect(() => {
-    fetchUsers(); // Fixed: Function call syntax
+    fetchUsers();
   }, []);
 
   return (
@@ -186,7 +184,7 @@ const AdminCustomerdetails = () => {
                             <button
                               onClick={() => toggleStatus(data)}
                               className={`product-status-btn ${
-                                isBlocked ? "status-block" : "status-unblock"
+                                isBlocked ? "status-unblock" : "status-block"
                               }`}
                             >
                               {isBlocked ? "Blocked" : "Active"}
@@ -207,80 +205,80 @@ const AdminCustomerdetails = () => {
             )}
 
             {/* Modal Overlay for Viewing Customer Details */}
-            {selectedCustomer && (
-              <div className="admincustomer-overlay" onClick={handleCloseProduct}>
-                <div
-                  className="admincustomer-content product-details-modal"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="adminmodal-header">
-                    <h3>
-                      <LuEye className="view-modal-icon" />
-                      User Details
-                    </h3>
+            {selectedCustomer && (() => {
+              const isModalBlocked = selectedCustomer.status === false || selectedCustomer.status === "Blocked";
 
-                    <button
-                      className="adminmodal-close-btn"
-                      onClick={handleCloseProduct}
-                    >
-                      <LuX />
-                    </button>
-                  </div>
+              return (
+                <div className="admincustomer-overlay" onClick={handleCloseProduct}>
+                  <div
+                    className="admincustomer-content product-details-modal"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="adminmodal-header">
+                      <h3>
+                        <LuEye className="view-modal-icon" />
+                        User Details
+                      </h3>
 
-                  <label>FULL NAME</label>
-                  <input readOnly value={selectedCustomer.name || "N/A"} />
-
-                  <label>EMAIL ADDRESS</label>
-                  <input readOnly value={selectedCustomer.email || "N/A"} />
-
-                  <label>PHONE NUMBER</label>
-                  <input readOnly value={selectedCustomer.phone || "N/A"} />
-
-                  <div className="view-detail-group">
-                    <div className="customer-status">
-                      <label>Status</label>
                       <button
-                        className={`customer-status-badge ${
-                          selectedCustomer.status === false || selectedCustomer.status === "Blocked"
-                            ? "status-block"
-                            : "status-unblock"
-                        }`}
-                        onClick={() => toggleStatus(selectedCustomer)}
+                        className="adminmodal-close-btn"
+                        onClick={handleCloseProduct}
                       >
-                        {selectedCustomer.status === false || selectedCustomer.status === "Blocked"
-                          ? "Blocked"
-                          : "Active"}
+                        <LuX />
                       </button>
                     </div>
 
-                    <div className="customer-role">
-                      <label>Role</label>
-                      <span className="customer-role-badge">
-                        {selectedCustomer.role || "Customer"}
-                      </span>
+                    <label>FULL NAME</label>
+                    <input readOnly value={selectedCustomer.name || "N/A"} />
+
+                    <label>EMAIL ADDRESS</label>
+                    <input readOnly value={selectedCustomer.email || "N/A"} />
+
+                    <label>PHONE NUMBER</label>
+                    <input readOnly value={selectedCustomer.phone || "N/A"} />
+
+                    <div className="view-detail-group">
+                      <div className="customer-status">
+                        <label>Status</label>
+                        <button
+                          className={`customer-status-badge ${
+                            isModalBlocked ? "status-unblock" : "status-block"
+                          }`}
+                          onClick={() => toggleStatus(selectedCustomer)}
+                        >
+                          {isModalBlocked ? "Blocked" : "Active"}
+                        </button>
+                      </div>
+
+                      <div className="customer-role">
+                        <label>Role</label>
+                        <span className="customer-role-badge">
+                          {selectedCustomer.role || "Customer"}
+                        </span>
+                      </div>
                     </div>
+
+                    <label>JOINED DATE</label>
+                    <input
+                      readOnly
+                      value={
+                        selectedCustomer.createdAt
+                          ? new Date(selectedCustomer.createdAt).toLocaleDateString("en-IN", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })
+                          : "N/A"
+                      }
+                    />
+
+                    <button className="close-button" onClick={handleCloseProduct}>
+                      Close
+                    </button>
                   </div>
-
-                  <label>JOINED DATE</label>
-                  <input
-                    readOnly
-                    value={
-                      selectedCustomer.createdAt
-                        ? new Date(selectedCustomer.createdAt).toLocaleDateString("en-IN", {
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                          })
-                        : "N/A"
-                    }
-                  />
-
-                  <button className="close-button" onClick={handleCloseProduct}>
-                    Close
-                  </button>
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
         </div>
       </div>

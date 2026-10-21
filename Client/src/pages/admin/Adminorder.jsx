@@ -381,7 +381,7 @@ const Adminorder = () => {
                                         <div>
                                             <strong>{selectedOrder.user?.name || 'Customer'}</strong>
                                             <p>User ID:</p>
-                                            <span>...{selectedOrder.user?._id?.slice(-8) || selectedOrder.user?.slice?.(-8) || 'N/A'}</span>
+                                            <span>{selectedOrder.user?._id?.slice(-8) || selectedOrder.user?.slice?.(-8) || 'N/A'}</span>
                                         </div>
                                     </div>
 

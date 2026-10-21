@@ -31,8 +31,6 @@ export default function Profile() {
 
   const { getUserdata, updatedetails, getOrders } = UserService();
 
-  const togglePasswordVisibility = () => setShowPassword((previous) => !previous);
-
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData((previous) => ({ ...previous, [name]: value }));
@@ -102,9 +100,7 @@ export default function Profile() {
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editAddressType, setEditAddressType] = useState("Home");
-  const [editFormData, setEditFormData] = useState({
-    
-  });
+  const [editFormData, setEditFormData] = useState({});
   const [addressType, setAddressType] = useState("Home");
 
   const { saveaddress, fetchdata: fetchAddressesFromService, updateaddress, setprimary } = UserService();
@@ -115,8 +111,9 @@ export default function Profile() {
     street: "",
     city: "",
     state: "",
-    country: "",
+    landmark: "",
     zip: "",
+    alternativePhone: ""
   });
 
   const handleAddressChange = (event) => {
@@ -129,9 +126,8 @@ export default function Profile() {
 
   const handleSave = async (event) => {
     event.preventDefault();
-
     try {
-      await saveaddress(addressFormData);
+      await saveaddress({ ...addressFormData, addressType });
       setShowModal(false);
       setAddressFormData({
         fullName: "",
@@ -139,21 +135,16 @@ export default function Profile() {
         street: "",
         city: "",
         state: "",
-        country: "",
+        landmark: "",
         zip: "",
+        alternativePhone: ""
       });
 
       await getAddresses();
       alert("Address saved successfully!");
     } catch (error) {
-      console.error(
-        "Failed to save address:",
-        error.response?.data || error.message
-      );
-      alert(
-        error.response?.data?.message ||
-        "Failed to save address. Please try again."
-      );
+      console.error("Failed to save address:", error.response?.data || error.message);
+      alert(error.response?.data?.message || "Failed to save address. Please try again.");
     }
   };
 
@@ -163,10 +154,7 @@ export default function Profile() {
       const response = await fetchAddressesFromService();
       setAddresses(response.addresses || []);
     } catch (error) {
-      console.error(
-        "Failed to fetch addresses:",
-        error.response?.data || error.message
-      );
+      console.error("Failed to fetch addresses:", error.response?.data || error.message);
       setAddresses([]);
     } finally {
       setLoading(false);
@@ -194,11 +182,13 @@ export default function Profile() {
       await updateaddress(selectedAddress._id, {
         fullName: editFormData.fullName,
         phone: editFormData.phone,
-        address: editFormData.address,
+        street: editFormData.street,
         city: editFormData.city,
         state: editFormData.state,
-        pincode: editFormData.pincode,
-        country: selectedAddress.country,
+        landmark: editFormData.landmark,
+        zip: editFormData.zip,
+        alternativePhone: editFormData.alternativePhone,
+        addressType: editAddressType,
       });
 
       await getAddresses();
@@ -206,14 +196,8 @@ export default function Profile() {
       setShowViewModal(false);
       alert("Address updated successfully!");
     } catch (error) {
-      console.error(
-        "Failed to update address:",
-        error.response?.data || error.message
-      );
-      alert(
-        error.response?.data?.message ||
-          "Failed to update address. Please try again."
-      );
+      console.error("Failed to update address:", error.response?.data || error.message);
+      alert(error.response?.data?.message || "Failed to update address. Please try again.");
     }
   };
 
@@ -473,14 +457,14 @@ export default function Profile() {
                                     </button>
                                   )}
                                   <span className="badge-tag">
-                                    <i className="fa-solid fa-location-dot"></i> Saved
+                                    <i className="fa-solid fa-location-dot"></i> {address.addressType || "Saved"}
                                   </span>
                                 </div>
                               </div>
 
                               <div className="fw-bold my-2 address-name">{address.fullName}</div>
                               <p className="address-text">
-                                {address.street}, {address.city}, {address.state}, {address.country} {address.zip}
+                                {address.street}, {address.city}, {address.state} {address.zip}
                               </p>
 
                               <div className="alladdress-card-actions">
@@ -509,48 +493,58 @@ export default function Profile() {
               <section className="profile-orders-section">
                 {Array.isArray(orders) && orders.length > 0 ? (
                   <div className="d-flex flex-column gap-3">
-                    {orders.map((order) => (
-                      <div key={order._id} className="card shadow-lg border-0 p-3">
-                        <div className="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
-                          <div>
-                            <span className="fw-bold text-dark me-2">Order ID: #{order._id}</span>
-                            <small className="text-muted">
-                              Placed on {new Date(order.createdAt).toLocaleDateString("en-IN")}
-                            </small>
-                          </div>
-                          <span className={`badge ${getStatusBadge(order.deliveryStatus)} px-3 py-2 fs-6`}>
-                            {order.deliveryStatus}
-                          </span>
-                        </div>
+                    {orders.map((order) => {
+                      const grandTotal = Number(order.totalPrice || 0);
 
-                        {/* Iterating through order items */}
-                        {Array.isArray(order.orderItems) && order.orderItems.map((item, idx) => (
-                          <div key={item._id || idx} className="d-flex align-items-center gap-3 py-2 border-bottom">
-                            <img
-                              src={`http://localhost:5000/uploads/${item.product?.image || "default.png"}`}
-                              alt={item.product?.name || "Product"}
-                              style={{ width: "70px", height: "70px", objectFit: "cover", borderRadius: "8px" }}
-                            />
-                            <div className="flex-grow-1">
-                              <h6 className="mb-1 fw-bold">{item.product?.name || "Product Title"}</h6>
-                              <small className="text-muted d-block">Quantity: {item.quantity}</small>
+                      return (
+                        <div key={order._id} className="card shadow-lg border-0 p-3">
+                          <div className="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                            <div>
+                              <span className="fw-bold text-dark me-2">Order ID: #{order._id}</span>
+                              <small className="text-muted">
+                                Placed on {order.createdAt ? new Date(order.createdAt).toLocaleDateString("en-IN") : "N/A"}
+                              </small>
                             </div>
-                            <div className="text-end fw-bold fs-6">
-                              Rs {order.totalPrice ? (order.totalPrice * item.quantity).toLocaleString("en-IN") : 0}
-                            </div>
+                            <span className={`badge ${getStatusBadge(order.deliveryStatus)} px-3 py-2 fs-6`}>
+                              {order.deliveryStatus || "Pending"}
+                            </span>
                           </div>
-                        ))}
 
-                        <div className="d-flex justify-content-between align-items-center pt-3">
-                          <span className="text-muted">
-                            Payment: <strong>{order.paymentMethod?.toUpperCase()}</strong> ({order.paymentStatus})
-                          </span>
-                          <span className="fs-5 fw-bold text-dark">
-                            Total: Rs {Number(order.totalPrice * order.quantity || 0).toLocaleString("en-IN")}
-                          </span>
+                          {/* Iterating through order items */}
+                          {Array.isArray(order.orderItems) && order.orderItems.map((item, idx) => {
+                            const itemPrice = Number(item.price || item.product?.price || 0);
+                            const itemQty = Number(item.quantity || 1);
+                            const itemSubtotal = itemPrice * itemQty;
+
+                            return (
+                              <div key={item._id || idx} className="d-flex align-items-center gap-3 py-2 border-bottom">
+                                <img
+                                  src={`http://localhost:5000/uploads/${item.product?.image || "default.png"}`}
+                                  alt={item.product?.name || "Product"}
+                                  style={{ width: "70px", height: "70px", objectFit: "cover", borderRadius: "8px" }}
+                                />
+                                <div className="flex-grow-1">
+                                  <h6 className="mb-1 fw-bold">{item.product?.name || item.name || "Product Title"}</h6>
+                                  <small className="text-muted d-block">Quantity: {itemQty}</small>
+                                </div>
+                                <div className="text-end fw-bold fs-6">
+                                  Rs {itemSubtotal.toLocaleString("en-IN")}
+                                </div>
+                              </div>
+                            );
+                          })}
+
+                          <div className="d-flex justify-content-between align-items-center pt-3">
+                            <span className="text-muted">
+                              Payment: <strong>{order.paymentMethod?.toUpperCase() || "N/A"}</strong> ({order.paymentStatus || "Pending"})
+                            </span>
+                            <span className="fs-5 fw-bold text-dark">
+                              Total: Rs {grandTotal.toLocaleString("en-IN")}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="text-center py-5 text-muted">
@@ -684,7 +678,7 @@ export default function Profile() {
                         name="viewAddressType"
                         id="viewTypeHome"
                         className="type-input"
-                        checked={true}
+                        checked={(selectedAddress.addressType || "Home") === "Home"}
                         readOnly
                       />
                       <label htmlFor="viewTypeHome" className="type-label home-active">
@@ -697,7 +691,7 @@ export default function Profile() {
                         name="viewAddressType"
                         id="viewTypeOffice"
                         className="type-input"
-                        checked={false}
+                        checked={selectedAddress.addressType === "Office"}
                         readOnly
                       />
                       <label htmlFor="viewTypeOffice" className="type-label">
@@ -710,7 +704,7 @@ export default function Profile() {
                         name="viewAddressType"
                         id="viewTypeOther"
                         className="type-input"
-                        checked={false}
+                        checked={selectedAddress.addressType === "Other"}
                         readOnly
                       />
                       <label htmlFor="viewTypeOther" className="type-label">
@@ -812,13 +806,14 @@ export default function Profile() {
                         setEditFormData({
                           fullName: selectedAddress.fullName || "",
                           phone: selectedAddress.phone || "",
-                          address: selectedAddress.street || "",
+                          street: selectedAddress.street || "",
                           city: selectedAddress.city || "",
                           state: selectedAddress.state || "",
                           landmark: selectedAddress.landmark || "",
-                          pincode: selectedAddress.zip || "",
+                          zip: selectedAddress.zip || "",
                           alternativePhone: selectedAddress.alternativePhone || "",
                         });
+                        setEditAddressType(selectedAddress.addressType || "Home");
                         setShowViewModal(false);
                         setShowEditModal(true);
                       }}
@@ -891,44 +886,43 @@ export default function Profile() {
               <div className="row g-3 mb-3">
                 <div className="col-md-6">
                   <label htmlFor="editFullName" className="form-label-custom">Full Name</label>
-                  <input id="editFullName" name="fullName" type="text" className="form-control-custom alladdress-edit-input" value={editFormData.fullName} onChange={handleEditChange} required />
+                  <input id="editFullName" name="fullName" type="text" className="form-control-custom alladdress-edit-input" value={editFormData.fullName || ""} onChange={handleEditChange} required />
                 </div>
                 <div className="col-md-6">
                   <label htmlFor="editPhone" className="form-label-custom">Phone Number</label>
-                  <input id="editPhone" name="phone" type="tel" className="form-control-custom alladdress-edit-input" value={editFormData.phone} onChange={handleEditChange} required />
+                  <input id="editPhone" name="phone" type="tel" className="form-control-custom alladdress-edit-input" value={editFormData.phone || ""} onChange={handleEditChange} required />
                 </div>
               </div>
 
               <div className="mb-3">
-                <label htmlFor="editAddress" className="form-label-custom">Address</label>
-                <textarea id="editAddress" name="address" className="form-control-custom textarea-custom alladdress-edit-input" value={editFormData.address} onChange={handleEditChange} required />
+                <label htmlFor="editStreet" className="form-label-custom">Address</label>
+                <textarea id="editStreet" name="street" className="form-control-custom textarea-custom alladdress-edit-input" value={editFormData.street || ""} onChange={handleEditChange} required />
               </div>
 
               <div className="row g-3 mb-3">
                 <div className="col-md-4">
                   <label htmlFor="editCity" className="form-label-custom">City/District</label>
-                  <input id="editCity" name="city" type="text" className="form-control-custom alladdress-edit-input" value={editFormData.city} onChange={handleEditChange} required />
+                  <input id="editCity" name="city" type="text" className="form-control-custom alladdress-edit-input" value={editFormData.city || ""} onChange={handleEditChange} required />
                 </div>
                 <div className="col-md-4">
                   <label htmlFor="editState" className="form-label-custom">State</label>
-                  <input id="editState" name="state" type="text" className="form-control-custom alladdress-edit-input" value={editFormData.state} onChange={handleEditChange} required />
+                  <input id="editState" name="state" type="text" className="form-control-custom alladdress-edit-input" value={editFormData.state || ""} onChange={handleEditChange} required />
                 </div>
                 <div className="col-md-4">
                   <label htmlFor="editLandmark" className="form-label-custom">Land Mark</label>
-                  <input id="editLandmark" name="landmark" type="text" className="form-control-custom alladdress-edit-input" value={editFormData.landmark} onChange={handleEditChange} />
+                  <input id="editLandmark" name="landmark" type="text" className="form-control-custom alladdress-edit-input" value={editFormData.landmark || ""} onChange={handleEditChange} />
                 </div>
               </div>
 
               <div className="row g-3 mb-4">
                 <div className="col-md-4">
                   <label htmlFor="editPincode" className="form-label-custom">PinCode</label>
-                  <input id="editPincode" name="pincode" type="text" className="form-control-custom alladdress-edit-input" value={editFormData.pincode} onChange={handleEditChange} pattern="[0-9]{6}" maxLength={6} required />
+                  <input id="editPincode" name="zip" type="text" className="form-control-custom alladdress-edit-input" value={editFormData.zip || ""} onChange={handleEditChange} pattern="[0-9]{6}" maxLength={6} required />
                 </div>
                 <div className="col-md-4">
                   <label htmlFor="editAlternativePhone" className="form-label-custom">Alternative Phone number (Optional)</label>
-                  <input id="editAlternativePhone" name="alternativePhone" type="tel" className={`form-control-custom alladdress-edit-input ${editFormData.alternativePhone ? "" : "empty-field"}`} value={editFormData.alternativePhone} onChange={handleEditChange} placeholder="Enter Alternative Phone number" maxLength={10} />
+                  <input id="editAlternativePhone" name="alternativePhone" type="tel" className={`form-control-custom alladdress-edit-input ${editFormData.alternativePhone ? "" : "empty-field"}`} value={editFormData.alternativePhone || ""} onChange={handleEditChange} placeholder="Enter Alternative Phone number" maxLength={10} />
                 </div>
-                <div className="col-md-4"></div>
               </div>
 
               <div className="alladdress-edit-actions">
@@ -1045,9 +1039,9 @@ export default function Profile() {
               </div>
 
               <div className="mb-3">
-                <label htmlFor="address" className="form-label-custom">Address</label>
+                <label htmlFor="street" className="form-label-custom">Address</label>
                 <textarea
-                  id="address"
+                  id="street"
                   name="street"
                   className="form-control-custom textarea-custom"
                   placeholder="Enter house or building details"
@@ -1088,11 +1082,11 @@ export default function Profile() {
                   <label htmlFor="landmark" className="form-label-custom">Land Mark</label>
                   <input
                     id="landmark"
-                    name="country"
+                    name="landmark"
                     type="text"
                     className="form-control-custom"
                     placeholder="Enter landmark"
-                    value={addressFormData.country}
+                    value={addressFormData.landmark}
                     onChange={handleAddressChange}
                   />
                 </div>
@@ -1100,9 +1094,9 @@ export default function Profile() {
 
               <div className="row g-3 mb-4">
                 <div className="col-md-4">
-                  <label htmlFor="pincode" className="form-label-custom">PinCode</label>
+                  <label htmlFor="zip" className="form-label-custom">PinCode</label>
                   <input
-                    id="pincode"
+                    id="zip"
                     name="zip"
                     type="text"
                     className="form-control-custom"

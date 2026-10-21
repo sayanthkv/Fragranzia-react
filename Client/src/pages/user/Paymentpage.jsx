@@ -214,19 +214,21 @@ const Paymentpage = () => {
       </nav>
 
       <div className="container py-4">
-        <div className="main row g-4 align-items-stretch">
+        <div className="main row g-4 align-items-start">
           {/* Left Section */}
-          <div className="left-section col-12 col-md-7 d-flex flex-column justify-content-between">
-            <div className="sec1main d-flex flex-column h-100 justify-content-between">
+          <div className="left-section col-12 col-md-7 d-flex flex-column">
+            <div className={`sec1main d-flex flex-column ${cartItems.length > 1 ? "justify-content-between h-100" : ""}`}>
               {loading ? (
                 <div className="p-3 text-center">Loading cart...</div>
               ) : errorMessage ? (
                 <div className="p-3 text-danger text-center">{errorMessage}</div>
               ) : cartItems.length > 0 ? (
                 <div
-                  className="d-flex flex-column align-items-center overflow-auto gap-3 py-2 flex-grow-1"
+                  className={`d-flex flex-column align-items-center overflow-auto gap-3 pb-2 ${
+                    cartItems.length > 1 ? "flex-grow-1" : "flex-grow-0"
+                  }`}
                   style={{
-                    maxHeight: "480px",
+                    maxHeight: cartItems.length > 1 ? "480px" : "none",
                     scrollSnapType: "y mandatory",
                     scrollbarWidth: "thin",
                   }}
@@ -301,7 +303,7 @@ const Paymentpage = () => {
               )}
 
               {/* Delivery Address Section */}
-              <div className="col-12 mt-auto pt-3">
+              <div className={`col-12 ${cartItems.length > 1 ? "mt-auto pt-3" : "pt-3"}`}>
                 <div className="d-flex justify-content-between align-items-center mb-2">
                   <h3 className="fw-bold fs-5 text-dark mb-0">Delivery Address</h3>
                   <Link to="/Profile?tab=address" className="address-change-btn">

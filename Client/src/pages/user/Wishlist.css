@@ -102,6 +102,14 @@ img {
   margin-bottom: 1.5rem;
   color: #6c757d;
   font-size: 0.875rem;
+
+}
+
+.wishlist-breadcrumb a {
+  color: inherit !important;
+  text-decoration: none !important;
+   font-size: 0.875rem;
+  transition: color 0.2s ease;
 }
 
 .wishlist-card {

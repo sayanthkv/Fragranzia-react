@@ -76,7 +76,6 @@ section {
   border: none !important;
 }
 
-
 .homepage-nav-link a {
   text-decoration: none !important;
   color: inherit !important;
@@ -214,20 +213,32 @@ section {
   overflow-wrap: anywhere;
 }
 
-.homepage-btn-shop {
+/* CAROUSEL SHOP NOW BUTTON */
+.homepage-carousel-shop-btn {
   padding: 12px 36px;
   font-weight: 600;
   font-size: 1.05rem;
   border-radius: 6px;
-  color: #000000 !important;
   background-color: #ffffff;
   border: none;
-  text-decoration: none;
   display: inline-block;
   transition: transform 0.2s ease;
 }
 
-.homepage-btn-shop:hover {
+.homepage-carousel-shop-btn a {
+  color: #000000 !important;
+  text-decoration: none !important;
+  display: block;
+}
+
+.homepage-carousel-shop-btn a:visited,
+.homepage-carousel-shop-btn a:hover,
+.homepage-carousel-shop-btn a:active {
+  color: #000000 !important;
+  text-decoration: none !important;
+}
+
+.homepage-carousel-shop-btn:hover {
   transform: scale(1.02);
   background-color: #f8f9fa;
 }
@@ -292,7 +303,7 @@ section {
 }
 
 .homepage-promo-card {
-  background-color: #ebEBEB;
+  background-color: #ebebeb;
   border-radius: 20px;
   padding: 2.5rem 2rem;
   min-height: 240px;
@@ -642,7 +653,7 @@ section {
   background: rgba(179, 237, 248, 1);
   border-radius: 12px;
   overflow: hidden;
-  position: relative; /* Anchor for absolute child */
+  position: relative;
   min-height: 320px;
   width: 100%;
   padding-left: 20px;
@@ -668,30 +679,40 @@ section {
   margin-bottom: 1.8rem;
 }
 
-.homepage-btn-banner-shop {
+/* BANNER SHOP NOW BUTTON */
+.homepage-banner-shop-btn {
   background-color: #043948;
-  color: #ffffff;
   font-weight: 600;
   padding: 0.75rem 2.2rem;
   border-radius: 8px;
   border: none;
   transition: background-color 0.2s ease, transform 0.1s ease;
-  
 }
 
-.homepage-btn-banner-shop:hover {
+.homepage-banner-shop-btn a {
+  color: #ffffff !important;
+  text-decoration: none !important;
+  display: block;
+}
+
+.homepage-banner-shop-btn a:visited,
+.homepage-banner-shop-btn a:hover,
+.homepage-banner-shop-btn a:active {
+  color: #ffffff !important;
+  text-decoration: none !important;
+}
+
+.homepage-banner-shop-btn:hover {
   background-color: #032b36;
-  color: #ffffff;
   transform: translateY(-1px);
 }
 
-/* Image container forced to right side and full height */
 .homepage-banner-img-side {
   position: absolute;
   top: 0;
   bottom: 0;
   right: 0;
-  width: 45%; /* Adjust width share as needed */
+  width: 45%;
   height: 100%;
   display: flex;
   align-items: center;
@@ -702,9 +723,10 @@ section {
 .homepage-banner-img-side img {
   width: 100%;
   height: 100%;
-  object-fit: contain; /* Keeps entire image visible without cropping box edges */
-  object-position: right center; /* Pins image to the right border */
+  object-fit: contain;
+  object-position: right center;
 }
+
 .homepage-quote-section {
   width: 100%;
   max-width: 1069px;
@@ -772,6 +794,11 @@ section {
 
 .homepage-product-price {
   margin-bottom: 0;
+}
+
+.homepage-see-all-link a {
+  color: black !important;
+  text-decoration: none !important;
 }
 
 .homepage-see-all-link:hover {
@@ -863,7 +890,7 @@ section {
     font-size: 1rem;
   }
 
-  .homepage-btn-shop {
+  .homepage-carousel-shop-btn {
     padding: 0.7rem 1.5rem;
     font-size: 0.95rem;
   }
@@ -1093,9 +1120,7 @@ section {
   font-weight: 500;
   color: #777;
   background-color: #f3f5f4;
-  
   border-radius: 5px;
-
   letter-spacing: 0.3px;
 }
 
