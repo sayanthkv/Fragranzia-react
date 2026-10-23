@@ -230,28 +230,34 @@ export default function Profile() {
     }
   };
 
-  const handleCancelClick = async (order) => {
-    setSelectedOrder(order);
-    await cancelOrder(order._id)
-    setShowCancelModal(true);
-  };
+
+const handleCancelClick = (order) => {
+  setSelectedOrder(order);
+  setShowCancelModal(true);
+};
 
   const handleReturnClick = (order) => {
     setSelectedOrder(order);
     setShowReturnModal(true);
   };
 
-  const confirmCancelOrder = async () => {
-    try {
-      // Execute your cancel API call here using selectedOrder._id
-      alert(`Order #${selectedOrder._id} cancellation requested.`);
-      setShowCancelModal(false);
-      setSelectedOrder(null);
-      await getorderedproducts();
-    } catch (error) {
-      console.error("Failed to cancel order:", error);
-    }
-  };
+
+const confirmCancelOrder = async () => {
+  try {
+    if (!selectedOrder?._id) return;
+
+    await cancelOrder(selectedOrder._id);
+
+    alert(`Order #${selectedOrder._id} cancelled successfully.`);
+    setShowCancelModal(false);
+    setSelectedOrder(null);
+
+    await getorderedproducts();
+  } catch (error) {
+    console.error("Failed to cancel order:", error.response?.data || error.message);
+    alert(error.response?.data?.message || "Failed to cancel order. Please try again.");
+  }
+};
 
   const confirmReturnOrder = async () => {
     try {
