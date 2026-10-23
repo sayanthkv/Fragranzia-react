@@ -113,7 +113,7 @@ export default function Profile() {
   const [editFormData, setEditFormData] = useState({});
   const [addressType, setAddressType] = useState("Home");
 
-  // State management for order cancellation, returns, and modal dialogs
+  // Order action state
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showReturnModal, setShowReturnModal] = useState(false);
@@ -231,10 +231,12 @@ export default function Profile() {
       case "Cancelled":
         return "bg-danger";
       case "Returned":
+      case "Return Requested":
         return "bg-secondary";
       case "Shipped":
       case "Out for Delivery":
         return "bg-info text-dark";
+      case "Pending":
       default:
         return "bg-warning text-dark";
     }
@@ -392,6 +394,7 @@ export default function Profile() {
               </button>
             </div>
 
+            {/* PROFILE TAB */}
             {activeTab === "profile" && (
               <div className="profile-tab-content">
                 <form className="row g-4" onSubmit={(e) => e.preventDefault()}>
@@ -471,6 +474,7 @@ export default function Profile() {
               </div>
             )}
 
+            {/* ADDRESS TAB */}
             {activeTab === "address" && (
               <main className={`alladdress-content ${showModal ? "alladdress-content-blurred" : ""}`}>
                 <div className="address-section-inner">
@@ -549,12 +553,17 @@ export default function Profile() {
               </main>
             )}
 
+            {/* MY ORDERS TAB */}
             {activeTab === "orders" && (
               <section className="profile-orders-section">
                 {Array.isArray(orders) && orders.length > 0 ? (
                   <div className="d-flex flex-column gap-3">
                     {orders.map((order) => {
                       const grandTotal = Number(order.totalPrice || 0);
+                      const currentDeliveryStatus = order.deliveryStatus || "Pending";
+
+                      // 🟢 STRICT CHECK: Rely strictly on isReturned boolean
+                      const isReturnActive = Boolean(order.isReturned === true);
 
                       return (
                         <div key={order._id} className="card shadow-lg border-0 p-3">
@@ -566,9 +575,20 @@ export default function Profile() {
                                 Placed on {order.createdAt ? new Date(order.createdAt).toLocaleDateString("en-IN") : "N/A"}
                               </small>
                             </div>
-                            <span className={`badge ${getStatusBadge(order.deliveryStatus)} px-3 py-2 fs-6`}>
-                              {order.deliveryStatus || "Pending"}
-                            </span>
+
+                            {/* Dynamic Badge strictly checking isReturned */}
+                            {isReturnActive ? (
+                              <span className="badge bg-warning text-dark px-3 py-2 fs-6">
+                                <i className="fa-solid fa-rotate-left me-1"></i>
+                                {order.returnStatus === "Completed"
+                                  ? "Product Returned"
+                                  : `Return ${order.returnStatus || "Requested"}`}
+                              </span>
+                            ) : (
+                              <span className={`badge ${getStatusBadge(currentDeliveryStatus)} px-3 py-2 fs-6`}>
+                                {currentDeliveryStatus}
+                              </span>
+                            )}
                           </div>
 
                           {/* Order Items List */}
@@ -596,42 +616,39 @@ export default function Profile() {
                               );
                             })}
 
-                          {/* Professional Footer Bar */}
-                          {/* Professional Footer Bar */}
-<div className="d-flex justify-content-between align-items-center pt-3 mt-1">
-  <div className="text-muted small">
-    Payment: <strong className="text-dark">{order.paymentMethod?.toUpperCase() || "N/A"}</strong> ({order.paymentStatus || "Pending"})
-  </div>
-  <div className="d-flex align-items-center gap-3">
-    <span className="fs-5 fw-bold text-dark">
-      Total: Rs {grandTotal.toLocaleString("en-IN")}
-    </span>
+                          {/* Dynamic Footer Bar & Action Handlers */}
+                          <div className="d-flex justify-content-between align-items-center pt-3 mt-1">
+                            <div className="text-muted small">
+                              Payment: <strong className="text-dark">{order.paymentMethod?.toUpperCase() || "N/A"}</strong> ({order.paymentStatus || "Pending"})
+                            </div>
+                            <div className="d-flex align-items-center gap-3">
+                              <span className="fs-5 fw-bold text-dark">
+                                Total: Rs {grandTotal.toLocaleString("en-IN")}
+                              </span>
 
-    {/* Dynamic Action Buttons & Return Badges */}
-    {order.isReturned || order.returnStatus ? (
-      <span className="badge bg-secondary px-3 py-2 fs-6">
-        <i className="fa-solid fa-rotate-left me-1"></i>
-        {order.returnStatus === "Completed"
-          ? "Product Returned"
-          : `Return ${order.returnStatus || "Requested"}`}
-      </span>
-    ) : order.deliveryStatus === "Delivered" ? (
-      <button
-        className="btn btn-outline-warning btn-sm px-3 fw-semibold"
-        onClick={() => handleReturnClick(order)}
-      >
-        Return Item
-      </button>
-    ) : order.deliveryStatus !== "Cancelled" && order.deliveryStatus !== "Returned" ? (
-      <button
-        className="btn btn-outline-danger btn-sm px-3 fw-semibold"
-        onClick={() => handleCancelClick(order)}
-      >
-        Cancel Order
-      </button>
-    ) : null}
-  </div>
-</div>
+                              {/* Conditional Action Buttons */}
+                              {isReturnActive ? (
+                                <span className="badge bg-secondary px-3 py-2 fs-6">
+                                  <i className="fa-solid fa-clock-rotate-left me-1"></i>
+                                  Return {order.returnStatus || "Requested"}
+                                </span>
+                              ) : currentDeliveryStatus === "Delivered" ? (
+                                <button
+                                  className="btn btn-outline-warning btn-sm px-3 fw-semibold"
+                                  onClick={() => handleReturnClick(order)}
+                                >
+                                  Return Item
+                                </button>
+                              ) : currentDeliveryStatus !== "Cancelled" && currentDeliveryStatus !== "Returned" ? (
+                                <button
+                                  className="btn btn-outline-danger btn-sm px-3 fw-semibold"
+                                  onClick={() => handleCancelClick(order)}
+                                >
+                                  Cancel Order
+                                </button>
+                              ) : null}
+                            </div>
+                          </div>
                         </div>
                       );
                     })}
@@ -710,7 +727,7 @@ export default function Profile() {
         </div>
       )}
 
-      {/* Edit Profile Details Modal */}
+      {/* Edit Profile Modal */}
       {showEdit && (
         <div className="alladdress-edit-overlay">
           <div className="profile-edit-modal">

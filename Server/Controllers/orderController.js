@@ -2,6 +2,7 @@ const { Order } = require("../models/Order");
 const { User } = require("../models/User");
 const { Products } = require("../models/productModel");
 
+// 1. User: Place a new order
 const placeOrder = async (req, res) => {
   try {
     const userId = req.userId || req.user?._id || req.user?.id;
@@ -43,6 +44,7 @@ const placeOrder = async (req, res) => {
       });
     }
 
+    // 1. Stock availability validation
     for (const item of orderItems) {
       const product = await Products.findById(item.product);
 
@@ -66,7 +68,7 @@ const placeOrder = async (req, res) => {
     const computedPaymentStatus = paymentStatus || (isCOD ? "Pending" : "Paid");
     const computedBalance = balanceTotal ?? (isCOD ? totalPrice : 0);
 
-    // 3. Create and Save the New Order
+    // 3. Create and Save the New Order (Explicitly setting return flags)
     const newOrder = new Order({
       user: userId,
       orderItems,
@@ -76,16 +78,19 @@ const placeOrder = async (req, res) => {
       balanceTotal: computedBalance,
       paymentStatus: computedPaymentStatus,
       paidAt: isCOD ? null : new Date(),
+      deliveryStatus: "Pending",
+      isReturned: false,      // 🟢 Guarantees fresh order is clean
+      returnStatus: "None",   // 🟢 Overrides schema default "Requested"
     });
 
     const savedOrder = await newOrder.save();
 
-  
+    // 4. Deduct Stock Quantities
     await Promise.all(
       orderItems.map((item) =>
         Products.findByIdAndUpdate(
           item.product,
-          { $inc: { quantity: -item.quantity } }, 
+          { $inc: { quantity: -item.quantity } },
           { new: true }
         )
       )
@@ -109,8 +114,9 @@ const placeOrder = async (req, res) => {
       error: error.message,
     });
   }
-}
+};
 
+// 2. User: Get all personal orders
 const getMyOrders = async (req, res) => {
   try {
     const userId = req.userId || req.user?._id || req.user?.id;
@@ -198,7 +204,7 @@ const cancelOrder = async (req, res) => {
       });
     }
 
-    // 1. Restock the quantities back to each product
+    // 1. Restock quantities back to products
     if (Array.isArray(order.orderItems) && order.orderItems.length > 0) {
       await Promise.all(
         order.orderItems.map((item) =>
@@ -211,7 +217,7 @@ const cancelOrder = async (req, res) => {
       );
     }
 
-    // 2. Mark order status as Cancelled
+    // 2. Update delivery status
     order.deliveryStatus = "Cancelled";
     await order.save();
 
@@ -270,7 +276,6 @@ const updateOrderStatusAdmin = async (req, res) => {
 
     order.deliveryStatus = status;
 
-    // Automatically update payment parameters if COD is delivered
     if (status === "Delivered" && order.paymentMethod?.toLowerCase() === "cod") {
       order.paymentStatus = "Paid";
       order.paidAt = new Date();
@@ -294,8 +299,7 @@ const updateOrderStatusAdmin = async (req, res) => {
   }
 };
 
-// User: Request order return
-// User: Request order return
+// 7. User: Request order return
 const requestReturnOrder = async (req, res) => {
   try {
     const userId = req.userId || req.user?._id || req.user?.id;
@@ -334,14 +338,14 @@ const requestReturnOrder = async (req, res) => {
       });
     }
 
-    if (order.isReturned || (order.returnStatus && order.returnStatus !== "Requested")) {
+    if (order.isReturned || (order.returnStatus && order.returnStatus !== "None" && order.returnStatus !== "Requested")) {
       return res.status(400).json({
         success: false,
         message: "A return request has already been submitted for this order.",
       });
     }
 
-    // Update database fields
+    // Update return state
     order.isReturned = true;
     order.returnReason = returnReason;
     order.returnStatus = "Requested";
@@ -364,7 +368,6 @@ const requestReturnOrder = async (req, res) => {
   }
 };
 
-// Export all controller functions cleanly
 module.exports = {
   placeOrder,
   getMyOrders,
@@ -372,5 +375,5 @@ module.exports = {
   cancelOrder,
   getAllOrdersAdmin,
   updateOrderStatusAdmin,
-  requestReturnOrder
+  requestReturnOrder,
 };

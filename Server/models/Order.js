@@ -49,7 +49,7 @@ const orderSchema = new mongoose.Schema(
         returnStatus: {
             type: String,
             enum: ["Requested", "Approved", "Rejected", "Completed"],
-            default: "Requested",
+            default: "None",
         },
         returnedAt: { type: Date },
     },
