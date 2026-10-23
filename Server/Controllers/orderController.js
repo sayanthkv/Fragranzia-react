@@ -2,7 +2,7 @@ const { Order } = require("../models/Order");
 const { User } = require("../models/User");
 const { Products } = require("../models/productModel");
 
-// 1. User: Place a new order
+// 1. User: Place a new order (Stock Decremented)
 const placeOrder = async (req, res) => {
   try {
     const userId = req.userId || req.user?._id || req.user?.id;
@@ -23,35 +23,22 @@ const placeOrder = async (req, res) => {
       paymentStatus,
     } = req.body;
 
-    if (!orderItems || orderItems.length === 0) {
+    if (!orderItems || !Array.isArray(orderItems) || orderItems.length === 0) {
       return res.status(400).json({
         success: false,
         message: "No items provided in order.",
       });
     }
 
-    if (!shippingAddress) {
-      return res.status(400).json({
-        success: false,
-        message: "Shipping address is required.",
-      });
-    }
-
-    if (!paymentMethod) {
-      return res.status(400).json({
-        success: false,
-        message: "Payment method is required.",
-      });
-    }
-
-    // 1. Stock availability validation
+    // Step 1: Stock Check — Ensure all requested items are in stock
     for (const item of orderItems) {
-      const product = await Products.findById(item.product);
+      const productId = item.product?._id || item.product;
+      const product = await Products.findById(productId);
 
       if (!product) {
         return res.status(404).json({
           success: false,
-          message: `Product not found for ID: ${item.product}`,
+          message: `Product not found for ID: ${productId}`,
         });
       }
 
@@ -63,12 +50,11 @@ const placeOrder = async (req, res) => {
       }
     }
 
-    // 2. Prepare Payment & Balance Parameters
     const isCOD = paymentMethod.toLowerCase() === "cod";
     const computedPaymentStatus = paymentStatus || (isCOD ? "Pending" : "Paid");
     const computedBalance = balanceTotal ?? (isCOD ? totalPrice : 0);
 
-    // 3. Create and Save the New Order (Explicitly setting return flags)
+    // Step 2: Instantiate new order
     const newOrder = new Order({
       user: userId,
       orderItems,
@@ -78,25 +64,27 @@ const placeOrder = async (req, res) => {
       balanceTotal: computedBalance,
       paymentStatus: computedPaymentStatus,
       paidAt: isCOD ? null : new Date(),
-      deliveryStatus: "Pending",
-      isReturned: false,      // 🟢 Guarantees fresh order is clean
-      returnStatus: "None",   // 🟢 Overrides schema default "Requested"
+      isReturned: false,
+      isStockRestored: false,
+      returnReason: null,
+      returnStatus: null,
     });
 
     const savedOrder = await newOrder.save();
 
-    // 4. Deduct Stock Quantities
+    // Step 3: Decrement Inventory — Deduct purchased quantities from product stock
     await Promise.all(
-      orderItems.map((item) =>
-        Products.findByIdAndUpdate(
-          item.product,
-          { $inc: { quantity: -item.quantity } },
+      orderItems.map((item) => {
+        const productId = item.product?._id || item.product;
+        return Products.findByIdAndUpdate(
+          productId,
+          { $inc: { quantity: -Number(item.quantity) } },
           { new: true }
-        )
-      )
+        );
+      })
     );
 
-    // 5. Clear Cart inside User Document
+    // Step 4: Clear User's Cart
     await User.findByIdAndUpdate(userId, {
       $set: { cart: [], cart_total: 0 },
     });
@@ -173,7 +161,7 @@ const getOrderById = async (req, res) => {
   }
 };
 
-// 4. User: Cancel an order
+// 4. User: Cancel an order (Stock Restored)
 const cancelOrder = async (req, res) => {
   try {
     const userId = req.userId || req.user?._id || req.user?.id;
@@ -204,20 +192,21 @@ const cancelOrder = async (req, res) => {
       });
     }
 
-    // 1. Restock quantities back to products
+    // Restock quantities back to products
     if (Array.isArray(order.orderItems) && order.orderItems.length > 0) {
       await Promise.all(
-        order.orderItems.map((item) =>
-          Products.findByIdAndUpdate(
-            item.product,
-            { $inc: { quantity: item.quantity } },
+        order.orderItems.map((item) => {
+          const productId = item.product?._id || item.product;
+          return Products.findByIdAndUpdate(
+            productId,
+            { $inc: { quantity: Number(item.quantity) } },
             { new: true }
-          )
-        )
+          );
+        })
       );
     }
 
-    // 2. Update delivery status
+    // Update delivery status
     order.deliveryStatus = "Cancelled";
     await order.save();
 
@@ -331,6 +320,13 @@ const requestReturnOrder = async (req, res) => {
       });
     }
 
+    if (order.deliveryStatus === "Cancelled") {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot request a return on a cancelled order.",
+      });
+    }
+
     if (order.deliveryStatus !== "Delivered") {
       return res.status(400).json({
         success: false,
@@ -338,14 +334,19 @@ const requestReturnOrder = async (req, res) => {
       });
     }
 
-    if (order.isReturned || (order.returnStatus && order.returnStatus !== "None" && order.returnStatus !== "Requested")) {
+    if (
+      order.isReturned ||
+      (order.returnStatus &&
+        order.returnStatus !== "None" &&
+        order.returnStatus !== null)
+    ) {
       return res.status(400).json({
         success: false,
         message: "A return request has already been submitted for this order.",
       });
     }
 
-    // Update return state
+    // Update return fields together
     order.isReturned = true;
     order.returnReason = returnReason;
     order.returnStatus = "Requested";
@@ -368,6 +369,80 @@ const requestReturnOrder = async (req, res) => {
   }
 };
 
+// 8. Admin: Approve or Reject Return Request (Conditional Stock Restoration)
+const processReturnStatusAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body; // Expects "Approved" or "Rejected"
+
+    if (!["Approved", "Rejected"].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Status must be either 'Approved' or 'Rejected'.",
+      });
+    }
+
+    const order = await Order.findById(id).populate("orderItems.product");
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found.",
+      });
+    }
+
+    if (status === "Approved") {
+      const nonRestockableReasons = ["Damaged Product", "Defective Product"];
+      const isDamagedOrDefective = nonRestockableReasons.includes(order.returnReason);
+
+      // Restock ONLY if reason is NOT Damaged or Defective AND stock has not yet been restored
+      if (!isDamagedOrDefective && !order.isStockRestored && Array.isArray(order.orderItems)) {
+        for (const item of order.orderItems) {
+          const productId = item.product?._id || item.product;
+          const qty = Number(item.quantity || 1);
+
+          if (productId) {
+            await Products.findByIdAndUpdate(
+              productId,
+              { $inc: { quantity: qty } },
+              { new: true }
+            );
+          }
+        }
+        order.isStockRestored = true;
+      }
+
+      order.returnStatus = "Approved";
+      order.deliveryStatus = "Returned";
+    } else {
+      order.returnStatus = "Rejected";
+    }
+
+    await order.save();
+
+    const isDamagedOrDefective = ["Damaged Product", "Defective Product"].includes(order.returnReason);
+
+    return res.status(200).json({
+      success: true,
+      message: `Return request ${status.toLowerCase()} successfully.${
+        status === "Approved"
+          ? isDamagedOrDefective
+            ? " Stock was NOT restored because the item was damaged/defective."
+            : " Stock HAS been restored to product inventory."
+          : ""
+      }`,
+      order,
+    });
+  } catch (error) {
+    console.error("Error in processReturnStatusAdmin:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to process return request status.",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   placeOrder,
   getMyOrders,
@@ -376,4 +451,5 @@ module.exports = {
   getAllOrdersAdmin,
   updateOrderStatusAdmin,
   requestReturnOrder,
+  processReturnStatusAdmin,
 };

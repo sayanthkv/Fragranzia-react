@@ -16,7 +16,10 @@ import {
     LuPhone,
     LuMail,
     LuCalendarDays,
-    LuClock
+    LuClock,
+    LuRotateCcw,
+    LuCircleCheck, // Updated from LuCheckCircle
+    LuCircleX      // Updated from LuXCircle
 } from 'react-icons/lu';
 import './Adminorder.css';
 import { Link } from 'react-router-dom';
@@ -27,7 +30,7 @@ const Adminorder = () => {
     const [loading, setLoading] = useState(true);
     const [selectedOrder, setSelectedOrder] = useState(null);
 
-    const { getOrders, updateStatus } = AdminService();
+    const { getOrders, updateStatus, processReturnStatus } = AdminService();
 
     const fetchOrderedProducts = async () => {
         try {
@@ -81,6 +84,22 @@ const Adminorder = () => {
             console.error("Failed to update status on server:", error);
             alert("Failed to update status on server. Reloading orders.");
             fetchOrderedProducts();
+        }
+    };
+
+    const handleReturnProcess = async (orderId, status) => {
+        try {
+            if (typeof processReturnStatus === 'function') {
+                const res = await processReturnStatus(orderId, status);
+                alert(res.message || `Return request ${status.toLowerCase()} successfully.`);
+                fetchOrderedProducts();
+                if (selectedOrder && selectedOrder._id === orderId) {
+                    setSelectedOrder(null);
+                }
+            }
+        } catch (error) {
+            console.error("Failed to process return request:", error);
+            alert(error.response?.data?.message || "Failed to process return request.");
         }
     };
 
@@ -199,8 +218,9 @@ const Adminorder = () => {
                                         <th>CUSTOMER</th>
                                         <th>DATE</th>
                                         <th>PRODUCT DETAILS</th>
+                                        <th>RETURN STATUS</th>
                                         <th>ACTIONS</th>
-                                        <th>STATUS</th>
+                                        <th>DELIVERY STATUS</th>
                                     </tr>
                                 </thead>
 
@@ -211,6 +231,8 @@ const Adminorder = () => {
                                             const totalQuantity = data.orderItems?.reduce(
                                                 (sum, item) => sum + (item.quantity || 1), 0
                                             ) || 0;
+
+                                            const isReturnRequested = data.isReturned || data.returnStatus === "Requested";
 
                                             return (
                                                 <tr key={data._id}>
@@ -286,6 +308,42 @@ const Adminorder = () => {
                                                         </div>
                                                     </td>
 
+                                                    {/* RETURN REQUEST STATUS & ACTION COLUMNS */}
+                                                    <td>
+                                                        {isReturnRequested ? (
+                                                            <div className="d-flex flex-column gap-1 align-items-start">
+                                                                <span className="badge bg-warning text-dark px-2 py-1 small">
+                                                                    <LuRotateCcw className="me-1" /> Requested
+                                                                </span>
+                                                                <small className="text-muted text-truncate" style={{ maxWidth: '120px' }}>
+                                                                    {data.returnReason || "No reason specified"}
+                                                                </small>
+                                                                {data.returnStatus === "Requested" && (
+                                                                    <div className="d-flex gap-1 mt-1">
+                                                                        <button
+                                                                            className="btn btn-success btn-sm py-0 px-2 fs-7"
+                                                                            onClick={() => handleReturnProcess(data._id, "Approved")}
+                                                                        >
+                                                                            Approve
+                                                                        </button>
+                                                                        <button
+                                                                            className="btn btn-danger btn-sm py-0 px-2 fs-7"
+                                                                            onClick={() => handleReturnProcess(data._id, "Rejected")}
+                                                                        >
+                                                                            Reject
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        ) : data.returnStatus ? (
+                                                            <span className={`badge ${data.returnStatus === 'Approved' ? 'bg-success' : 'bg-danger'} px-2 py-1`}>
+                                                                {data.returnStatus}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-muted small">None</span>
+                                                        )}
+                                                    </td>
+
                                                     <td>
                                                         <button
                                                             className="product-action-show-btn"
@@ -319,7 +377,7 @@ const Adminorder = () => {
                                         })
                                     ) : (
                                         <tr>
-                                            <td colSpan="6" className="text-center py-4">
+                                            <td colSpan="7" className="text-center py-4">
                                                 No orders available.
                                             </td>
                                         </tr>
@@ -361,6 +419,34 @@ const Adminorder = () => {
                         </div>
 
                         <div className="order-details-body">
+                            {/* Return Request Banner inside Modal */}
+                            {(selectedOrder.isReturned || selectedOrder.returnStatus === "Requested") && (
+                                <div className="alert alert-warning d-flex align-items-center justify-content-between p-3 mb-3 rounded shadow-sm">
+                                    <div>
+                                        <strong className="d-block text-dark mb-1">
+                                            <LuRotateCcw className="me-2" /> Return Request Pending
+                                        </strong>
+                                        <span className="text-muted small">
+                                            Reason: <strong>{selectedOrder.returnReason || "Not provided"}</strong>
+                                        </span>
+                                    </div>
+                                    <div className="d-flex gap-2">
+                                        <button
+                                            className="btn btn-success btn-sm d-flex align-items-center gap-1 fw-bold"
+                                            onClick={() => handleReturnProcess(selectedOrder._id, "Approved")}
+                                        >
+                                            <LuCheckCircle /> Approve & Restock
+                                        </button>
+                                        <button
+                                            className="btn btn-danger btn-sm d-flex align-items-center gap-1 fw-bold"
+                                            onClick={() => handleReturnProcess(selectedOrder._id, "Rejected")}
+                                        >
+                                            <LuXCircle /> Reject Request
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="order-information-grid">
                                 {/* Customer Info Card */}
                                 <div className="order-information-card">
@@ -493,7 +579,7 @@ const Adminorder = () => {
                                 </div>
 
                                 <div className="footer-status">
-                                    <span>STATUS:</span>
+                                    <span>DELIVERY STATUS:</span>
                                     <select
                                         className={`order-details-status-select ${getStatusClass(selectedOrder.deliveryStatus)}`}
                                         value={selectedOrder.deliveryStatus || 'Pending'}

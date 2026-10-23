@@ -54,20 +54,24 @@ const AdminService = () => {
     return response.data;
   };
 
-  
+  const getOrders = async () => {
+    const response = await axiosPrivate.get("/api/orders/admin/all");
+    return response.data;
+  };
 
- // AdminService.jsx
-const getOrders = async () => {
-  // Update to /api/orders/admin/all
-  const response = await axiosPrivate.get("/api/orders/admin/all"); 
-  return response.data;
-};
+  const updateStatus = async (orderId, data) => {
+    const response = await axiosPrivate.put(`/api/orders/admin/status/${orderId}`, data);
+    return response.data;
+  };
 
-const updateStatus = async (orderId, data) => {
-  // Update to /api/orders/admin/status/:id
-  const response = await axiosPrivate.put(`/api/orders/admin/status/${orderId}`, data);
-  return response.data;
-};
+  // Approve or Reject Return Requests
+  const processReturnStatus = async (orderId, status) => {
+    const response = await axiosPrivate.put(`/api/orders/admin/return-status/${orderId}`, {
+      status,
+    });
+    return response.data;
+  };
+
   return {
     addToProduct,
     AddCategory,
@@ -78,10 +82,11 @@ const updateStatus = async (orderId, data) => {
     getProduct,
     editProductStatus,
     fetchUsers,
-    fetchUserdetails: fetchUsers, // Exported as fetchUserdetails to resolve the undefined error
+    fetchUserdetails: fetchUsers,
     toggleUserBlockStatus,
     getOrders,
-    updateStatus 
+    updateStatus,
+    processReturnStatus, // Exported return status handler
   };
 };
 

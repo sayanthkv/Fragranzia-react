@@ -8,7 +8,8 @@ const {
   cancelOrder,
   getAllOrdersAdmin,
   updateOrderStatusAdmin,
-  requestReturnOrder
+  requestReturnOrder,
+  processReturnStatusAdmin,
 } = require("../Controllers/orderController");
 
 // Protected order routes
@@ -18,15 +19,14 @@ router.use(checkAuth);
 router.post("/placeorder", placeOrder);
 router.get("/my-orders", getMyOrders);
 
-// 2. Admin Order Routes (MUST be placed before /:id)
+// 2. Admin Order Routes (MUST be placed before dynamic /:id)
 router.get("/admin/all", getAllOrdersAdmin);
 router.put("/admin/status/:id", updateOrderStatusAdmin);
+router.put("/admin/return-status/:id", processReturnStatusAdmin);
 
-// 3. Dynamic ID Routes (Keep at the bottom)
+// 3. Dynamic User ID Routes (Placed at the bottom)
 router.get("/:id", getOrderById);
 router.put("/cancel/:id", cancelOrder);
-
 router.put("/return/:id", requestReturnOrder);
-
 
 module.exports = router;
