@@ -43,7 +43,6 @@ const placeOrder = async (req, res) => {
       });
     }
 
-    // 1. Stock Validation Check
     for (const item of orderItems) {
       const product = await Products.findById(item.product);
 
@@ -81,12 +80,12 @@ const placeOrder = async (req, res) => {
 
     const savedOrder = await newOrder.save();
 
-    // 4. Reduce Quantity in Database using findByIdAndUpdate in parallel
+  
     await Promise.all(
       orderItems.map((item) =>
         Products.findByIdAndUpdate(
           item.product,
-          { $inc: { quantity: -item.quantity } }, // Decrement stock quantity
+          { $inc: { quantity: -item.quantity } }, 
           { new: true }
         )
       )
@@ -111,7 +110,7 @@ const placeOrder = async (req, res) => {
     });
   }
 }
-// 2. User: Get orders for logged-in user
+
 const getMyOrders = async (req, res) => {
   try {
     const userId = req.userId || req.user?._id || req.user?.id;

@@ -61,7 +61,6 @@ const Adminorder = () => {
     };
 
     const handleStatusChange = async (id, status) => {
-        // Optimistic UI update
         setOrders((prevOrders) =>
             prevOrders.map((item) =>
                 item._id === id
@@ -74,7 +73,6 @@ const Adminorder = () => {
             setSelectedOrder((prev) => ({ ...prev, deliveryStatus: status }));
         }
 
-        // Send API request to persist changes in DB
         try {
             if (typeof updateStatus === 'function') {
                 await updateStatus(id, { status });
@@ -260,30 +258,28 @@ const Adminorder = () => {
                                                     </td>
 
                                                     <td>
-                                                        <div className="order-product">
-                                                            <div className="order-product-image">
+                                                        <div className="order-product d-flex align-items-center gap-2">
+                                                            <div className="order-product-image flex-shrink-0">
                                                                 {firstItem?.product?.image ? (
                                                                     <img
                                                                         src={`http://localhost:5000/uploads/${firstItem.product.image}`}
                                                                         alt={firstItem.product.name}
-                                                                        style={{ width: '35px', height: '35px', objectFit: 'cover', borderRadius: '4px' }}
+                                                                        style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '6px' }}
                                                                     />
                                                                 ) : (
-                                                                    '🧴'
+                                                                    <span style={{ fontSize: '20px' }}>🧴</span>
                                                                 )}
                                                             </div>
 
-                                                            <div className="order-product-info">
-                                                                <strong>
+                                                            <div className="order-product-info text-start">
+                                                                <strong className="d-block text-truncate" style={{ maxWidth: '180px' }}>
                                                                     {firstItem?.product?.name || 'Product'}
                                                                     {data.orderItems?.length > 1 && ` (+${data.orderItems.length - 1} more)`}
                                                                 </strong>
-
-                                                                <span>
+                                                                <span className="d-block text-muted small">
                                                                     Qty: {totalQuantity}
                                                                 </span>
-
-                                                                <span className="order-total">
+                                                                <span className="order-total fw-bold text-dark small">
                                                                     Total: ₹{data.totalPrice?.toLocaleString('en-IN') || 0}
                                                                 </span>
                                                             </div>
@@ -380,7 +376,7 @@ const Adminorder = () => {
 
                                         <div>
                                             <strong>{selectedOrder.user?.name || 'Customer'}</strong>
-                                            <p>User ID:</p>
+                                            <p className="mb-0">User ID:</p>
                                             <span>{selectedOrder.user?._id?.slice(-8) || selectedOrder.user?.slice?.(-8) || 'N/A'}</span>
                                         </div>
                                     </div>
@@ -406,13 +402,13 @@ const Adminorder = () => {
 
                                     <div className="shipping-address">
                                         <strong>{selectedOrder.shippingAddress?.fullName || selectedOrder.user?.name}</strong>
-                                        <p>{selectedOrder.shippingAddress?.street}</p>
-                                        <p>{selectedOrder.shippingAddress?.city}, {selectedOrder.shippingAddress?.state}</p>
-                                        <p>{selectedOrder.shippingAddress?.country} - {selectedOrder.shippingAddress?.zip}</p>
+                                        <p className="mb-1">{selectedOrder.shippingAddress?.street}</p>
+                                        <p className="mb-1">{selectedOrder.shippingAddress?.city}, {selectedOrder.shippingAddress?.state}</p>
+                                        <p className="mb-2">{selectedOrder.shippingAddress?.country} {selectedOrder.shippingAddress?.zip}</p>
 
                                         <div className="address-contact">
                                             <LuPhone />
-                                            <span>Address Contact: {selectedOrder.shippingAddress?.phone}</span>
+                                            <span>Address Contact: {selectedOrder.shippingAddress?.phone || 'N/A'}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -449,38 +445,42 @@ const Adminorder = () => {
                             </div>
 
                             {/* Ordered Items List */}
-                            <div className="items-title">ITEMS ORDERED</div>
+                            <div className="items-title mt-4 mb-2 fw-bold">ITEMS ORDERED</div>
 
                             <div className="d-flex flex-column gap-2 mb-3">
                                 {selectedOrder.orderItems?.map((item, idx) => (
-                                    <div key={item._id || idx} className="ordered-item-card">
-                                        <div className="ordered-product-image">
-                                            {item.product?.image ? (
-                                                <img
-                                                    src={`http://localhost:5000/uploads/${item.product.image}`}
-                                                    alt={item.product?.name}
-                                                    style={{ width: '45px', height: '45px', objectFit: 'cover', borderRadius: '4px' }}
-                                                />
-                                            ) : (
-                                                '🧴'
-                                            )}
-                                        </div>
+                                    <div key={item._id || idx} className="ordered-item-card d-flex align-items-center justify-content-between p-2 border rounded">
+                                        <div className="d-flex align-items-center gap-3">
+                                            <div className="ordered-product-image flex-shrink-0">
+                                                {item.product?.image ? (
+                                                    <img
+                                                        src={`http://localhost:5000/uploads/${item.product.image}`}
+                                                        alt={item.product?.name}
+                                                        style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '6px' }}
+                                                    />
+                                                ) : (
+                                                    <span style={{ fontSize: '24px' }}>🧴</span>
+                                                )}
+                                            </div>
 
-                                        <div className="ordered-product-information">
-                                            <h3>{item.product?.name || 'Product Name'}</h3>
-                                            <div className="ordered-product-meta">
-                                                <span>Category: <strong>{item.product?.category || 'General'}</strong></span>
+                                            <div className="ordered-product-information">
+                                                <h3 className="fs-6 mb-1">{item.product?.name || 'Product Name'}</h3>
+                                                <div className="ordered-product-meta text-muted small">
+                                                    <span>Category: <strong>{item.product?.categories?.name || 'General'}</strong></span>
+                                                </div>
                                             </div>
                                         </div>
 
-                                        <div className="ordered-price">
-                                            <span>Pricing</span>
-                                            <strong>₹{item.product?.saleprice || 0} x {item.quantity}</strong>
-                                        </div>
+                                        <div className="d-flex align-items-center gap-4 text-end">
+                                            <div className="ordered-price">
+                                                <span className="d-block text-muted small">Pricing</span>
+                                                <strong>₹{item.product?.saleprice || 0} x {item.quantity}</strong>
+                                            </div>
 
-                                        <div className="ordered-total">
-                                            <span>Total Price</span>
-                                            <strong>₹{(item.product?.saleprice || 0) * item.quantity}</strong>
+                                            <div className="ordered-total">
+                                                <span className="d-block text-muted small">Total Price</span>
+                                                <strong>₹{(item.product?.saleprice || 0) * item.quantity}</strong>
+                                            </div>
                                         </div>
                                     </div>
                                 ))}

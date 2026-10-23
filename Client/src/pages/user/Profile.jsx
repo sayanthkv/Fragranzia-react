@@ -103,6 +103,11 @@ export default function Profile() {
   const [editFormData, setEditFormData] = useState({});
   const [addressType, setAddressType] = useState("Home");
 
+  // State management for order cancellation and returns
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showReturnModal, setShowReturnModal] = useState(false);
+
   const { saveaddress, fetchdata: fetchAddressesFromService, updateaddress, setprimary } = UserService();
 
   const [addressFormData, setAddressFormData] = useState({
@@ -221,6 +226,40 @@ export default function Profile() {
         return "bg-info text-dark";
       default:
         return "bg-warning text-dark";
+    }
+  };
+
+  const handleCancelClick = (order) => {
+    setSelectedOrder(order);
+    setShowCancelModal(true);
+  };
+
+  const handleReturnClick = (order) => {
+    setSelectedOrder(order);
+    setShowReturnModal(true);
+  };
+
+  const confirmCancelOrder = async () => {
+    try {
+      // Execute your cancel API call here using selectedOrder._id
+      alert(`Order #${selectedOrder._id} cancellation requested.`);
+      setShowCancelModal(false);
+      setSelectedOrder(null);
+      await getorderedproducts();
+    } catch (error) {
+      console.error("Failed to cancel order:", error);
+    }
+  };
+
+  const confirmReturnOrder = async () => {
+    try {
+      // Execute your return API call here using selectedOrder._id
+      alert(`Order #${selectedOrder._id} return requested.`);
+      setShowReturnModal(false);
+      setSelectedOrder(null);
+      await getorderedproducts();
+    } catch (error) {
+      console.error("Failed to process return:", error);
     }
   };
 
@@ -505,9 +544,20 @@ export default function Profile() {
                                 Placed on {order.createdAt ? new Date(order.createdAt).toLocaleDateString("en-IN") : "N/A"}
                               </small>
                             </div>
-                            <span className={`badge ${getStatusBadge(order.deliveryStatus)} px-3 py-2 fs-6`}>
-                              {order.deliveryStatus || "Pending"}
-                            </span>
+                            <div className="d-flex gap-2 align-items-center">
+                              {order.deliveryStatus === "Delivered" ? (
+                                <button className="btn btn-outline-danger btn-sm" onClick={() => handleReturnClick(order)}>
+                                  Return
+                                </button>
+                              ) : order.deliveryStatus !== "Cancelled" ? (
+                                <button className="btn btn-outline-warning btn-sm" onClick={() => handleCancelClick(order)}>
+                                  Cancel
+                                </button>
+                              ) : null}
+                              <span className={`badge ${getStatusBadge(order.deliveryStatus)} px-3 py-2 fs-6`}>
+                                {order.deliveryStatus || "Pending"}
+                              </span>
+                            </div>
                           </div>
 
                           {/* Iterating through order items */}
@@ -557,6 +607,50 @@ export default function Profile() {
           </div>
         </div>
       </div>
+
+      {/* Cancel Order Modal */}
+      {showCancelModal && selectedOrder && (
+        <div className="cancelorder-overlay">
+          <div className="cancelorder-modal p-4 bg-white rounded shadow">
+            <div className="cancel-order-header border-bottom pb-2 mb-3">
+              <h4 className="m-0">Cancel Order #{selectedOrder._id}</h4>
+            </div>
+            <p>Are you sure you want to cancel this order?</p>
+            <div className="mb-3">
+              <strong>Status:</strong> {selectedOrder.deliveryStatus || "Pending"}<br />
+              <strong>Total Amount:</strong> Rs {Number(selectedOrder.totalPrice || 0).toLocaleString("en-IN")}
+            </div>
+            <div className="d-flex justify-content-end gap-2">
+              <button className="btn btn-secondary" onClick={() => setShowCancelModal(false)}>
+                Close
+              </button>
+              <button className="btn btn-danger" onClick={confirmCancelOrder}>
+                Confirm Cancellation
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Return Order Modal */}
+      {showReturnModal && selectedOrder && (
+        <div className="cancelorder-overlay">
+          <div className="cancelorder-modal p-4 bg-white rounded shadow">
+            <div className="cancel-order-header border-bottom pb-2 mb-3">
+              <h4 className="m-0">Return Order #{selectedOrder._id}</h4>
+            </div>
+            <p>Are you sure you want to request a return for this delivered order?</p>
+            <div className="d-flex justify-content-end gap-2">
+              <button className="btn btn-secondary" onClick={() => setShowReturnModal(false)}>
+                Close
+              </button>
+              <button className="btn btn-warning" onClick={confirmReturnOrder}>
+                Submit Return Request
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showEdit && (
         <div className="alladdress-edit-overlay">

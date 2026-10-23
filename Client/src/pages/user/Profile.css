@@ -113,7 +113,8 @@
 
 .alladdress-modal-overlay,
 .alladdress-view-overlay,
-.alladdress-edit-overlay {
+.alladdress-edit-overlay,
+.cancelorder-overlay {
   position: fixed;
   inset: 0;
   z-index: 1055;
@@ -127,7 +128,8 @@
 .alladdress-custom-modal,
 .alladdress-view-modal,
 .alladdress-edit-modal,
-.profile-edit-modal {
+.profile-edit-modal,
+.cancelorder-modal {
   width: min(100%, 850px);
   max-height: calc(100vh - 40px);
   overflow-y: auto;
