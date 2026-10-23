@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom"; 
+import { Link, useSearchParams } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./Profile.css";
 import UserService from "../../services/user-api-services/UserService";
 
+
 export default function Profile() {
-  const [searchParams] = useSearchParams(); 
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState("profile");
 
   useEffect(() => {
@@ -88,8 +89,8 @@ export default function Profile() {
     }
   };
 
-  useEffect(() => { 
-    fetchdata(); 
+  useEffect(() => {
+    fetchdata();
     getorderedproducts();
   }, []);
 
@@ -108,7 +109,7 @@ export default function Profile() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showReturnModal, setShowReturnModal] = useState(false);
 
-  const { saveaddress, fetchdata: fetchAddressesFromService, updateaddress, setprimary } = UserService();
+  const { saveaddress, fetchdata: fetchAddressesFromService, updateaddress, setprimary ,cancelOrder } = UserService();
 
   const [addressFormData, setAddressFormData] = useState({
     fullName: "",
@@ -229,8 +230,9 @@ export default function Profile() {
     }
   };
 
-  const handleCancelClick = (order) => {
+  const handleCancelClick = async (order) => {
     setSelectedOrder(order);
+    await cancelOrder(order._id)
     setShowCancelModal(true);
   };
 
@@ -473,10 +475,10 @@ export default function Profile() {
                               style={
                                 isPrimary
                                   ? {
-                                      borderColor: '#198754',
-                                      boxShadow: '0 0.5rem 1rem rgba(25, 135, 84, 0.25)',
-                                      backgroundColor: '#f8fff9',
-                                    }
+                                    borderColor: '#198754',
+                                    boxShadow: '0 0.5rem 1rem rgba(25, 135, 84, 0.25)',
+                                    backgroundColor: '#f8fff9',
+                                  }
                                   : {}
                               }
                             >
@@ -537,62 +539,70 @@ export default function Profile() {
 
                       return (
                         <div key={order._id} className="card shadow-lg border-0 p-3">
-                          <div className="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
-                            <div>
-                              <span className="fw-bold text-dark me-2">Order ID: #{order._id}</span>
-                              <small className="text-muted">
-                                Placed on {order.createdAt ? new Date(order.createdAt).toLocaleDateString("en-IN") : "N/A"}
-                              </small>
-                            </div>
-                            <div className="d-flex gap-2 align-items-center">
-                              {order.deliveryStatus === "Delivered" ? (
-                                <button className="btn btn-outline-danger btn-sm" onClick={() => handleReturnClick(order)}>
-                                  Return
-                                </button>
-                              ) : order.deliveryStatus !== "Cancelled" ? (
-                                <button className="btn btn-outline-warning btn-sm" onClick={() => handleCancelClick(order)}>
-                                  Cancel
-                                </button>
-                              ) : null}
-                              <span className={`badge ${getStatusBadge(order.deliveryStatus)} px-3 py-2 fs-6`}>
-                                {order.deliveryStatus || "Pending"}
-                              </span>
-                            </div>
-                          </div>
+  {/* Header Section */}
+  <div className="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+    <div>
+      <span className="fw-bold text-dark me-2">Order ID: #{order._id}</span>
+      <small className="text-muted d-block d-sm-inline mt-1 mt-sm-0">
+        Placed on {order.createdAt ? new Date(order.createdAt).toLocaleDateString("en-IN") : "N/A"}
+      </small>
+    </div>
+    <span className={`badge ${getStatusBadge(order.deliveryStatus)} px-3 py-2 fs-6`}>
+      {order.deliveryStatus || "Pending"}
+    </span>
+  </div>
 
-                          {/* Iterating through order items */}
-                          {Array.isArray(order.orderItems) && order.orderItems.map((item, idx) => {
-                            const itemPrice = Number(item.price || item.product?.price || 0);
-                            const itemQty = Number(item.quantity || 1);
-                            const itemSubtotal = itemPrice * itemQty;
+  {/* Order Items List */}
+  {Array.isArray(order.orderItems) && order.orderItems.map((item, idx) => {
+    const itemPrice = Number(item.price || item.product?.price || 0);
+    const itemQty = Number(item.quantity || 1);
+    const itemSubtotal = itemPrice * itemQty;
 
-                            return (
-                              <div key={item._id || idx} className="d-flex align-items-center gap-3 py-2 border-bottom">
-                                <img
-                                  src={`http://localhost:5000/uploads/${item.product?.image || "default.png"}`}
-                                  alt={item.product?.name || "Product"}
-                                  style={{ width: "70px", height: "70px", objectFit: "cover", borderRadius: "8px" }}
-                                />
-                                <div className="flex-grow-1">
-                                  <h6 className="mb-1 fw-bold">{item.product?.name || item.name || "Product Title"}</h6>
-                                  <small className="text-muted d-block">Quantity: {itemQty}</small>
-                                </div>
-                                <div className="text-end fw-bold fs-6">
-                                  Rs {itemSubtotal.toLocaleString("en-IN")}
-                                </div>
-                              </div>
-                            );
-                          })}
+    return (
+      <div key={item._id || idx} className="d-flex align-items-center gap-3 py-2 border-bottom">
+        <img
+          src={`http://localhost:5000/uploads/${item.product?.image || "default.png"}`}
+          alt={item.product?.name || "Product"}
+          style={{ width: "70px", height: "70px", objectFit: "cover", borderRadius: "8px" }}
+        />
+        <div className="flex-grow-1">
+          <h6 className="mb-1 fw-bold">{item.product?.name || item.name || "Product Title"}</h6>
+          <small className="text-muted d-block">Quantity: {itemQty}</small>
+        </div>
+        <div className="text-end fw-bold fs-6">
+          Rs {itemSubtotal.toLocaleString("en-IN")}
+        </div>
+      </div>
+    );
+  })}
 
-                          <div className="d-flex justify-content-between align-items-center pt-3">
-                            <span className="text-muted">
-                              Payment: <strong>{order.paymentMethod?.toUpperCase() || "N/A"}</strong> ({order.paymentStatus || "Pending"})
-                            </span>
-                            <span className="fs-5 fw-bold text-dark">
-                              Total: Rs {grandTotal.toLocaleString("en-IN")}
-                            </span>
-                          </div>
-                        </div>
+  {/* Professional Footer Bar */}
+  <div className="d-flex justify-content-between align-items-center pt-3 mt-1">
+    <div className="text-muted small">
+      Payment: <strong className="text-dark">{order.paymentMethod?.toUpperCase() || "N/A"}</strong> ({order.paymentStatus || "Pending"})
+    </div>
+    <div className="d-flex align-items-center gap-3">
+      <span className="fs-5 fw-bold text-dark">
+        Total: Rs {grandTotal.toLocaleString("en-IN")}
+      </span>
+      {order.deliveryStatus === "Delivered" ? (
+        <button 
+          className="btn btn-outline-warning btn-sm px-3 fw-semibold" 
+          onClick={() => handleReturnClick(order)}
+        >
+          Return Item
+        </button>
+      ) : order.deliveryStatus !== "Cancelled" ? (
+        <button 
+          className="btn btn-outline-danger btn-sm px-3 fw-semibold" 
+          onClick={() => handleCancelClick(order)}
+        >
+          Cancel Order
+        </button>
+      ) : null}
+    </div>
+  </div>
+</div>
                       );
                     })}
                   </div>

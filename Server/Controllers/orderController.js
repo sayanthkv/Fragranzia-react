@@ -184,6 +184,13 @@ const cancelOrder = async (req, res) => {
       });
     }
 
+    if (order.deliveryStatus === "Cancelled") {
+      return res.status(400).json({
+        success: false,
+        message: "This order has already been cancelled.",
+      });
+    }
+
     if (["Shipped", "Out for Delivery", "Delivered"].includes(order.deliveryStatus)) {
       return res.status(400).json({
         success: false,
@@ -191,12 +198,26 @@ const cancelOrder = async (req, res) => {
       });
     }
 
+    // 1. Restock the quantities back to each product
+    if (Array.isArray(order.orderItems) && order.orderItems.length > 0) {
+      await Promise.all(
+        order.orderItems.map((item) =>
+          Products.findByIdAndUpdate(
+            item.product,
+            { $inc: { quantity: item.quantity } },
+            { new: true }
+          )
+        )
+      );
+    }
+
+    // 2. Mark order status as Cancelled
     order.deliveryStatus = "Cancelled";
     await order.save();
 
     return res.status(200).json({
       success: true,
-      message: "Order cancelled successfully.",
+      message: "Order cancelled successfully and product stock restored!",
       order,
     });
   } catch (error) {
