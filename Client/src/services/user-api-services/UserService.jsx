@@ -123,6 +123,13 @@ const UserService = () => {
     return response.data;
   };
 
+   const returnOrder = async (orderId, returnReason) => {
+  const response = await axiosPrivate.put(`/api/orders/return/${orderId}`, {
+    returnReason,
+  });
+  return response.data;
+};
+
   return {
     regUser,
     logUser,
@@ -146,6 +153,7 @@ const UserService = () => {
     getOrders,
     getOrderById,
     cancelOrder,
+    returnOrder
   };
 };
 

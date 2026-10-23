@@ -6,7 +6,6 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./Profile.css";
 import UserService from "../../services/user-api-services/UserService";
 
-
 export default function Profile() {
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState("profile");
@@ -30,7 +29,17 @@ export default function Profile() {
     password: "",
   });
 
-  const { getUserdata, updatedetails, getOrders } = UserService();
+  const {
+    getUserdata,
+    updatedetails,
+    getOrders,
+    saveaddress,
+    fetchdata: fetchAddressesFromService,
+    updateaddress,
+    setprimary,
+    cancelOrder,
+    returnOrder,
+  } = UserService();
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -104,12 +113,11 @@ export default function Profile() {
   const [editFormData, setEditFormData] = useState({});
   const [addressType, setAddressType] = useState("Home");
 
-  // State management for order cancellation and returns
+  // State management for order cancellation, returns, and modal dialogs
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showReturnModal, setShowReturnModal] = useState(false);
-
-  const { saveaddress, fetchdata: fetchAddressesFromService, updateaddress, setprimary ,cancelOrder } = UserService();
+  const [selectedReturnReason, setSelectedReturnReason] = useState("Damaged Product");
 
   const [addressFormData, setAddressFormData] = useState({
     fullName: "",
@@ -119,7 +127,7 @@ export default function Profile() {
     state: "",
     landmark: "",
     zip: "",
-    alternativePhone: ""
+    alternativePhone: "",
   });
 
   const handleAddressChange = (event) => {
@@ -143,7 +151,7 @@ export default function Profile() {
         state: "",
         landmark: "",
         zip: "",
-        alternativePhone: ""
+        alternativePhone: "",
       });
 
       await getAddresses();
@@ -222,6 +230,8 @@ export default function Profile() {
         return "bg-success";
       case "Cancelled":
         return "bg-danger";
+      case "Returned":
+        return "bg-secondary";
       case "Shipped":
       case "Out for Delivery":
         return "bg-info text-dark";
@@ -230,44 +240,41 @@ export default function Profile() {
     }
   };
 
-
-const handleCancelClick = (order) => {
-  setSelectedOrder(order);
-  setShowCancelModal(true);
-};
+  const handleCancelClick = (order) => {
+    setSelectedOrder(order);
+    setShowCancelModal(true);
+  };
 
   const handleReturnClick = (order) => {
     setSelectedOrder(order);
     setShowReturnModal(true);
   };
 
-
-const confirmCancelOrder = async () => {
-  try {
-    if (!selectedOrder?._id) return;
-
-    await cancelOrder(selectedOrder._id);
-
-    alert(`Order #${selectedOrder._id} cancelled successfully.`);
-    setShowCancelModal(false);
-    setSelectedOrder(null);
-
-    await getorderedproducts();
-  } catch (error) {
-    console.error("Failed to cancel order:", error.response?.data || error.message);
-    alert(error.response?.data?.message || "Failed to cancel order. Please try again.");
-  }
-};
+  const confirmCancelOrder = async () => {
+    try {
+      if (!selectedOrder?._id) return;
+      await cancelOrder(selectedOrder._id);
+      alert(`Order #${selectedOrder._id} cancelled successfully.`);
+      setShowCancelModal(false);
+      setSelectedOrder(null);
+      await getorderedproducts();
+    } catch (error) {
+      console.error("Failed to cancel order:", error.response?.data || error.message);
+      alert(error.response?.data?.message || "Failed to cancel order. Please try again.");
+    }
+  };
 
   const confirmReturnOrder = async () => {
     try {
-      // Execute your return API call here using selectedOrder._id
-      alert(`Order #${selectedOrder._id} return requested.`);
+      if (!selectedOrder?._id) return;
+      await returnOrder(selectedOrder._id, selectedReturnReason);
+      alert(`Return request for Order #${selectedOrder._id} submitted successfully.`);
       setShowReturnModal(false);
       setSelectedOrder(null);
       await getorderedproducts();
     } catch (error) {
-      console.error("Failed to process return:", error);
+      console.error("Failed to process return:", error.response?.data || error.message);
+      alert(error.response?.data?.message || "Failed to submit return request.");
     }
   };
 
@@ -276,7 +283,7 @@ const confirmCancelOrder = async () => {
       <nav className="navbar navbar-expand-lg navbar-light shadow-sm homepage-navbar">
         <div className="container-fluid px-0">
           <span className="navbar-brand homepage-navbar-brand">
-            <Link to='/'>Fragranzia</Link>
+            <Link to="/">Fragranzia</Link>
           </span>
           <button
             className="navbar-toggler"
@@ -293,22 +300,22 @@ const confirmCancelOrder = async () => {
             <ul className="navbar-nav align-items-center gap-2">
               <li className="nav-item">
                 <span className="nav-link homepage-nav-link">
-                  <Link to='/'>Home</Link>
+                  <Link to="/">Home</Link>
                 </span>
               </li>
               <li className="nav-item">
                 <span className="nav-link homepage-nav-link">
-                  <Link to='/Products'>Products</Link>
+                  <Link to="/Products">Products</Link>
                 </span>
               </li>
               <li className="nav-item">
                 <span className="nav-link homepage-nav-link">
-                  <Link to='/Wishlist'>Wishlist</Link>
+                  <Link to="/Wishlist">Wishlist</Link>
                 </span>
               </li>
               <li className="nav-item me-3">
                 <span className="nav-link homepage-nav-link">
-                  <Link to='/About'>About</Link>
+                  <Link to="/About">About</Link>
                 </span>
               </li>
               <li className="nav-item me-2">
@@ -324,7 +331,9 @@ const confirmCancelOrder = async () => {
               </li>
               <li className="nav-item">
                 <span className="icon-btn homepage-icon-btn" aria-label="Cart">
-                  <Link to='/Cart'><i className="fa-solid fa-cart-shopping"></i></Link>
+                  <Link to="/Cart">
+                    <i className="fa-solid fa-cart-shopping"></i>
+                  </Link>
                 </span>
               </li>
               <li className="nav-item">
@@ -338,7 +347,9 @@ const confirmCancelOrder = async () => {
               </li>
               <li className="nav-item">
                 <span className="icon-btn homepage-icon-btn active" aria-label="Profile">
-                  <Link to='/Profile'><i className="fa-regular fa-user"></i></Link>
+                  <Link to="/Profile">
+                    <i className="fa-regular fa-user"></i>
+                  </Link>
                 </span>
               </li>
             </ul>
@@ -349,7 +360,9 @@ const confirmCancelOrder = async () => {
       <div className="profile-root-wrapper">
         <div className="container-fluid px-md-5 px-3">
           <div className="mx-2 py-4">
-            <h1 className="mb-1" style={{ fontWeight: 700, fontSize: "2.2rem" }}>Profile</h1>
+            <h1 className="mb-1" style={{ fontWeight: 700, fontSize: "2.2rem" }}>
+              Profile
+            </h1>
             <nav aria-label="breadcrumb" className="mb-4">
               <span className="text-muted" style={{ fontSize: "0.9rem" }}>
                 Home &gt; {activeTab === "profile" ? "Profile" : activeTab === "address" ? "Address" : "My Order"}
@@ -436,11 +449,11 @@ const confirmCancelOrder = async () => {
                     <label className="profile-form-label">Password</label>
                     <div className="profile-input-group">
                       <input
-                        type={showPassword ? 'text' : 'password'}
+                        type={showPassword ? "text" : "password"}
                         className="profile-custom-control"
                         value={formData.password}
                         readOnly
-                        style={{ letterSpacing: showPassword ? 'normal' : '3px' }}
+                        style={{ letterSpacing: showPassword ? "normal" : "3px" }}
                       />
                     </div>
                   </div>
@@ -477,14 +490,14 @@ const confirmCancelOrder = async () => {
                         return (
                           <div className="col-12 col-md-6 col-xl-4" key={address._id}>
                             <div
-                              className={`address-card h-100 ${isPrimary ? 'primary-card' : ''}`}
+                              className={`address-card h-100 ${isPrimary ? "primary-card" : ""}`}
                               style={
                                 isPrimary
                                   ? {
-                                    borderColor: '#198754',
-                                    boxShadow: '0 0.5rem 1rem rgba(25, 135, 84, 0.25)',
-                                    backgroundColor: '#f8fff9',
-                                  }
+                                      borderColor: "#198754",
+                                      boxShadow: "0 0.5rem 1rem rgba(25, 135, 84, 0.25)",
+                                      backgroundColor: "#f8fff9",
+                                    }
                                   : {}
                               }
                             >
@@ -545,70 +558,81 @@ const confirmCancelOrder = async () => {
 
                       return (
                         <div key={order._id} className="card shadow-lg border-0 p-3">
-  {/* Header Section */}
-  <div className="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
-    <div>
-      <span className="fw-bold text-dark me-2">Order ID: #{order._id}</span>
-      <small className="text-muted d-block d-sm-inline mt-1 mt-sm-0">
-        Placed on {order.createdAt ? new Date(order.createdAt).toLocaleDateString("en-IN") : "N/A"}
-      </small>
-    </div>
-    <span className={`badge ${getStatusBadge(order.deliveryStatus)} px-3 py-2 fs-6`}>
-      {order.deliveryStatus || "Pending"}
-    </span>
+                          {/* Header Section */}
+                          <div className="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                            <div>
+                              <span className="fw-bold text-dark me-2">Order ID: #{order._id}</span>
+                              <small className="text-muted d-block d-sm-inline mt-1 mt-sm-0">
+                                Placed on {order.createdAt ? new Date(order.createdAt).toLocaleDateString("en-IN") : "N/A"}
+                              </small>
+                            </div>
+                            <span className={`badge ${getStatusBadge(order.deliveryStatus)} px-3 py-2 fs-6`}>
+                              {order.deliveryStatus || "Pending"}
+                            </span>
+                          </div>
+
+                          {/* Order Items List */}
+                          {Array.isArray(order.orderItems) &&
+                            order.orderItems.map((item, idx) => {
+                              const itemPrice = Number(item.price || item.product?.price || 0);
+                              const itemQty = Number(item.quantity || 1);
+                              const itemSubtotal = itemPrice * itemQty;
+
+                              return (
+                                <div key={item._id || idx} className="d-flex align-items-center gap-3 py-2 border-bottom">
+                                  <img
+                                    src={`http://localhost:5000/uploads/${item.product?.image || "default.png"}`}
+                                    alt={item.product?.name || "Product"}
+                                    style={{ width: "70px", height: "70px", objectFit: "cover", borderRadius: "8px" }}
+                                  />
+                                  <div className="flex-grow-1">
+                                    <h6 className="mb-1 fw-bold">{item.product?.name || item.name || "Product Title"}</h6>
+                                    <small className="text-muted d-block">Quantity: {itemQty}</small>
+                                  </div>
+                                  <div className="text-end fw-bold fs-6">
+                                    Rs {itemSubtotal.toLocaleString("en-IN")}
+                                  </div>
+                                </div>
+                              );
+                            })}
+
+                          {/* Professional Footer Bar */}
+                          {/* Professional Footer Bar */}
+<div className="d-flex justify-content-between align-items-center pt-3 mt-1">
+  <div className="text-muted small">
+    Payment: <strong className="text-dark">{order.paymentMethod?.toUpperCase() || "N/A"}</strong> ({order.paymentStatus || "Pending"})
   </div>
+  <div className="d-flex align-items-center gap-3">
+    <span className="fs-5 fw-bold text-dark">
+      Total: Rs {grandTotal.toLocaleString("en-IN")}
+    </span>
 
-  {/* Order Items List */}
-  {Array.isArray(order.orderItems) && order.orderItems.map((item, idx) => {
-    const itemPrice = Number(item.price || item.product?.price || 0);
-    const itemQty = Number(item.quantity || 1);
-    const itemSubtotal = itemPrice * itemQty;
-
-    return (
-      <div key={item._id || idx} className="d-flex align-items-center gap-3 py-2 border-bottom">
-        <img
-          src={`http://localhost:5000/uploads/${item.product?.image || "default.png"}`}
-          alt={item.product?.name || "Product"}
-          style={{ width: "70px", height: "70px", objectFit: "cover", borderRadius: "8px" }}
-        />
-        <div className="flex-grow-1">
-          <h6 className="mb-1 fw-bold">{item.product?.name || item.name || "Product Title"}</h6>
-          <small className="text-muted d-block">Quantity: {itemQty}</small>
-        </div>
-        <div className="text-end fw-bold fs-6">
-          Rs {itemSubtotal.toLocaleString("en-IN")}
-        </div>
-      </div>
-    );
-  })}
-
-  {/* Professional Footer Bar */}
-  <div className="d-flex justify-content-between align-items-center pt-3 mt-1">
-    <div className="text-muted small">
-      Payment: <strong className="text-dark">{order.paymentMethod?.toUpperCase() || "N/A"}</strong> ({order.paymentStatus || "Pending"})
-    </div>
-    <div className="d-flex align-items-center gap-3">
-      <span className="fs-5 fw-bold text-dark">
-        Total: Rs {grandTotal.toLocaleString("en-IN")}
+    {/* Dynamic Action Buttons & Return Badges */}
+    {order.isReturned || order.returnStatus ? (
+      <span className="badge bg-secondary px-3 py-2 fs-6">
+        <i className="fa-solid fa-rotate-left me-1"></i>
+        {order.returnStatus === "Completed"
+          ? "Product Returned"
+          : `Return ${order.returnStatus || "Requested"}`}
       </span>
-      {order.deliveryStatus === "Delivered" ? (
-        <button 
-          className="btn btn-outline-warning btn-sm px-3 fw-semibold" 
-          onClick={() => handleReturnClick(order)}
-        >
-          Return Item
-        </button>
-      ) : order.deliveryStatus !== "Cancelled" ? (
-        <button 
-          className="btn btn-outline-danger btn-sm px-3 fw-semibold" 
-          onClick={() => handleCancelClick(order)}
-        >
-          Cancel Order
-        </button>
-      ) : null}
-    </div>
+    ) : order.deliveryStatus === "Delivered" ? (
+      <button
+        className="btn btn-outline-warning btn-sm px-3 fw-semibold"
+        onClick={() => handleReturnClick(order)}
+      >
+        Return Item
+      </button>
+    ) : order.deliveryStatus !== "Cancelled" && order.deliveryStatus !== "Returned" ? (
+      <button
+        className="btn btn-outline-danger btn-sm px-3 fw-semibold"
+        onClick={() => handleCancelClick(order)}
+      >
+        Cancel Order
+      </button>
+    ) : null}
   </div>
 </div>
+                        </div>
                       );
                     })}
                   </div>
@@ -624,7 +648,7 @@ const confirmCancelOrder = async () => {
         </div>
       </div>
 
-      {/* Cancel Order Modal */}
+      {/* Cancel Order Confirmation Modal */}
       {showCancelModal && selectedOrder && (
         <div className="cancelorder-overlay">
           <div className="cancelorder-modal p-4 bg-white rounded shadow">
@@ -633,14 +657,15 @@ const confirmCancelOrder = async () => {
             </div>
             <p>Are you sure you want to cancel this order?</p>
             <div className="mb-3">
-              <strong>Status:</strong> {selectedOrder.deliveryStatus || "Pending"}<br />
+              <strong>Status:</strong> {selectedOrder.deliveryStatus || "Pending"}
+              <br />
               <strong>Total Amount:</strong> Rs {Number(selectedOrder.totalPrice || 0).toLocaleString("en-IN")}
             </div>
             <div className="d-flex justify-content-end gap-2">
               <button className="btn btn-secondary" onClick={() => setShowCancelModal(false)}>
                 Close
               </button>
-              <button className="btn btn-danger" onClick={confirmCancelOrder}>
+              <button className="btn btn-danger fw-semibold" onClick={confirmCancelOrder}>
                 Confirm Cancellation
               </button>
             </div>
@@ -648,19 +673,36 @@ const confirmCancelOrder = async () => {
         </div>
       )}
 
-      {/* Return Order Modal */}
+      {/* Return Order Request Modal */}
       {showReturnModal && selectedOrder && (
         <div className="cancelorder-overlay">
           <div className="cancelorder-modal p-4 bg-white rounded shadow">
             <div className="cancel-order-header border-bottom pb-2 mb-3">
               <h4 className="m-0">Return Order #{selectedOrder._id}</h4>
             </div>
-            <p>Are you sure you want to request a return for this delivered order?</p>
+            <p className="mb-3 text-muted">Please select the reason for returning this order:</p>
+
+            <div className="mb-4">
+              <label className="form-label fw-bold">Return Reason</label>
+              <select
+                className="form-select"
+                value={selectedReturnReason}
+                onChange={(e) => setSelectedReturnReason(e.target.value)}
+              >
+                <option value="Damaged Product">Damaged Product</option>
+                <option value="Wrong Item Received">Wrong Item Received</option>
+                <option value="Defective Product">Defective Product</option>
+                <option value="Item Not as Described">Item Not as Described</option>
+                <option value="Size/Color Mismatch">Size/Color Mismatch</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
             <div className="d-flex justify-content-end gap-2">
               <button className="btn btn-secondary" onClick={() => setShowReturnModal(false)}>
                 Close
               </button>
-              <button className="btn btn-warning" onClick={confirmReturnOrder}>
+              <button className="btn btn-warning fw-semibold" onClick={confirmReturnOrder}>
                 Submit Return Request
               </button>
             </div>
@@ -668,6 +710,7 @@ const confirmCancelOrder = async () => {
         </div>
       )}
 
+      {/* Edit Profile Details Modal */}
       {showEdit && (
         <div className="alladdress-edit-overlay">
           <div className="profile-edit-modal">
@@ -727,13 +770,13 @@ const confirmCancelOrder = async () => {
                 <label className="profileedit-form-label">Password</label>
                 <div className="profileedit-custom-input-group">
                   <input
-                    type={showPassword ? 'text' : 'password'}
+                    type={showPassword ? "text" : "password"}
                     name="password"
                     className="profileedit-custom-control"
                     value={formData.password}
                     onChange={handleChange}
                     readOnly
-                    style={{ letterSpacing: showPassword ? 'normal' : '3px' }}
+                    style={{ letterSpacing: showPassword ? "normal" : "3px" }}
                   />
                 </div>
               </div>
@@ -748,6 +791,7 @@ const confirmCancelOrder = async () => {
         </div>
       )}
 
+      {/* View Address Details Modal */}
       {showViewModal && (
         <div
           className="alladdress-view-overlay"
@@ -825,7 +869,9 @@ const confirmCancelOrder = async () => {
 
                   <div className="row g-3 mb-3">
                     <div className="col-md-6">
-                      <label htmlFor="viewFullName" className="form-label-custom">Full Name</label>
+                      <label htmlFor="viewFullName" className="form-label-custom">
+                        Full Name
+                      </label>
                       <input
                         id="viewFullName"
                         className="form-control-custom alladdress-view-input"
@@ -834,7 +880,9 @@ const confirmCancelOrder = async () => {
                       />
                     </div>
                     <div className="col-md-6">
-                      <label htmlFor="viewPhone" className="form-label-custom">Phone Number</label>
+                      <label htmlFor="viewPhone" className="form-label-custom">
+                        Phone Number
+                      </label>
                       <input
                         id="viewPhone"
                         className="form-control-custom alladdress-view-input"
@@ -845,7 +893,9 @@ const confirmCancelOrder = async () => {
                   </div>
 
                   <div className="mb-3">
-                    <label htmlFor="viewAddress" className="form-label-custom">Address</label>
+                    <label htmlFor="viewAddress" className="form-label-custom">
+                      Address
+                    </label>
                     <textarea
                       id="viewAddress"
                       className="form-control-custom textarea-custom alladdress-view-input"
@@ -856,7 +906,9 @@ const confirmCancelOrder = async () => {
 
                   <div className="row g-3 mb-3">
                     <div className="col-md-4">
-                      <label htmlFor="viewCity" className="form-label-custom">City/District</label>
+                      <label htmlFor="viewCity" className="form-label-custom">
+                        City/District
+                      </label>
                       <input
                         id="viewCity"
                         className="form-control-custom alladdress-view-input"
@@ -865,7 +917,9 @@ const confirmCancelOrder = async () => {
                       />
                     </div>
                     <div className="col-md-4">
-                      <label htmlFor="viewState" className="form-label-custom">State</label>
+                      <label htmlFor="viewState" className="form-label-custom">
+                        State
+                      </label>
                       <input
                         id="viewState"
                         className="form-control-custom alladdress-view-input"
@@ -874,7 +928,9 @@ const confirmCancelOrder = async () => {
                       />
                     </div>
                     <div className="col-md-4">
-                      <label htmlFor="viewLandmark" className="form-label-custom">Land Mark</label>
+                      <label htmlFor="viewLandmark" className="form-label-custom">
+                        Land Mark
+                      </label>
                       <input
                         id="viewLandmark"
                         className="form-control-custom alladdress-view-input"
@@ -886,7 +942,9 @@ const confirmCancelOrder = async () => {
 
                   <div className="row g-3 mb-4">
                     <div className="col-md-4">
-                      <label htmlFor="viewPincode" className="form-label-custom">PinCode</label>
+                      <label htmlFor="viewPincode" className="form-label-custom">
+                        PinCode
+                      </label>
                       <input
                         id="viewPincode"
                         className="form-control-custom alladdress-view-input"
@@ -938,6 +996,7 @@ const confirmCancelOrder = async () => {
         </div>
       )}
 
+      {/* Edit Address Modal */}
       {showEditModal && (
         <div
           className="alladdress-edit-overlay"
@@ -995,55 +1054,145 @@ const confirmCancelOrder = async () => {
 
               <div className="row g-3 mb-3">
                 <div className="col-md-6">
-                  <label htmlFor="editFullName" className="form-label-custom">Full Name</label>
-                  <input id="editFullName" name="fullName" type="text" className="form-control-custom alladdress-edit-input" value={editFormData.fullName || ""} onChange={handleEditChange} required />
+                  <label htmlFor="editFullName" className="form-label-custom">
+                    Full Name
+                  </label>
+                  <input
+                    id="editFullName"
+                    name="fullName"
+                    type="text"
+                    className="form-control-custom alladdress-edit-input"
+                    value={editFormData.fullName || ""}
+                    onChange={handleEditChange}
+                    required
+                  />
                 </div>
                 <div className="col-md-6">
-                  <label htmlFor="editPhone" className="form-label-custom">Phone Number</label>
-                  <input id="editPhone" name="phone" type="tel" className="form-control-custom alladdress-edit-input" value={editFormData.phone || ""} onChange={handleEditChange} required />
+                  <label htmlFor="editPhone" className="form-label-custom">
+                    Phone Number
+                  </label>
+                  <input
+                    id="editPhone"
+                    name="phone"
+                    type="tel"
+                    className="form-control-custom alladdress-edit-input"
+                    value={editFormData.phone || ""}
+                    onChange={handleEditChange}
+                    required
+                  />
                 </div>
               </div>
 
               <div className="mb-3">
-                <label htmlFor="editStreet" className="form-label-custom">Address</label>
-                <textarea id="editStreet" name="street" className="form-control-custom textarea-custom alladdress-edit-input" value={editFormData.street || ""} onChange={handleEditChange} required />
+                <label htmlFor="editStreet" className="form-label-custom">
+                  Address
+                </label>
+                <textarea
+                  id="editStreet"
+                  name="street"
+                  className="form-control-custom textarea-custom alladdress-edit-input"
+                  value={editFormData.street || ""}
+                  onChange={handleEditChange}
+                  required
+                />
               </div>
 
               <div className="row g-3 mb-3">
                 <div className="col-md-4">
-                  <label htmlFor="editCity" className="form-label-custom">City/District</label>
-                  <input id="editCity" name="city" type="text" className="form-control-custom alladdress-edit-input" value={editFormData.city || ""} onChange={handleEditChange} required />
+                  <label htmlFor="editCity" className="form-label-custom">
+                    City/District
+                  </label>
+                  <input
+                    id="editCity"
+                    name="city"
+                    type="text"
+                    className="form-control-custom alladdress-edit-input"
+                    value={editFormData.city || ""}
+                    onChange={handleEditChange}
+                    required
+                  />
                 </div>
                 <div className="col-md-4">
-                  <label htmlFor="editState" className="form-label-custom">State</label>
-                  <input id="editState" name="state" type="text" className="form-control-custom alladdress-edit-input" value={editFormData.state || ""} onChange={handleEditChange} required />
+                  <label htmlFor="editState" className="form-label-custom">
+                    State
+                  </label>
+                  <input
+                    id="editState"
+                    name="state"
+                    type="text"
+                    className="form-control-custom alladdress-edit-input"
+                    value={editFormData.state || ""}
+                    onChange={handleEditChange}
+                    required
+                  />
                 </div>
                 <div className="col-md-4">
-                  <label htmlFor="editLandmark" className="form-label-custom">Land Mark</label>
-                  <input id="editLandmark" name="landmark" type="text" className="form-control-custom alladdress-edit-input" value={editFormData.landmark || ""} onChange={handleEditChange} />
+                  <label htmlFor="editLandmark" className="form-label-custom">
+                    Land Mark
+                  </label>
+                  <input
+                    id="editLandmark"
+                    name="landmark"
+                    type="text"
+                    className="form-control-custom alladdress-edit-input"
+                    value={editFormData.landmark || ""}
+                    onChange={handleEditChange}
+                  />
                 </div>
               </div>
 
               <div className="row g-3 mb-4">
                 <div className="col-md-4">
-                  <label htmlFor="editPincode" className="form-label-custom">PinCode</label>
-                  <input id="editPincode" name="zip" type="text" className="form-control-custom alladdress-edit-input" value={editFormData.zip || ""} onChange={handleEditChange} pattern="[0-9]{6}" maxLength={6} required />
+                  <label htmlFor="editPincode" className="form-label-custom">
+                    PinCode
+                  </label>
+                  <input
+                    id="editPincode"
+                    name="zip"
+                    type="text"
+                    className="form-control-custom alladdress-edit-input"
+                    value={editFormData.zip || ""}
+                    onChange={handleEditChange}
+                    pattern="[0-9]{6}"
+                    maxLength={6}
+                    required
+                  />
                 </div>
                 <div className="col-md-4">
-                  <label htmlFor="editAlternativePhone" className="form-label-custom">Alternative Phone number (Optional)</label>
-                  <input id="editAlternativePhone" name="alternativePhone" type="tel" className={`form-control-custom alladdress-edit-input ${editFormData.alternativePhone ? "" : "empty-field"}`} value={editFormData.alternativePhone || ""} onChange={handleEditChange} placeholder="Enter Alternative Phone number" maxLength={10} />
+                  <label htmlFor="editAlternativePhone" className="form-label-custom">
+                    Alternative Phone number (Optional)
+                  </label>
+                  <input
+                    id="editAlternativePhone"
+                    name="alternativePhone"
+                    type="tel"
+                    className={`form-control-custom alladdress-edit-input ${editFormData.alternativePhone ? "" : "empty-field"}`}
+                    value={editFormData.alternativePhone || ""}
+                    onChange={handleEditChange}
+                    placeholder="Enter Alternative Phone number"
+                    maxLength={10}
+                  />
                 </div>
               </div>
 
               <div className="alladdress-edit-actions">
-                <button type="button" className="btn-modal-cancel" onClick={() => setShowEditModal(false)}>Cancel</button>
-                <button type="submit" className="btn-modal-save">Save</button>
+                <button
+                  type="button"
+                  className="btn-modal-cancel"
+                  onClick={() => setShowEditModal(false)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn-modal-save">
+                  Save
+                </button>
               </div>
             </form>
           </div>
         </div>
       )}
 
+      {/* Add Address Modal */}
       {showModal && (
         <div
           className="alladdress-modal-overlay"
@@ -1119,7 +1268,9 @@ const confirmCancelOrder = async () => {
 
               <div className="row g-3 mb-3">
                 <div className="col-md-6">
-                  <label htmlFor="fullName" className="form-label-custom">Full Name</label>
+                  <label htmlFor="fullName" className="form-label-custom">
+                    Full Name
+                  </label>
                   <input
                     id="fullName"
                     name="fullName"
@@ -1132,7 +1283,9 @@ const confirmCancelOrder = async () => {
                   />
                 </div>
                 <div className="col-md-6">
-                  <label htmlFor="phone" className="form-label-custom">Phone Number</label>
+                  <label htmlFor="phone" className="form-label-custom">
+                    Phone Number
+                  </label>
                   <input
                     id="phone"
                     name="phone"
@@ -1149,7 +1302,9 @@ const confirmCancelOrder = async () => {
               </div>
 
               <div className="mb-3">
-                <label htmlFor="street" className="form-label-custom">Address</label>
+                <label htmlFor="street" className="form-label-custom">
+                  Address
+                </label>
                 <textarea
                   id="street"
                   name="street"
@@ -1163,7 +1318,9 @@ const confirmCancelOrder = async () => {
 
               <div className="row g-3 mb-3">
                 <div className="col-md-4">
-                  <label htmlFor="city" className="form-label-custom">City/District</label>
+                  <label htmlFor="city" className="form-label-custom">
+                    City/District
+                  </label>
                   <input
                     id="city"
                     name="city"
@@ -1176,7 +1333,9 @@ const confirmCancelOrder = async () => {
                   />
                 </div>
                 <div className="col-md-4">
-                  <label htmlFor="state" className="form-label-custom">State</label>
+                  <label htmlFor="state" className="form-label-custom">
+                    State
+                  </label>
                   <input
                     id="state"
                     name="state"
@@ -1189,7 +1348,9 @@ const confirmCancelOrder = async () => {
                   />
                 </div>
                 <div className="col-md-4">
-                  <label htmlFor="landmark" className="form-label-custom">Land Mark</label>
+                  <label htmlFor="landmark" className="form-label-custom">
+                    Land Mark
+                  </label>
                   <input
                     id="landmark"
                     name="landmark"
@@ -1204,7 +1365,9 @@ const confirmCancelOrder = async () => {
 
               <div className="row g-3 mb-4">
                 <div className="col-md-4">
-                  <label htmlFor="zip" className="form-label-custom">PinCode</label>
+                  <label htmlFor="zip" className="form-label-custom">
+                    PinCode
+                  </label>
                   <input
                     id="zip"
                     name="zip"

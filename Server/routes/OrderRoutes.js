@@ -8,6 +8,7 @@ const {
   cancelOrder,
   getAllOrdersAdmin,
   updateOrderStatusAdmin,
+  requestReturnOrder
 } = require("../Controllers/orderController");
 
 // Protected order routes
@@ -24,5 +25,8 @@ router.put("/admin/status/:id", updateOrderStatusAdmin);
 // 3. Dynamic ID Routes (Keep at the bottom)
 router.get("/:id", getOrderById);
 router.put("/cancel/:id", cancelOrder);
+
+router.put("/return/:id", requestReturnOrder);
+
 
 module.exports = router;

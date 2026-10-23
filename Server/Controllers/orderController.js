@@ -294,6 +294,76 @@ const updateOrderStatusAdmin = async (req, res) => {
   }
 };
 
+// User: Request order return
+// User: Request order return
+const requestReturnOrder = async (req, res) => {
+  try {
+    const userId = req.userId || req.user?._id || req.user?.id;
+    const { id } = req.params;
+    const { returnReason } = req.body;
+
+    const validReasons = [
+      "Damaged Product",
+      "Wrong Item Received",
+      "Defective Product",
+      "Item Not as Described",
+      "Size/Color Mismatch",
+      "Other",
+    ];
+
+    if (!returnReason || !validReasons.includes(returnReason)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please select a valid return reason.",
+      });
+    }
+
+    const order = await Order.findOne({ _id: id, user: userId });
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found.",
+      });
+    }
+
+    if (order.deliveryStatus !== "Delivered") {
+      return res.status(400).json({
+        success: false,
+        message: "Only delivered orders can be requested for return.",
+      });
+    }
+
+    if (order.isReturned || (order.returnStatus && order.returnStatus !== "Requested")) {
+      return res.status(400).json({
+        success: false,
+        message: "A return request has already been submitted for this order.",
+      });
+    }
+
+    // Update database fields
+    order.isReturned = true;
+    order.returnReason = returnReason;
+    order.returnStatus = "Requested";
+    order.returnedAt = new Date();
+
+    await order.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Return request submitted successfully.",
+      order,
+    });
+  } catch (error) {
+    console.error("Error in requestReturnOrder:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to process return request.",
+      error: error.message,
+    });
+  }
+};
+
 // Export all controller functions cleanly
 module.exports = {
   placeOrder,
@@ -302,4 +372,5 @@ module.exports = {
   cancelOrder,
   getAllOrdersAdmin,
   updateOrderStatusAdmin,
+  requestReturnOrder
 };
