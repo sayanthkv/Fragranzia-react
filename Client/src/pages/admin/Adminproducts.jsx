@@ -15,7 +15,8 @@ import {
   LuDownload,
   LuUpload,
   LuEye,
-  LuX
+  LuX,
+  LuHouse
 } from 'react-icons/lu';
 
 import './Adminproducts.css';
@@ -185,10 +186,10 @@ const Adminproducts = () => {
   };
 
   const handleLogout = () => {
-  localStorage.removeItem("Token");
-  localStorage.removeItem("role");
-  navigate('/LogIn');
-};
+    localStorage.removeItem("Token");
+    localStorage.removeItem("role");
+    navigate('/LogIn');
+  };
 
   useEffect(() => {
     fetchproduct();
@@ -247,11 +248,20 @@ const Adminproducts = () => {
         </div>
 
         <div className="admin-navbar-logout">
-                    <button className="admin-logout-btn" onClick={handleLogout}>
-                      <LuLogOut className="admin-nav-icon" />
-                      <span>Log Out</span>
-                    </button>
-                  </div>
+          {/* 🏠 GO TO HOME PAGE BUTTON */}
+          <button className="admin-logout-btn mb-2" style={{ backgroundColor: '#4b5563' }}>
+            <Link to="/" style={{ color: 'inherit', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <LuHouse className="admin-nav-icon" />
+              <span>Go to home page</span>
+            </Link>
+          </button>
+
+          {/* 🚪 LOG OUT BUTTON */}
+          <button className="admin-logout-btn" onClick={handleLogout}>
+            <LuLogOut className="admin-nav-icon" />
+            <span>Log Out</span>
+          </button>
+        </div>
 
       </nav>
 

@@ -8,7 +8,8 @@ import {
   LuShoppingCart,
   LuLogOut,
   LuEye,
-  LuX
+  LuX,
+  LuHouse
 } from 'react-icons/lu';
 import './AdminCustomerdetails.css';
 import { Link } from 'react-router-dom';
@@ -80,10 +81,11 @@ const AdminCustomerdetails = () => {
   };
 
   const handleLogout = () => {
-  localStorage.removeItem("Token");
-  localStorage.removeItem("role");
-  navigate('/LogIn');
-};
+    localStorage.removeItem("Token");
+    localStorage.removeItem("role");
+    navigate('/LogIn');
+  };
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -138,6 +140,15 @@ const AdminCustomerdetails = () => {
           </div>
 
           <div className="admin-navbar-logout">
+            {/* 🏠 GO TO HOME PAGE BUTTON */}
+            <button className="admin-logout-btn mb-2" style={{ backgroundColor: '#4b5563' }}>
+              <Link to="/" style={{ color: 'inherit', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <LuHouse className="admin-nav-icon" />
+                <span>Go to home page</span>
+              </Link>
+            </button>
+
+            {/* 🚪 LOG OUT BUTTON */}
             <button className="admin-logout-btn" onClick={handleLogout}>
               <LuLogOut className="admin-nav-icon" />
               <span>Log Out</span>

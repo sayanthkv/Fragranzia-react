@@ -10,7 +10,8 @@ import {
   LuTag,
   LuUsers,
   LuShoppingCart,
-  LuLogOut
+  LuLogOut,
+  LuHouse
 } from 'react-icons/lu';
 import { useNavigate } from 'react-router-dom';
 
@@ -70,10 +71,10 @@ const Adminaddproducts = () => {
   }, []);
 
   const handleLogout = () => {
-  localStorage.removeItem("Token");
-  localStorage.removeItem("role");
-  navigate('/LogIn');
-};
+    localStorage.removeItem("Token");
+    localStorage.removeItem("role");
+    navigate('/LogIn');
+  };
 
   const Onhandlesubmit = async (event) => {
     event.preventDefault();
@@ -176,11 +177,20 @@ const Adminaddproducts = () => {
         </div>
 
         <div className="admin-navbar-logout">
-                    <button className="admin-logout-btn" onClick={handleLogout}>
-                      <LuLogOut className="admin-nav-icon" />
-                      <span>Log Out</span>
-                    </button>
-                  </div>
+          {/* 🏠 GO TO HOME PAGE BUTTON */}
+          <button className="admin-logout-btn mb-2" style={{ backgroundColor: '#4b5563' }}>
+            <Link to="/" style={{ color: 'inherit', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <LuHouse className="admin-nav-icon" />
+              <span>Go to home page</span>
+            </Link>
+          </button>
+
+          {/* 🚪 LOG OUT BUTTON */}
+          <button className="admin-logout-btn" onClick={handleLogout}>
+            <LuLogOut className="admin-nav-icon" />
+            <span>Log Out</span>
+          </button>
+        </div>
 
       </nav>
 
