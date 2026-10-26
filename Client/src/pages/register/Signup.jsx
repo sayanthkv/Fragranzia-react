@@ -7,6 +7,7 @@ import { FcGoogle } from "react-icons/fc";
 import { FaFacebookF } from "react-icons/fa";
 import axios from "axios"
 import UserService from "../../services/user-api-services/UserService";
+import { useNavigate } from 'react-router-dom';
 
 function Signup() {
     const [formData, setFormData] = useState({
@@ -25,6 +26,7 @@ function Signup() {
         terms: false
     });
 
+    const navigate = useNavigate();
     const {regUser} = UserService()
     const onhandlechange = (event) => {
         const { name, value, type, checked } = event.target;
@@ -88,6 +90,7 @@ function Signup() {
         if (next) {
             await regUser(formData);
             alert("Registered Successfully");
+            navigate('/LogIn');
         }
 
 

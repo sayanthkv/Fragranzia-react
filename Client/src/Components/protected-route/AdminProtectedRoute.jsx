@@ -6,16 +6,25 @@ const AdminProtectedRoute = () => {
   const token = localStorage.getItem("Token");
   const role = localStorage.getItem("role");
 
-  // Verify authentication and admin role
   if (!token || !role || role.toLowerCase() !== "admin") {
     return <Navigate to="/LogIn" replace />;
   }
 
-  // Render the matched protected admin component directly
   return <Outlet />;
 };
 
-// 🚫 2. Protect Login/Signup Pages (Logged-in users/admins CANNOT access)
+// 🔒 2. Protect User Account Routes (Only Logged-in Users/Admins allowed)
+export const UserProtectedRoute = () => {
+  const token = localStorage.getItem("Token");
+
+  if (!token) {
+    return <Navigate to="/LogIn" replace />;
+  }
+
+  return <Outlet />;
+};
+
+// 🚫 3. Protect Login/Signup Pages (Logged-in users/admins CANNOT access)
 export const PublicOnlyRoute = () => {
   const token = localStorage.getItem("Token");
   const role = localStorage.getItem("role");
