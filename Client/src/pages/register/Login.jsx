@@ -67,6 +67,7 @@ function Login() {
 
         if (res?.token) {
           localStorage.setItem("Token", res.token);
+          localStorage.setItem("role", res.role);
           navigate("/");
         }
       } catch (error) {
@@ -87,6 +88,7 @@ function Login() {
       }
     }
   };
+  
 
   const handleBlur = (event) => {
     const { name } = event.target;
