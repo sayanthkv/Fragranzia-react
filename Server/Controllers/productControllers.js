@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const { Products } = require('../models/productModel');
 
+// Add a new product (Admin)
 const addproduct = async (req, res) => {
   try {
     const {
@@ -40,6 +41,7 @@ const addproduct = async (req, res) => {
   }
 };
 
+// Fetch ALL products for Admin panel (Includes both Block and Unblock)
 const getproduct = async (req, res) => {
   try {
     const products = await Products
@@ -48,7 +50,7 @@ const getproduct = async (req, res) => {
 
     res.status(200).json(products);
   } catch (error) {
-    console.error('Error fetching products:', error);
+    console.error('Error fetching products for admin:', error);
 
     res.status(500).json({
       message: error.message
@@ -56,6 +58,24 @@ const getproduct = async (req, res) => {
   }
 };
 
+// Fetch ONLY UNBLOCKED products for User store page
+const getUserProducts = async (req, res) => {
+  try {
+    const products = await Products
+      .find({ status: 'Unblock' })
+      .populate('category', 'name');
+
+    res.status(200).json(products);
+  } catch (error) {
+    console.error('Error fetching user products:', error);
+
+    res.status(500).json({
+      message: error.message
+    });
+  }
+};
+
+// Update existing product details (Admin)
 const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
@@ -111,6 +131,7 @@ const updateProduct = async (req, res) => {
   }
 };
 
+// Update product status - Toggle Block/Unblock (Admin)
 const updateProductStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -156,24 +177,33 @@ const updateProductStatus = async (req, res) => {
   }
 };
 
-const getitems = async (req,res) => {
+// Fetch single product details (Guards against direct URL access for blocked items)
+const getitems = async (req, res) => {
   try {
-  const {id} = req.params;
+    const { id } = req.params;
 
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({
-      message: 'Invalid product ID'
-    });
-  }
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        message: 'Invalid product ID'
+      });
+    }
 
-  const item = await Products.findById(id).populate('category', 'name');
-  if (!item) {
-    return res.status(404).json({
-      message: 'Product not found'
-    });
-  }
+    const item = await Products.findById(id).populate('category', 'name');
 
-  res.status(200).json(item);
+    if (!item) {
+      return res.status(404).json({
+        message: 'Product not found'
+      });
+    }
+
+    // Blocked products cannot be accessed on the user side via URL parameter
+    if (item.status === 'Block') {
+      return res.status(404).json({
+        message: 'Product is currently unavailable'
+      });
+    }
+
+    res.status(200).json(item);
   } catch (error) {
     console.error('Error fetching product:', error);
 
@@ -182,11 +212,12 @@ const getitems = async (req,res) => {
       error: error.message
     });
   }
-}
+};
 
 module.exports = {
   addproduct,
   getproduct,
+  getUserProducts,
   updateProduct,
   updateProductStatus,
   getitems

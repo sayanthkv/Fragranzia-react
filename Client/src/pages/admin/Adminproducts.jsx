@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import AdminService from '../../services/admin-api-services/AdminService';
@@ -22,10 +21,7 @@ import {
 import './Adminproducts.css';
 import { Link } from 'react-router-dom';
 
-
 const IMAGE_URL = 'http://localhost:5000/uploads';
-
-
 
 const Adminproducts = () => {
   const [product, setProduct] = useState([]);
@@ -35,8 +31,7 @@ const Adminproducts = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [categories, setCategories] = useState([]);
 
-  const { getCategory, getProduct, EditProduct,editProductStatus } = AdminService()
-
+  const { getCategory, getProduct, EditProduct, editProductStatus } = AdminService();
 
   const fetchCategories = async () => {
     try {
@@ -119,10 +114,7 @@ const Adminproducts = () => {
       formData.append('price', editingProduct.price || '');
       formData.append('saleprice', editingProduct.saleprice || '');
       formData.append('quantity', editingProduct.quantity || '');
-      formData.append(
-        'category',
-        editingProduct.category || ''
-      );
+      formData.append('category', editingProduct.category || '');
 
       if (selectedImage) {
         formData.append('image', selectedImage);
@@ -165,7 +157,7 @@ const Adminproducts = () => {
           : 'Block';
 
       const res = await editProductStatus(
-        id, {status: newStatus}
+        id, { status: newStatus }
       );
 
       setProduct((prevProducts) =>
@@ -184,6 +176,10 @@ const Adminproducts = () => {
     } catch (error) {
       console.error('Error updating status:', error);
     }
+  };
+
+  const formatStatusLabel = (status) => {
+    return status === 'Block' ? 'Blocked' : 'Unblocked';
   };
 
   useEffect(() => {
@@ -348,12 +344,13 @@ const Adminproducts = () => {
 
                     <button
                       onClick={() => toggleStatus(item._id)}
-                      className={`adminproduct-status-btn ${item.status === 'Unblock'
+                      className={`adminproduct-status-btn ${
+                        item.status === 'Unblock'
                           ? 'adminproduct-status-unblock'
                           : 'adminproduct-status-block'
-                        }`}
+                      }`}
                     >
-                      {item.status}
+                      {formatStatusLabel(item.status)}
                     </button>
 
                   </td>
@@ -489,10 +486,11 @@ const Adminproducts = () => {
                     <label>Stock</label>
 
                     <span
-                      className={`adminproduct-view-stock-badge ${selectedProduct.quantity > 0
+                      className={`adminproduct-view-stock-badge ${
+                        selectedProduct.quantity > 0
                           ? 'adminproduct-in-stock'
                           : 'adminproduct-out-of-stock'
-                        }`}
+                      }`}
                     >
                       {selectedProduct.quantity > 0
                         ? `${selectedProduct.quantity} In Stock`
@@ -507,15 +505,16 @@ const Adminproducts = () => {
                     <label>Status</label>
 
                     <button
-                      className={`adminproduct-status-btn ${selectedProduct.status === 'Unblock'
+                      className={`adminproduct-status-btn ${
+                        selectedProduct.status === 'Unblock'
                           ? 'adminproduct-status-unblock'
                           : 'adminproduct-status-block'
-                        }`}
+                      }`}
                       onClick={() =>
                         toggleStatus(selectedProduct._id)
                       }
                     >
-                      {selectedProduct.status}
+                      {formatStatusLabel(selectedProduct.status)}
                     </button>
 
                   </div>

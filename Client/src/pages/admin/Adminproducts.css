@@ -325,12 +325,12 @@ a {
   opacity: 0.85;
 }
 
-.adminproduct-status-block {
+.adminproduct-status-unblock {
   background-color: #dcfce7;
   color: #166534;
 }
 
-.adminproduct-status-unblock {
+.adminproduct-status-block {
   background-color: #fee2e2;
   color: #991b1b;
 }
@@ -1022,3 +1022,4 @@ a {
     width: 100%;
   }
 }
+

@@ -334,3 +334,27 @@ section {
   cursor: wait;
   opacity: 0.6;
 }
+
+/* Filter Sliding Dropdown Styling */
+.filter-sliding-panel {
+  width: 280px;
+  max-width: 90vw; /* Prevents overflow on mobile screens */
+  z-index: 1050;
+  top: 100%;
+  left: 0; /* Align to the left edge of the parent container */
+  right: auto;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12) !important;
+  animation: slideDown 0.25s ease-out forwards;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

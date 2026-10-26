@@ -29,8 +29,9 @@ const AdminService = () => {
     return response.data;
   };
 
+  // Updated to fetch ALL products for Admin including blocked items
   const getProduct = async () => {
-    const response = await axiosPrivate.get("/Products");
+    const response = await axiosPrivate.get("/Products/admin/all");
     return response.data;
   };
 
@@ -64,7 +65,6 @@ const AdminService = () => {
     return response.data;
   };
 
-  // Approve or Reject Return Requests
   const processReturnStatus = async (orderId, status) => {
     const response = await axiosPrivate.put(`/api/orders/admin/return-status/${orderId}`, {
       status,
@@ -86,7 +86,7 @@ const AdminService = () => {
     toggleUserBlockStatus,
     getOrders,
     updateStatus,
-    processReturnStatus, // Exported return status handler
+    processReturnStatus,
   };
 };
 

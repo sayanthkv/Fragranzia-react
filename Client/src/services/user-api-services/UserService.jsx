@@ -4,8 +4,9 @@ import useAxiosPrivate from '../../hooks/useAxiosprivate';
 const UserService = () => {
   const axiosPrivate = useAxiosPrivate();
 
-  const getProduct = async () => {
-    const response = await axiosPrivate.get("/Products");
+  // Hits GET /Products -> Calls getUserProducts on backend (Unblocked items only)
+  const getProduct = async (params = {}) => {
+    const response = await axiosPrivate.get("/Products", { params });
     return response.data;
   };
 
@@ -99,36 +100,32 @@ const UserService = () => {
     return response.data;
   };
 
-  // Place order -> Updated prefix to /api/orders
   const placeorder = async (orderData) => {
     const response = await axiosPrivate.post("/api/orders/placeorder", orderData);
     return response.data;
   };
 
-  // Fetch all orders for current user -> Updated prefix to /api/orders
   const getOrders = async () => {
     const response = await axiosPrivate.get("/api/orders/my-orders");
     return response.data;
   };
 
-  // Fetch specific order details -> Updated prefix to /api/orders
   const getOrderById = async (id) => {
     const response = await axiosPrivate.get(`/api/orders/${id}`);
     return response.data;
   };
 
-  // Cancel order by ID -> Updated prefix to /api/orders
   const cancelOrder = async (id) => {
     const response = await axiosPrivate.put(`/api/orders/cancel/${id}`);
     return response.data;
   };
 
-   const returnOrder = async (orderId, returnReason) => {
-  const response = await axiosPrivate.put(`/api/orders/return/${orderId}`, {
-    returnReason,
-  });
-  return response.data;
-};
+  const returnOrder = async (orderId, returnReason) => {
+    const response = await axiosPrivate.put(`/api/orders/return/${orderId}`, {
+      returnReason,
+    });
+    return response.data;
+  };
 
   return {
     regUser,
