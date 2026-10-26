@@ -29,7 +29,7 @@ const addproduct = async (req, res) => {
 
     const product = await Products
       .findById(newProduct._id)
-      .populate('category', 'name');
+      .populate('category', 'name isActive');
 
     res.status(201).json(product);
   } catch (error) {
@@ -41,12 +41,12 @@ const addproduct = async (req, res) => {
   }
 };
 
-// Fetch ALL products for Admin panel (Includes both Block and Unblock)
+// Fetch ALL products for Admin panel (Includes Blocked products & Blocked categories)
 const getproduct = async (req, res) => {
   try {
     const products = await Products
       .find()
-      .populate('category', 'name');
+      .populate('category', 'name isActive');
 
     res.status(200).json(products);
   } catch (error) {
@@ -58,14 +58,22 @@ const getproduct = async (req, res) => {
   }
 };
 
-// Fetch ONLY UNBLOCKED products for User store page
+// Fetch ONLY active products for User store page
+// (Filters out blocked products AND products in blocked categories)
 const getUserProducts = async (req, res) => {
   try {
-    const products = await Products
-      .find({ status: 'Unblock' })
-      .populate('category', 'name');
+    const products = await Products.find({ status: 'Unblock' })
+      .populate({
+        path: 'category',
+        select: 'name isActive'
+      });
 
-    res.status(200).json(products);
+    // Keep only products whose category exists and is active (isActive === true)
+    const activeProducts = products.filter(
+      (item) => item.category && item.category.isActive === true
+    );
+
+    res.status(200).json(activeProducts);
   } catch (error) {
     console.error('Error fetching user products:', error);
 
@@ -118,7 +126,7 @@ const updateProduct = async (req, res) => {
 
     const updatedProduct = await Products
       .findById(id)
-      .populate('category', 'name');
+      .populate('category', 'name isActive');
 
     res.status(200).json(updatedProduct);
   } catch (error) {
@@ -158,7 +166,7 @@ const updateProductStatus = async (req, res) => {
         new: true,
         runValidators: true
       }
-    ).populate('category', 'name');
+    ).populate('category', 'name isActive');
 
     if (!updatedProduct) {
       return res.status(404).json({
@@ -177,7 +185,7 @@ const updateProductStatus = async (req, res) => {
   }
 };
 
-// Fetch single product details (Guards against direct URL access for blocked items)
+// Fetch single product details (Guards against direct URL access for blocked items/categories)
 const getitems = async (req, res) => {
   try {
     const { id } = req.params;
@@ -188,7 +196,7 @@ const getitems = async (req, res) => {
       });
     }
 
-    const item = await Products.findById(id).populate('category', 'name');
+    const item = await Products.findById(id).populate('category', 'name isActive');
 
     if (!item) {
       return res.status(404).json({
@@ -196,8 +204,8 @@ const getitems = async (req, res) => {
       });
     }
 
-    // Blocked products cannot be accessed on the user side via URL parameter
-    if (item.status === 'Block') {
+    // Block direct access if product is blocked OR if parent category is blocked/missing
+    if (item.status === 'Block' || !item.category || item.category.isActive === false) {
       return res.status(404).json({
         message: 'Product is currently unavailable'
       });

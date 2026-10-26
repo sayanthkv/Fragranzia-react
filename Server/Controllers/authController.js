@@ -1,17 +1,14 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const {User} = require("../models/User");
+const { User } = require("../models/User");
 
-let getdata = async (req,res) =>{
-
+let getdata = async (req, res) => {
   const userId = req.userId;
-
-  const user = await User.findById(userId)
-  return res.status(200).json(user)
-}
+  const user = await User.findById(userId);
+  return res.status(200).json(user);
+};
 
 let register = async (req, res) => {
-  
   const { name, email, password } = req.body;
 
   const userExist = await User.findOne({ email });
@@ -19,10 +16,10 @@ let register = async (req, res) => {
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  await User.create({ name, email, password: hashedPassword });
+  await User.create({ name, email, password: hashedPassword, status: true, isActive: true });
 
   res.status(201).json({ message: "Registered Successfully" });
-}
+};
 
 let login = async (req, res) => {
   const { email, password } = req.body;
@@ -30,20 +27,25 @@ let login = async (req, res) => {
   const user = await User.findOne({ email });
   if (!user) return res.status(400).json({ message: "Invalid Email" });
 
+  // CHECK IF USER IS BLOCKED BY ADMIN
+  if (user.status === false || user.isActive === false) {
+    return res.status(403).json({
+      message: "Your account has been blocked by the admin. Please contact support.",
+    });
+  }
+
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) return res.status(400).json({ message: "Invalid Password" });
 
   const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: "1y" });
 
   res.json({ token });
-}
+};
 
 let home = (req, res) => {
-  
-  User.findById(req.userId)
+  User.findById(req.userId);
   res.json({ message: "Welcome to Home Page " });
-}
-
+};
 
 const updatedata = async (req, res) => {
   try {
@@ -83,12 +85,44 @@ const updatedata = async (req, res) => {
   }
 };
 
-const getallusers = async (req,res) =>{
+const getallusers = async (req, res) => {
+  try {
+    const alluser = await User.find();
+    return res.status(200).json(alluser);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
 
-  const alluser = await User.find()
+// CONTROLLER TO TOGGLE USER BLOCK/UNBLOCK STATUS (ADMIN)
+const toggleUserBlockStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
 
-  return res.status(200).json(alluser)
-}
+    const user = await User.findById(id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Update both status and isActive to maintain alignment
+    user.status = typeof status === "boolean" ? status : !user.status;
+    user.isActive = user.status;
+
+    await user.save();
+
+    return res.status(200).json({
+      message: `User ${user.status ? "unblocked" : "blocked"} successfully`,
+      user,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Failed to update block status",
+      error: error.message,
+    });
+  }
+};
 
 module.exports = {
   register,
@@ -96,5 +130,6 @@ module.exports = {
   home,
   getdata,
   updatedata,
-  getallusers
+  getallusers,
+  toggleUserBlockStatus,
 };

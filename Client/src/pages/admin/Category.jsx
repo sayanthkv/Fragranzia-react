@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   LuLayoutDashboard,
   LuShoppingBag,
@@ -13,10 +13,7 @@ import {
 } from 'react-icons/lu';
 import './Category.css';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
 import AdminService from '../../services/admin-api-services/AdminService';
-
-
 
 function Category() {
   const [categories, setCategories] = useState([]);
@@ -26,7 +23,7 @@ function Category() {
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const {AddCategory,getCategory,EditCategory,editStatus} = AdminService()
+  const { AddCategory, getCategory, EditCategory, editStatus } = AdminService();
 
   const [editDetails, setEditDetails] = useState({
     id: '',
@@ -61,12 +58,7 @@ function Category() {
         name,
         description,
         isActive: true
-      })
-      // await axios.post(API_URL, {
-      //   name,
-      //   description,
-      //   isActive: true
-      // });
+      });
 
       await fetchCategory();
 
@@ -133,12 +125,10 @@ function Category() {
     }
 
     try {
-      const res = await EditCategory(editDetails.id,
-        {
-          name: editDetails.name,
-          description: editDetails.description
-        }
-      );
+      const res = await EditCategory(editDetails.id, {
+        name: editDetails.name,
+        description: editDetails.description
+      });
 
       setCategories((prevCategories) =>
         prevCategories.map((cat) =>
@@ -169,14 +159,12 @@ function Category() {
 
   const closeAddDrawer = () => {
     setIsDrawerOpen(false);
-
     setName('');
     setDescription('');
   };
 
   const closeEditDrawer = () => {
     setIsEditDrawerOpen(false);
-
     setEditDetails({
       id: '',
       name: '',
@@ -225,9 +213,11 @@ function Category() {
             </button>
 
             <button className="admin-nav-item">
-                          <LuShoppingCart className="admin-nav-icon" />
-                          <Link to='/Adminorder'><span>Orders</span></Link>
-                        </button>
+              <LuShoppingCart className="admin-nav-icon" />
+              <Link to="/Adminorder">
+                <span>Orders</span>
+              </Link>
+            </button>
           </div>
 
           <div className="admin-navbar-logout">
@@ -274,19 +264,13 @@ function Category() {
               <tbody className="category-table-body">
                 {categories.map((cat) => (
                   <tr key={cat._id}>
-                    <td className="category-col-name">
-                      {cat.name}
-                    </td>
+                    <td className="category-col-name">{cat.name}</td>
 
-                    <td className="category-col-desc">
-                      {cat.description}
-                    </td>
+                    <td className="category-col-desc">{cat.description}</td>
 
                     <td className="category-col-actions">
                       <button
-                        onClick={() =>
-                          onhandleeditdrawer(cat)
-                        }
+                        onClick={() => onhandleeditdrawer(cat)}
                         className="category-action-edit-btn"
                       >
                         <LuPencil className="action-icon" />
@@ -296,18 +280,14 @@ function Category() {
 
                     <td className="category-col-status">
                       <button
-                        onClick={() =>
-                          toggleStatus(cat._id)
-                        }
+                        onClick={() => toggleStatus(cat._id)}
                         className={`category-status-btn ${
                           cat.isActive
-                            ? 'isActive-block'
-                            : 'isActive-unblock'
+                            ? 'isActive-unblock'
+                            : 'isActive-block'
                         }`}
                       >
-                        {cat.isActive
-                          ? 'Block'
-                          : 'Unblock'}
+                        {cat.isActive ? 'Unblocked' : 'Blocked'}
                       </button>
                     </td>
                   </tr>
@@ -316,20 +296,13 @@ function Category() {
             </table>
 
             <div className="category-pagination">
-              <button
-                className="category-page-btn"
-                disabled
-              >
+              <button className="category-page-btn" disabled>
                 Previous
               </button>
 
-              <span className="category-page-info">
-                Page 1
-              </span>
+              <span className="category-page-info">Page 1</span>
 
-              <button className="category-page-btn">
-                Next
-              </button>
+              <button className="category-page-btn">Next</button>
             </div>
           </div>
         </div>
@@ -342,18 +315,10 @@ function Category() {
         onClick={closeAddDrawer}
       />
 
-      <div
-        className={`category-drawer ${
-          isDrawerOpen ? 'open' : ''
-        }`}
-      >
+      <div className={`category-drawer ${isDrawerOpen ? 'open' : ''}`}>
         <div className="category-drawer-header">
           <h3>Add Category</h3>
-
-          <button
-            className="close-btn"
-            onClick={closeAddDrawer}
-          >
+          <button className="close-btn" onClick={closeAddDrawer}>
             ×
           </button>
         </div>
@@ -361,42 +326,29 @@ function Category() {
         <div className="category-drawer-body">
           <div className="form-group">
             <label>Category Name</label>
-
             <input
               type="text"
               placeholder="Category Name"
               value={name}
-              onChange={(e) =>
-                setName(e.target.value)
-              }
+              onChange={(e) => setName(e.target.value)}
             />
           </div>
 
           <div className="form-group">
             <label>Description</label>
-
             <textarea
               rows="4"
               placeholder="Category Description"
               value={description}
-              onChange={(e) =>
-                setDescription(e.target.value)
-              }
+              onChange={(e) => setDescription(e.target.value)}
             />
           </div>
 
           <div className="drawer-actions">
-            <button
-              className="cancel-btn"
-              onClick={closeAddDrawer}
-            >
+            <button className="cancel-btn" onClick={closeAddDrawer}>
               Cancel
             </button>
-
-            <button
-              className="submit-btn"
-              onClick={submitdetails}
-            >
+            <button className="submit-btn" onClick={submitdetails}>
               Add Category
             </button>
           </div>
@@ -410,18 +362,10 @@ function Category() {
         onClick={closeEditDrawer}
       />
 
-      <div
-        className={`category-drawer ${
-          isEditDrawerOpen ? 'open' : ''
-        }`}
-      >
+      <div className={`category-drawer ${isEditDrawerOpen ? 'open' : ''}`}>
         <div className="category-drawer-header">
           <h3>Edit Category</h3>
-
-          <button
-            className="close-btn"
-            onClick={closeEditDrawer}
-          >
+          <button className="close-btn" onClick={closeEditDrawer}>
             ×
           </button>
         </div>
@@ -429,7 +373,6 @@ function Category() {
         <div className="category-drawer-body">
           <div className="form-group">
             <label>Category Name</label>
-
             <input
               type="text"
               name="name"
@@ -441,7 +384,6 @@ function Category() {
 
           <div className="form-group">
             <label>Description</label>
-
             <textarea
               rows="4"
               name="description"
@@ -452,17 +394,10 @@ function Category() {
           </div>
 
           <div className="drawer-actions">
-            <button
-              className="cancel-btn"
-              onClick={closeEditDrawer}
-            >
+            <button className="cancel-btn" onClick={closeEditDrawer}>
               Cancel
             </button>
-
-            <button
-              className="submit-btn"
-              onClick={submiteditdetails}
-            >
+            <button className="submit-btn" onClick={submiteditdetails}>
               Update Category
             </button>
           </div>

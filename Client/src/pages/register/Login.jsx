@@ -1,12 +1,10 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import styles from "./Login.module.css";
 import loginImg from "../../assets/login.jpg";
-import { User, Lock, Eye } from "lucide-react";
+import { User, Lock, Eye, EyeOff } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebookF } from "react-icons/fa";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
 import UserService from "../../services/user-api-services/UserService";
 
 function Login() {
@@ -15,9 +13,11 @@ function Login() {
     password: ""
   });
 
+  const [showPassword, setShowPassword] = useState(false);
+  const [serverError, setServerError] = useState("");
+
   const navigate = useNavigate();
-   
-  const {logUser} = UserService()
+  const { logUser } = UserService();
 
   const [formErr, setFormErr] = useState({
     email: false,
@@ -30,10 +30,16 @@ function Login() {
       ...prev,
       [name]: value
     }));
+    if (serverError) setServerError("");
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
   };
 
   const onHandleSubmit = async (event) => {
     event.preventDefault();
+    setServerError("");
 
     let next = true;
     let err = {
@@ -41,7 +47,7 @@ function Login() {
       password: false
     };
 
-    if (formData.email === "") {
+    if (formData.email.trim() === "") {
       next = false;
       err.email = true;
     }
@@ -56,11 +62,29 @@ function Login() {
     setFormErr(err);
 
     if (next) {
-     const res = await logUser(formData);
-     console.log(res,"=====res=====");
-     
-    localStorage.setItem("Token", res.token);
-    navigate("/");
+      try {
+        const res = await logUser(formData);
+
+        if (res?.token) {
+          localStorage.setItem("Token", res.token);
+          navigate("/");
+        }
+      } catch (error) {
+        console.error("Login API Error:", error.response?.data || error.message);
+
+        // Capture blocked status (403 Forbidden)
+        if (error.response?.status === 403) {
+          setServerError(
+            error.response?.data?.message ||
+              "Your account is blocked by admin, please contact admin."
+          );
+        } else {
+          setServerError(
+            error.response?.data?.message ||
+              "Invalid email or password. Please try again."
+          );
+        }
+      }
     }
   };
 
@@ -68,7 +92,7 @@ function Login() {
     const { name } = event.target;
     let err = false;
 
-    if (name === "email" && formData.email === "") {
+    if (name === "email" && formData.email.trim() === "") {
       err = true;
     } else if (
       name === "password" &&
@@ -120,7 +144,26 @@ function Login() {
               <span>Or sign in with email</span>
             </div>
 
-            {/* Username Input */}
+            {/* Server Block / Error Alert Banner */}
+            {serverError && (
+              <div
+                style={{
+                  color: "#721c24",
+                  backgroundColor: "#f8d7da",
+                  borderColor: "#f5c6cb",
+                  padding: "10px 14px",
+                  borderRadius: "6px",
+                  marginBottom: "16px",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  textAlign: "center"
+                }}
+              >
+                {serverError}
+              </div>
+            )}
+
+            {/* Email Input */}
             <div className={styles.inputGroup}>
               <User className={styles.inputIcon} size={18} />
               <input
@@ -128,7 +171,7 @@ function Login() {
                 name="email"
                 type="text"
                 value={formData.email}
-                placeholder="Enter your username"
+                placeholder="Enter your email"
                 onChange={onHandleChange}
                 onBlur={handleBlur}
               />
@@ -143,17 +186,23 @@ function Login() {
               <input
                 id="password"
                 name="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 value={formData.password}
                 placeholder="Enter your password"
                 onChange={onHandleChange}
                 onBlur={handleBlur}
               />
-              <button type="button" className={styles.eyeIconBtn}>
-                <Eye size={18} />
+              <button
+                type="button"
+                className={styles.eyeIconBtn}
+                onClick={togglePasswordVisibility}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
               {formErr.password && (
-                <span className={styles.error}>Please enter a valid password</span>
+                <span className={styles.error}>
+                  Please enter a valid password
+                </span>
               )}
             </div>
 
