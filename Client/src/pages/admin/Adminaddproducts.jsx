@@ -12,6 +12,7 @@ import {
   LuShoppingCart,
   LuLogOut
 } from 'react-icons/lu';
+import { useNavigate } from 'react-router-dom';
 
 import './Adminaddproducts.css';
 
@@ -28,6 +29,7 @@ const Adminaddproducts = () => {
   });
 
   const { getCategory, addToProduct } = AdminService();
+  const navigate = useNavigate();
 
   const [categoriesData, setCategoriesData] = useState([]);
 
@@ -66,6 +68,12 @@ const Adminaddproducts = () => {
 
     handleCategories();
   }, []);
+
+  const handleLogout = () => {
+  localStorage.removeItem("Token");
+  localStorage.removeItem("role");
+  navigate('/LogIn');
+};
 
   const Onhandlesubmit = async (event) => {
     event.preventDefault();
@@ -168,11 +176,11 @@ const Adminaddproducts = () => {
         </div>
 
         <div className="admin-navbar-logout">
-          <button className="admin-logout-btn">
-            <LuLogOut className="admin-nav-icon" />
-            <span>Log Out</span>
-          </button>
-        </div>
+                    <button className="admin-logout-btn" onClick={handleLogout}>
+                      <LuLogOut className="admin-nav-icon" />
+                      <span>Log Out</span>
+                    </button>
+                  </div>
 
       </nav>
 

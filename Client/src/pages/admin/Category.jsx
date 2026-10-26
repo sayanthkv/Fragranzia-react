@@ -14,6 +14,7 @@ import {
 import './Category.css';
 import { Link } from 'react-router-dom';
 import AdminService from '../../services/admin-api-services/AdminService';
+import { useNavigate } from 'react-router-dom';
 
 function Category() {
   const [categories, setCategories] = useState([]);
@@ -24,6 +25,7 @@ function Category() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const { AddCategory, getCategory, EditCategory, editStatus } = AdminService();
+  const navigate = useNavigate();
 
   const [editDetails, setEditDetails] = useState({
     id: '',
@@ -172,6 +174,12 @@ function Category() {
     });
   };
 
+  const handleLogout = () => {
+  localStorage.removeItem("Token");
+  localStorage.removeItem("role");
+  navigate('/LogIn');
+};
+
   return (
     <>
       <div className="category-main-container">
@@ -221,11 +229,11 @@ function Category() {
           </div>
 
           <div className="admin-navbar-logout">
-            <button className="admin-logout-btn">
-              <LuLogOut className="admin-nav-icon" />
-              <span>Log Out</span>
-            </button>
-          </div>
+                      <button className="admin-logout-btn" onClick={handleLogout}>
+                        <LuLogOut className="admin-nav-icon" />
+                        <span>Log Out</span>
+                      </button>
+                    </div>
         </nav>
 
         <div className="category-main-content">

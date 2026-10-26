@@ -20,6 +20,7 @@ import {
 
 import './Adminproducts.css';
 import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const IMAGE_URL = 'http://localhost:5000/uploads';
 
@@ -32,6 +33,7 @@ const Adminproducts = () => {
   const [categories, setCategories] = useState([]);
 
   const { getCategory, getProduct, EditProduct, editProductStatus } = AdminService();
+  const navigate = useNavigate();
 
   const fetchCategories = async () => {
     try {
@@ -182,6 +184,12 @@ const Adminproducts = () => {
     return status === 'Block' ? 'Blocked' : 'Unblocked';
   };
 
+  const handleLogout = () => {
+  localStorage.removeItem("Token");
+  localStorage.removeItem("role");
+  navigate('/LogIn');
+};
+
   useEffect(() => {
     fetchproduct();
     fetchCategories();
@@ -238,14 +246,12 @@ const Adminproducts = () => {
 
         </div>
 
-        <div className="adminproduct-navbar-logout">
-
-          <button className="adminproduct-logout-btn">
-            <LuLogOut className="adminproduct-nav-icon" />
-            <span>Log Out</span>
-          </button>
-
-        </div>
+        <div className="admin-navbar-logout">
+                    <button className="admin-logout-btn" onClick={handleLogout}>
+                      <LuLogOut className="admin-nav-icon" />
+                      <span>Log Out</span>
+                    </button>
+                  </div>
 
       </nav>
 

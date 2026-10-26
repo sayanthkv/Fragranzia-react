@@ -24,6 +24,7 @@ import {
 import './Adminorder.css';
 import { Link } from 'react-router-dom';
 import AdminService from '../../services/admin-api-services/AdminService';
+import { useNavigate } from 'react-router-dom';
 
 const Adminorder = () => {
     const [orders, setOrders] = useState([]);
@@ -31,6 +32,7 @@ const Adminorder = () => {
     const [selectedOrder, setSelectedOrder] = useState(null);
 
     const { getOrders, updateStatus, processReturnStatus } = AdminService();
+    const navigate = useNavigate();
 
     const fetchOrderedProducts = async () => {
         try {
@@ -133,6 +135,12 @@ const Adminorder = () => {
         }
     };
 
+    const handleLogout = () => {
+  localStorage.removeItem("Token");
+  localStorage.removeItem("role");
+  navigate('/LogIn');
+};
+
     return (
         <>
             <div className="product-main-container">
@@ -182,11 +190,11 @@ const Adminorder = () => {
                     </div>
 
                     <div className="admin-navbar-logout">
-                        <button className="admin-logout-btn">
-                            <LuLogOut className="admin-nav-icon" />
-                            <span>Log Out</span>
-                        </button>
-                    </div>
+                                <button className="admin-logout-btn" onClick={handleLogout}>
+                                  <LuLogOut className="admin-nav-icon" />
+                                  <span>Log Out</span>
+                                </button>
+                              </div>
                 </nav>
 
                 <div className="AdminCustomerdetails-content">

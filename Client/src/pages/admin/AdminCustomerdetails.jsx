@@ -13,6 +13,7 @@ import {
 import './AdminCustomerdetails.css';
 import { Link } from 'react-router-dom';
 import AdminService from '../../services/admin-api-services/AdminService';
+import { useNavigate } from 'react-router-dom';
 
 const AdminCustomerdetails = () => {
   const [usersDetails, setUsersDetails] = useState([]);
@@ -20,6 +21,7 @@ const AdminCustomerdetails = () => {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
 
   const { fetchUserdetails, toggleUserBlockStatus } = AdminService();
+  const navigate = useNavigate();
 
   const fetchUsers = async () => {
     try {
@@ -77,6 +79,11 @@ const AdminCustomerdetails = () => {
     setSelectedCustomer(null);
   };
 
+  const handleLogout = () => {
+  localStorage.removeItem("Token");
+  localStorage.removeItem("role");
+  navigate('/LogIn');
+};
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -131,7 +138,7 @@ const AdminCustomerdetails = () => {
           </div>
 
           <div className="admin-navbar-logout">
-            <button className="admin-logout-btn">
+            <button className="admin-logout-btn" onClick={handleLogout}>
               <LuLogOut className="admin-nav-icon" />
               <span>Log Out</span>
             </button>
