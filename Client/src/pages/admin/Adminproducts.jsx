@@ -691,14 +691,17 @@ const Adminproducts = () => {
                     Select Category
                   </option>
 
-                  {categories.map((category) => (
-                    <option
-                      key={category._id}
-                      value={category._id}
-                    >
-                      {category.name}
-                    </option>
-                  ))}
+                  {/* FILTER OUT BLOCKED CATEGORIES IN EDIT MODAL */}
+                  {categories
+                    .filter((category) => category.isActive === true)
+                    .map((category) => (
+                      <option
+                        key={category._id}
+                        value={category._id}
+                      >
+                        {category.name}
+                      </option>
+                    ))}
                 </select>
               </div>
 

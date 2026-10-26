@@ -15,7 +15,6 @@ import {
 
 import './Adminaddproducts.css';
 
-
 const Adminaddproducts = () => {
   const [productData, setProductData] = useState({
     name: '',
@@ -28,7 +27,7 @@ const Adminaddproducts = () => {
     status: 'Unblock'
   });
 
-  const {getCategory,addToProduct} = AdminService()
+  const { getCategory, addToProduct } = AdminService();
 
   const [categoriesData, setCategoriesData] = useState([]);
 
@@ -41,7 +40,6 @@ const Adminaddproducts = () => {
     }));
   };
 
-  // FIXED FILE HANDLER
   const handlefilechange = (e) => {
     const file = e.target.files[0];
 
@@ -83,7 +81,6 @@ const Adminaddproducts = () => {
       formData.append('description', productData.description);
       formData.append('status', productData.status);
 
-      // Only append image if selected
       if (productData.image) {
         formData.append('image', productData.image);
       }
@@ -164,9 +161,9 @@ const Adminaddproducts = () => {
           </button>
 
           <button className="admin-nav-item">
-                        <LuShoppingCart className="admin-nav-icon" />
-                        <Link to='/Adminorder'><span>Orders</span></Link>
-                      </button>
+            <LuShoppingCart className="admin-nav-icon" />
+            <Link to='/Adminorder'><span>Orders</span></Link>
+          </button>
 
         </div>
 
@@ -259,14 +256,17 @@ const Adminaddproducts = () => {
                   Select Category
                 </option>
 
-                {categoriesData.map((item) => (
-                  <option
-                    key={item._id}
-                    value={item._id}
-                  >
-                    {item.name}
-                  </option>
-                ))}
+                {/* FILTER OUT BLOCKED CATEGORIES */}
+                {categoriesData
+                  .filter((item) => item.isActive === true)
+                  .map((item) => (
+                    <option
+                      key={item._id}
+                      value={item._id}
+                    >
+                      {item.name}
+                    </option>
+                  ))}
 
               </select>
             </div>
