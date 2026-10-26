@@ -20,8 +20,8 @@ import SpecificProduct from "./pages/user/SpecificProduct.jsx";
 import Wishlist from "./pages/user/Wishlist.jsx";
 import Adminorder from "./pages/admin/Adminorder.jsx";
 
-// Import your protected route component
-import AdminProtectedRoute from "./Components/protected-route/AdminProtectedRoute.jsx";
+// Import default (AdminProtectedRoute) and named (PublicOnlyRoute) exports from the same file
+import AdminProtectedRoute, { PublicOnlyRoute } from "./Components/protected-route/AdminProtectedRoute.jsx";
 
 function App() {
   return (
@@ -30,15 +30,21 @@ function App() {
         {/* Public User Routes */}
         <Route path="/" element={<Homepage />} />
         <Route path="/Products" element={<Products />} />
-        <Route path="/LogIn" element={<Login />} />
-        <Route path="/Signup" element={<Signup />} />
+        <Route path="/About" element={<About />} />
+        <Route path="/SpecificProduct/:id" element={<SpecificProduct />} />
+
+        {/* 🚫 Guest-Only Routes (Redirects to /Profile or /AdminCategory if logged in) */}
+        <Route element={<PublicOnlyRoute />}>
+          <Route path="/LogIn" element={<Login />} />
+          <Route path="/Signup" element={<Signup />} />
+        </Route>
+
+        {/* User Account Routes */}
         <Route path="/Paymentpage" element={<Paymentpage />} />
         <Route path="/Cart" element={<Cart />} />
-        <Route path="/About" element={<About />} />
         <Route path="/Profile" element={<Profile />} />
         <Route path="/Ordersuccess" element={<Ordersuccess />} />
         <Route path="/Orderfailure" element={<Orderfailure />} />
-        <Route path="/SpecificProduct/:id" element={<SpecificProduct />} />
         <Route path="/Wishlist" element={<Wishlist />} />
 
         {/* 🔒 Protected Admin Routes */}

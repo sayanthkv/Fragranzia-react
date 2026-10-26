@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "@fortawesome/fontawesome-free/css/all.min.css";
@@ -9,6 +9,11 @@ import UserService from "../../services/user-api-services/UserService";
 export default function Profile() {
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState("profile");
+  const navigate = useNavigate();
+
+  // Check if current user is an admin
+  const userRole = localStorage.getItem("role");
+  const isAdmin = userRole && userRole.toLowerCase() === "admin";
 
   useEffect(() => {
     const tabParam = searchParams.get("tab");
@@ -280,6 +285,12 @@ export default function Profile() {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("Token");
+    localStorage.removeItem("role");
+    navigate('/LogIn');
+  };
+
   return (
     <>
       <nav className="navbar navbar-expand-lg navbar-light shadow-sm homepage-navbar">
@@ -370,28 +381,43 @@ export default function Profile() {
                 Home &gt; {activeTab === "profile" ? "Profile" : activeTab === "address" ? "Address" : "My Order"}
               </span>
             </nav>
-            <div className="tab-container">
-              <button
-                className={`tab-btn ${activeTab === "profile" ? "profile-btn" : "other-btn"}`}
-                type="button"
-                onClick={() => setActiveTab("profile")}
-              >
-                Profile
-              </button>
-              <button
-                className={`tab-btn ${activeTab === "address" ? "profile-btn" : "other-btn"}`}
-                type="button"
-                onClick={() => setActiveTab("address")}
-              >
-                Address
-              </button>
-              <button
-                className={`tab-btn ${activeTab === "orders" ? "profile-btn" : "other-btn"}`}
-                type="button"
-                onClick={() => setActiveTab("orders")}
-              >
-                My Order
-              </button>
+
+            <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+              <div className="tab-container mb-0">
+                <button
+                  className={`tab-btn ${activeTab === "profile" ? "profile-btn" : "other-btn"}`}
+                  type="button"
+                  onClick={() => setActiveTab("profile")}
+                >
+                  Profile
+                </button>
+                <button
+                  className={`tab-btn ${activeTab === "address" ? "profile-btn" : "other-btn"}`}
+                  type="button"
+                  onClick={() => setActiveTab("address")}
+                >
+                  Address
+                </button>
+                <button
+                  className={`tab-btn ${activeTab === "orders" ? "profile-btn" : "other-btn"}`}
+                  type="button"
+                  onClick={() => setActiveTab("orders")}
+                >
+                  My Order
+                </button>
+              </div>
+
+              {/* 👑 ADMIN DASHBOARD BUTTON (Visible only when role === 'admin') */}
+              {isAdmin && (
+                <button
+                  type="button"
+                  className="btn btn-dark fw-semibold px-4 py-2 d-flex align-items-center gap-2 shadow-sm"
+                  onClick={() => navigate("/AdminCategory")}
+                >
+                  <i className="fa-solid fa-user-shield"></i>
+                  Open Admin Dashboard
+                </button>
+              )}
             </div>
 
             {/* PROFILE TAB */}
@@ -461,7 +487,15 @@ export default function Profile() {
                     </div>
                   </div>
 
-                  <div className="col-12 text-end">
+                  <div className="col-12 text-end d-flex justify-content-end gap-3 align-items-center">
+                    <button
+                      type="button"
+                      className="btn btn-outline-danger fw-semibold px-4 py-2"
+                      onClick={handleLogout}
+                    >
+                      <i className="fa-solid fa-right-from-bracket me-2"></i>
+                      Log Out
+                    </button>
                     <button
                       type="button"
                       className="profile-btn-edit"
@@ -562,12 +596,10 @@ export default function Profile() {
                       const grandTotal = Number(order.totalPrice || 0);
                       const currentDeliveryStatus = order.deliveryStatus || "Pending";
 
-                      // 🟢 STRICT CHECK: Rely strictly on isReturned boolean
                       const isReturnActive = Boolean(order.isReturned === true);
 
                       return (
                         <div key={order._id} className="card shadow-lg border-0 p-3">
-                          {/* Header Section */}
                           <div className="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
                             <div>
                               <span className="fw-bold text-dark me-2">Order ID: #{order._id}</span>
@@ -576,7 +608,6 @@ export default function Profile() {
                               </small>
                             </div>
 
-                            {/* Dynamic Badge strictly checking isReturned */}
                             {isReturnActive ? (
                               <span className="badge bg-warning text-dark px-3 py-2 fs-6">
                                 <i className="fa-solid fa-rotate-left me-1"></i>
@@ -591,7 +622,6 @@ export default function Profile() {
                             )}
                           </div>
 
-                          {/* Order Items List */}
                           {Array.isArray(order.orderItems) &&
                             order.orderItems.map((item, idx) => {
                               const itemPrice = Number(item.price || item.product?.price || 0);
@@ -616,7 +646,6 @@ export default function Profile() {
                               );
                             })}
 
-                          {/* Dynamic Footer Bar & Action Handlers */}
                           <div className="d-flex justify-content-between align-items-center pt-3 mt-1">
                             <div className="text-muted small">
                               Payment: <strong className="text-dark">{order.paymentMethod?.toUpperCase() || "N/A"}</strong> ({order.paymentStatus || "Pending"})
@@ -626,7 +655,6 @@ export default function Profile() {
                                 Total: Rs {grandTotal.toLocaleString("en-IN")}
                               </span>
 
-                              {/* Conditional Action Buttons */}
                               {isReturnActive ? (
                                 <span className="badge bg-secondary px-3 py-2 fs-6">
                                   <i className="fa-solid fa-clock-rotate-left me-1"></i>
