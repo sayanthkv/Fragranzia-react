@@ -482,7 +482,7 @@ const Homepage = () => {
                   <div className="new-badge homepage-new-badge">New</div>
                   <Link to={`/SpecificProduct/${products._id}`}>
                     <img
-                      src={`http://localhost:5000/uploads/${products.image}`}
+                      src={products.image}
                       alt={products.name}
                     />
                   </Link>
@@ -704,7 +704,7 @@ const Homepage = () => {
                 <div className="product-image-frame homepage-product-image-frame mb-3">
                   <Link to={`/SpecificProduct/${products._id}`}>
                     <img
-                      src={`http://localhost:5000/uploads/${products.image}`}
+                      src={products.image}
                       alt={products.name}
                     />
                   </Link>

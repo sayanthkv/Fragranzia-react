@@ -358,9 +358,7 @@ const SpecificProduct = () => {
       ? Math.round(((price - salePrice) / price) * 100)
       : 0;
 
-  const productImage = product.image
-    ? `http://localhost:5000/uploads/${product.image}`
-    : "/images/AUTOGRAPH_EDP_100ML_1.png";
+  const productImage = product.image || "/images/AUTOGRAPH_EDP_100ML_1.png";
 
   const suggestedProducts = products.filter(
     (item) => String(item._id) !== String(product._id)
@@ -717,13 +715,10 @@ const SpecificProduct = () => {
               <div className="product-image-frame homepage-product-image-frame mb-3">
                 <Link to={`/SpecificProduct/${item._id}`}>
                   <img
-                    src={
-                      item.image
-                        ? `http://localhost:5000/uploads/${item.image}`
-                        : "/images/AUTOGRAPH_EDP_100ML_1.png"
-                    }
-                    alt={item.name}
-                  />
+  src={item.image || "/images/AUTOGRAPH_EDP_100ML_1.png"}
+  alt={item.name}
+/>
+                  
                 </Link>
               </div>
 

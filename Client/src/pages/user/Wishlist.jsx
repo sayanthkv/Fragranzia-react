@@ -245,18 +245,18 @@ const Wishlist = () => {
                 <div className="col-12 col-md-6" key={productId}>
                   <div className="wishlist-card">
                     <div className="wishlist-image">
-                      {item.image ? (
-                        <img
-                          src={item.image}
-                          alt={item.alt || item.title || "Fragrance"}
-                        />
-                      ) : (
-                        <div className="wishlist-no-image">
-                          <i className="fa-regular fa-image"></i>
-                          <p>No image available</p>
-                        </div>
-                      )}
-                    </div>
+  {item.image || item.product?.image ? (
+    <img
+      src={item.image || item.product?.image}
+      alt={item.alt || item.title || item.product?.name || "Fragrance"}
+    />
+  ) : (
+    <div className="wishlist-no-image">
+      <i className="fa-regular fa-image"></i>
+      <p>No image available</p>
+    </div>
+  )}
+</div>
 
                     <div className="wishlist-details">
                       <h3>{item.title || "Fragrance"}</h3>

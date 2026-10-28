@@ -631,7 +631,7 @@ export default function Profile() {
                               return (
                                 <div key={item._id || idx} className="d-flex align-items-center gap-3 py-2 border-bottom">
                                   <img
-                                    src={`http://localhost:5000/uploads/${item.product?.image || "default.png"}`}
+                                    src={item.product?.image || "default.png"}
                                     alt={item.product?.name || "Product"}
                                     style={{ width: "70px", height: "70px", objectFit: "cover", borderRadius: "8px" }}
                                   />

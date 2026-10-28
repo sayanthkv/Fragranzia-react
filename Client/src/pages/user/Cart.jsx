@@ -341,7 +341,7 @@ const Cart = () => {
                         <div className="col-12 col-sm-4 text-center">
                           <Link to={`/SpecificProduct/${item.product._id}`}>
                             <img
-                              src={`http://localhost:5000/uploads/${item.product.image}`}
+                              src={item.product.image}
                               alt={item.product.name || "Fragrance"}
                               className="img-fluid"
                               style={{

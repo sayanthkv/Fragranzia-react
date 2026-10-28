@@ -481,7 +481,7 @@ const Products = () => {
                     >
                       <img
                         className="productpage-product-img"
-                        src={`http://localhost:5000/uploads/${products.image}`}
+                        src={products.image}
                         alt={products.name}
                       />
                     </Link>

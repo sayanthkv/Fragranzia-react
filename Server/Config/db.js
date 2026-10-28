@@ -2,10 +2,11 @@ const mongoose = require("mongoose");
 
 const connectDb = async () => {
   try {
-    const  connection  = await mongoose.connect("mongodb://127.0.0.1:27017/fragraniza");
-    console.log("Database Connected: ");
+    const connection = await mongoose.connect(process.env.MONGO_URI);
+    console.log(`Database Connected: ${connection.connection.host}`);
   } catch (error) {
-    console.log(error);
+    console.error("Database connection error:", error.message);
+    process.exit(1);
   }
 };
 

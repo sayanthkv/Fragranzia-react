@@ -22,7 +22,7 @@ const addproduct = async (req, res) => {
       category,
       description,
       status: status || 'Unblock',
-      image: req.file ? req.file.filename : ''
+      image: req.file ? req.file.path : ''
     });
 
     await newProduct.save();
@@ -119,8 +119,8 @@ const updateProduct = async (req, res) => {
     product.description = description;
 
     if (req.file) {
-      product.image = req.file.filename;
-    }
+  product.image = req.file.path;
+}
 
     await product.save();
 
