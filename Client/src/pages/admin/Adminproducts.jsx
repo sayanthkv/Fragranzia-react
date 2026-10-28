@@ -23,7 +23,7 @@ import './Adminproducts.css';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 
-const IMAGE_URL = 'http://localhost:5000/uploads';
+
 
 const Adminproducts = () => {
   const [product, setProduct] = useState([]);
@@ -68,11 +68,7 @@ const Adminproducts = () => {
       category: item.category?._id || ''
     });
 
-    setImagePreview(
-      item.image
-        ? `${IMAGE_URL}/${item.image}`
-        : ''
-    );
+    setImagePreview(item.image || '');
 
     setSelectedImage(null);
   };
@@ -443,7 +439,7 @@ const Adminproducts = () => {
                   {selectedProduct.image ? (
 
                     <img
-                      src={`${IMAGE_URL}/${selectedProduct.image}`}
+                      src={selectedProduct.image}
                       alt={selectedProduct.name}
                     />
 

@@ -302,7 +302,7 @@ const Adminorder = () => {
                               <div className="order-product-image flex-shrink-0">
                                 {firstItem?.product?.image ? (
                                   <img
-                                    src={`http://localhost:5000/uploads/${firstItem.product.image}`}
+                                    src={firstItem.product.image}
                                     alt={firstItem.product.name}
                                     style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '6px' }}
                                   />
@@ -558,7 +558,7 @@ const Adminorder = () => {
                       <div className="ordered-product-image flex-shrink-0">
                         {item.product?.image ? (
                           <img
-                            src={`http://localhost:5000/uploads/${item.product.image}`}
+                            src={item.product?.image}
                             alt={item.product?.name}
                             style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '6px' }}
                           />

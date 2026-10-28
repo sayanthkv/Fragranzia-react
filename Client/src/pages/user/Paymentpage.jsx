@@ -242,7 +242,7 @@ const Paymentpage = () => {
                       <div className="row align-items-center g-3">
                         <div className="col-12 col-sm-4 text-center">
                           <img
-                            src={products.image}
+                            src={item.image}
                             alt={item.name}
                             className="img-fluid product-img mx-auto"
                           />
