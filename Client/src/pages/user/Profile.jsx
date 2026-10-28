@@ -29,8 +29,6 @@ export default function Profile() {
     name: "",
     email: "",
     phone: "",
-    dob: "",
-    gender: "",
     password: "",
   });
 
@@ -454,38 +452,6 @@ export default function Profile() {
                     />
                   </div>
 
-                  <div className="col-12 col-md-4">
-                    <label className="profile-form-label">Date of Birth</label>
-                    <input
-                      type="text"
-                      className="profile-custom-control"
-                      value={formData.dob}
-                      readOnly
-                    />
-                  </div>
-
-                  <div className="col-12 col-md-4">
-                    <label className="profile-form-label">Gender</label>
-                    <input
-                      type="text"
-                      className="profile-custom-control"
-                      value={formData.gender}
-                      readOnly
-                    />
-                  </div>
-
-                  <div className="col-12 col-md-4">
-                    <label className="profile-form-label">Password</label>
-                    <div className="profile-input-group">
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        className="profile-custom-control"
-                        value={formData.password}
-                        readOnly
-                        style={{ letterSpacing: showPassword ? "normal" : "3px" }}
-                      />
-                    </div>
-                  </div>
 
                   <div className="col-12 text-end d-flex justify-content-end gap-3 align-items-center">
                     <button
@@ -789,41 +755,6 @@ export default function Profile() {
                   value={formData.phone}
                   onChange={handleChange}
                 />
-              </div>
-
-              <div className="col-12 col-md-4">
-                <label className="profileedit-form-label">Date of Birth</label>
-                <input
-                  type="text"
-                  name="dob"
-                  className="profileedit-custom-control"
-                  value={formData.dob}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="col-12 col-md-4">
-                <label className="profileedit-form-label">Gender</label>
-                <input
-                  type="text"
-                  name="gender"
-                  className="profileedit-custom-control"
-                  value={formData.gender}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="col-12 col-md-4">
-                <label className="profileedit-form-label">Password</label>
-                <div className="profileedit-custom-input-group">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    className="profileedit-custom-control"
-                    value={formData.password}
-                    onChange={handleChange}
-                    readOnly
-                    style={{ letterSpacing: showPassword ? "normal" : "3px" }}
-                  />
-                </div>
               </div>
 
               <div className="col-12 text-end">
