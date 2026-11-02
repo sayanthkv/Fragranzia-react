@@ -324,3 +324,18 @@ input[type='number']::-webkit-outer-spin-button {
   background-color: var(--primary-color);
   color: #ffffff !important;
 }
+
+.ordersuccess-home-btn,
+.ordersuccess-track-btn,
+.orderfailure-home-btn,
+.orderfailure-retry-btn {
+  cursor: pointer; /* Change from default to pointer */
+  transition: opacity 0.2s ease, transform 0.1s ease;
+}
+
+.ordersuccess-home-btn:hover,
+.ordersuccess-track-btn:hover,
+.orderfailure-home-btn:hover,
+.orderfailure-retry-btn:hover {
+  opacity: 0.9;
+}

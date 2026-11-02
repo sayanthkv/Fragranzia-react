@@ -34,6 +34,10 @@ const Paymentpage = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("gpay");
 
+  // Modal State: null | 'success' | 'failure'
+  const [orderStatus, setOrderStatus] = useState(null);
+  const [failureReason, setFailureReason] = useState("");
+
   const formatPrice = (amount) =>
     Number(amount || 0).toLocaleString("en-IN", {
       maximumFractionDigits: 2,
@@ -114,11 +118,12 @@ const Paymentpage = () => {
     0
   );
 
-const handlePayment = async (data) => {
+  const handlePayment = async (data) => {
     try {
       const isScriptLoaded = await loadRazorpayScript();
       if (!isScriptLoaded) {
-        alert("Failed to load Razorpay SDK. Please check your internet connection.");
+        setFailureReason("Failed to load Razorpay SDK. Please check your internet connection.");
+        setOrderStatus("failure");
         setIsPlacingOrder(false);
         return;
       }
@@ -131,14 +136,12 @@ const handlePayment = async (data) => {
         description: "Order Purchase",
         order_id: data.id,
         handler: function (response) {
-          // Payment succeeded in Razorpay modal; navigate directly without backend check
           console.log("Payment successful:", response);
           setIsPlacingOrder(false);
-          navigate("/Ordersuccess");
+          setOrderStatus("success");
         },
         modal: {
           ondismiss: function () {
-            // User closed the popup manually
             setIsPlacingOrder(false);
           },
         },
@@ -151,17 +154,20 @@ const handlePayment = async (data) => {
 
       rzp1.on("payment.failed", function (response) {
         console.error("Payment failed:", response.error);
-        // alert(`Payment Failed: ${response.error.description}`);
-        navigate("/Orderfailure");
+        setFailureReason(response.error?.description || "Your order can't be completed.");
+        setOrderStatus("failure");
         setIsPlacingOrder(false);
       });
 
       rzp1.open();
     } catch (error) {
       console.error("Payment Error:", error);
+      setFailureReason("Something went wrong while initializing payment.");
+      setOrderStatus("failure");
       setIsPlacingOrder(false);
     }
   };
+
   const handlePlaceOrder = async () => {
     if (!details || !details._id) {
       alert("Please select a primary shipping address before placing your order.");
@@ -192,21 +198,27 @@ const handlePayment = async (data) => {
 
       if (response?.success) {
         if (response.paymentMethod?.toLowerCase() === "cod") {
-          navigate("/Ordersuccess");
+          setOrderStatus("success");
         } else if (response.razorpayOrder) {
           await handlePayment(response.razorpayOrder);
         }
       } else {
-        alert(response?.message || "Order creation failed.");
+        setFailureReason(response?.message || "Order creation failed.");
+        setOrderStatus("failure");
       }
     } catch (error) {
       console.error("Order error:", error);
-      alert("Something went wrong while placing your order.");
+      setFailureReason("Something went wrong while placing your order.");
+      setOrderStatus("failure");
     } finally {
       setIsPlacingOrder(false);
     }
   };
-  
+
+  const handleRetry = () => {
+    setOrderStatus(null);
+  };
+
   return (
     <>
       {/* Navbar */}
@@ -570,6 +582,108 @@ const handlePayment = async (data) => {
           </div>
         </div>
       </div>
+
+      {/* --- Success Modal Overlay --- */}
+      {orderStatus === "success" && (
+        <div className="ordersuccess-overlay">
+          <div className="ordersuccess-modal">
+            <div className="ordersuccess-icon">
+              <svg
+                width="75"
+                height="75"
+                viewBox="0 0 75 75"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M18 39L29 50L58 23"
+                  stroke="white"
+                  strokeWidth="7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+
+            <h2 className="ordersuccess-title">Thank You for Ordering!</h2>
+
+            <p className="ordersuccess-message">
+              Your order has been successfully placed.
+              <br />
+              We're preparing it for shipment.
+            </p>
+
+            <div className="ordersuccess-buttons">
+              <button
+                type="button"
+                className="ordersuccess-home-btn"
+                onClick={() => navigate("/")}
+              >
+                Back to Home
+              </button>
+
+              <button
+                type="button"
+                className="ordersuccess-track-btn"
+                onClick={() => navigate("/Profile?tab=orders")}
+              >
+                Track Order
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- Failure Modal Overlay --- */}
+      {orderStatus === "failure" && (
+        <div className="orderfailure-overlay">
+          <div className="orderfailure-modal">
+            <div className="orderfailure-icon">
+              <svg
+                width="75"
+                height="75"
+                viewBox="0 0 75 75"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M21 21L54 54M54 21L21 54"
+                  stroke="white"
+                  strokeWidth="7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+
+            <h2 className="orderfailure-title">Your order has failed!</h2>
+
+            <p className="orderfailure-message">
+              {failureReason || "Your order can't be completed"}
+              <br />
+              Please check your payment details or connection!
+            </p>
+
+            <div className="orderfailure-buttons">
+              <button
+                type="button"
+                className="orderfailure-home-btn"
+                onClick={() => navigate("/")}
+              >
+                Back to Home
+              </button>
+
+              <button
+                type="button"
+                className="orderfailure-retry-btn"
+                onClick={handleRetry}
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
