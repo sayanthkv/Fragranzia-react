@@ -2,6 +2,8 @@ const { Order } = require("../models/Order");
 const { User } = require("../models/User");
 const { Products } = require("../models/productModel");
 
+const razorpay = require("../utils/razorpay")
+
 // 1. User: Place a new order (Stock Decremented)
 const placeOrder = async (req, res) => {
   try {
@@ -21,6 +23,7 @@ const placeOrder = async (req, res) => {
       totalPrice,
       balanceTotal,
       paymentStatus,
+      currency = "INR"
     } = req.body;
 
     if (!orderItems || !Array.isArray(orderItems) || orderItems.length === 0) {
@@ -72,6 +75,30 @@ const placeOrder = async (req, res) => {
 
     const savedOrder = await newOrder.save();
 
+    let razorpayOrder = null;
+
+    // Create one Razorpay order if payment is not COD
+    if (paymentMethod !== "COD") {
+      const options = {
+        amount: totalPrice * 100, // in paise
+        currency,
+        receipt: `receipt_${savedOrder._id}`,
+      };
+
+
+      razorpayOrder = await razorpay.orders.create(options);
+
+
+      if (!razorpayOrder) {
+        return res
+          .status(500)
+          .json({ message: "Razorpay order creation failed" });
+      }
+
+      // Save razorpay ID to all orders
+
+    }
+
     // Step 3: Decrement Inventory — Deduct purchased quantities from product stock
     await Promise.all(
       orderItems.map((item) => {
@@ -93,6 +120,8 @@ const placeOrder = async (req, res) => {
       success: true,
       message: "Order placed successfully and product stock updated!",
       order: savedOrder,
+      razorpayOrder: razorpayOrder || null,
+      paymentMethod
     });
   } catch (error) {
     console.error("Error in placeOrder:", error);

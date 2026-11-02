@@ -5,6 +5,23 @@ import "./Paymentpage.css";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import UserService from "../../services/user-api-services/UserService";
+import axios from "axios";
+
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
 
 const Paymentpage = () => {
   const navigate = useNavigate();
@@ -97,6 +114,54 @@ const Paymentpage = () => {
     0
   );
 
+const handlePayment = async (data) => {
+    try {
+      const isScriptLoaded = await loadRazorpayScript();
+      if (!isScriptLoaded) {
+        alert("Failed to load Razorpay SDK. Please check your internet connection.");
+        setIsPlacingOrder(false);
+        return;
+      }
+
+      const options = {
+        key: "rzp_test_TtcgxkiZwyZJ7b",
+        amount: data.amount,
+        currency: "INR",
+        name: "Cart7",
+        description: "Order Purchase",
+        order_id: data.id,
+        handler: function (response) {
+          // Payment succeeded in Razorpay modal; navigate directly without backend check
+          console.log("Payment successful:", response);
+          setIsPlacingOrder(false);
+          navigate("/Ordersuccess");
+        },
+        modal: {
+          ondismiss: function () {
+            // User closed the popup manually
+            setIsPlacingOrder(false);
+          },
+        },
+        theme: {
+          color: "#043948",
+        },
+      };
+
+      const rzp1 = new window.Razorpay(options);
+
+      rzp1.on("payment.failed", function (response) {
+        console.error("Payment failed:", response.error);
+        // alert(`Payment Failed: ${response.error.description}`);
+        navigate("/Orderfailure");
+        setIsPlacingOrder(false);
+      });
+
+      rzp1.open();
+    } catch (error) {
+      console.error("Payment Error:", error);
+      setIsPlacingOrder(false);
+    }
+  };
   const handlePlaceOrder = async () => {
     if (!details || !details._id) {
       alert("Please select a primary shipping address before placing your order.");
@@ -120,25 +185,28 @@ const Paymentpage = () => {
         paymentMethod: selectedPaymentMethod,
         totalPrice: totalSellingPrice,
         balanceTotal: selectedPaymentMethod === "cod" ? totalSellingPrice : 0,
-        paymentStatus: selectedPaymentMethod === "cod" ? "Pending" : "Paid",
+        paymentStatus: selectedPaymentMethod === "cod" ? "Pending" : "Pending",
       };
 
       const response = await placeorder(orderPayload);
 
       if (response?.success) {
-        alert("Order placed successfully!");
-        navigate("/Profile?tab=orders");
+        if (response.paymentMethod?.toLowerCase() === "cod") {
+          navigate("/Ordersuccess");
+        } else if (response.razorpayOrder) {
+          await handlePayment(response.razorpayOrder);
+        }
       } else {
-        alert(response?.message || "Failed to place order. Please try again.");
+        alert(response?.message || "Order creation failed.");
       }
     } catch (error) {
-      console.error("Error placing order:", error);
-      alert(error.response?.data?.message || "Something went wrong while placing your order.");
+      console.error("Order error:", error);
+      alert("Something went wrong while placing your order.");
     } finally {
       setIsPlacingOrder(false);
     }
   };
-
+  
   return (
     <>
       {/* Navbar */}
