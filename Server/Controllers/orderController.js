@@ -160,7 +160,7 @@ const getMyOrders = async (req, res) => {
 // 3. User: Get single order details by ID
 const getOrderById = async (req, res) => {
   try {
-    const userId = req.userId || req.user?._id || req.user?.id;
+    // const userId = req.userId || req.user?._id || req.user?.id;
 
     const order = await Order.findOne({
       _id: req.params.id,
