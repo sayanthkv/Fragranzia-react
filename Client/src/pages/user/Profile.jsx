@@ -4,16 +4,13 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./Profile.css";
+import toast, { Toaster } from "react-hot-toast";
 import UserService from "../../services/user-api-services/UserService";
 
 export default function Profile() {
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState("profile");
   const navigate = useNavigate();
-
-  // Check if current user is an admin
-  const userRole = localStorage.getItem("role");
-  const isAdmin = userRole && userRole.toLowerCase() === "admin";
 
   useEffect(() => {
     const tabParam = searchParams.get("tab");
@@ -24,7 +21,6 @@ export default function Profile() {
 
   const [orders, setOrders] = useState([]);
   const [showEdit, setShowEdit] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -44,6 +40,17 @@ export default function Profile() {
     returnOrder,
   } = UserService();
 
+  const getCleanImageUrl = (url) => {
+    if (!url) return "default.png";
+    if (url.includes("https://")) {
+      return url.substring(url.indexOf("https://"));
+    }
+    if (url.includes("http://") && url.indexOf("http://") !== 0) {
+      return url.substring(url.indexOf("http://"));
+    }
+    return url;
+  };
+
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData((previous) => ({ ...previous, [name]: value }));
@@ -55,6 +62,7 @@ export default function Profile() {
       setFormData((previous) => ({ ...previous, ...response }));
     } catch (error) {
       console.error("Failed to fetch profile:", error.response?.data || error.message);
+      toast.error("Failed to load profile details.");
     }
   };
 
@@ -78,10 +86,10 @@ export default function Profile() {
         await fetchdata();
       }
       setShowEdit(false);
-      alert("Profile updated successfully");
+      toast.success("Profile updated successfully!");
     } catch (error) {
       console.error("Profile update failed:", error.response?.data || error.message);
-      alert(error.response?.data?.message || "Failed to update profile");
+      toast.error(error.response?.data?.message || "Failed to update profile.");
     }
   };
 
@@ -158,10 +166,10 @@ export default function Profile() {
       });
 
       await getAddresses();
-      alert("Address saved successfully!");
+      toast.success("Address saved successfully!");
     } catch (error) {
       console.error("Failed to save address:", error.response?.data || error.message);
-      alert(error.response?.data?.message || "Failed to save address. Please try again.");
+      toast.error(error.response?.data?.message || "Failed to save address. Please try again.");
     }
   };
 
@@ -191,7 +199,7 @@ export default function Profile() {
     event.preventDefault();
 
     if (!selectedAddress?._id) {
-      alert("Please select an address to edit.");
+      toast.error("Please select an address to edit.");
       return;
     }
 
@@ -211,16 +219,21 @@ export default function Profile() {
       await getAddresses();
       setShowEditModal(false);
       setShowViewModal(false);
-      alert("Address updated successfully!");
+      toast.success("Address updated successfully!");
     } catch (error) {
       console.error("Failed to update address:", error.response?.data || error.message);
-      alert(error.response?.data?.message || "Failed to update address. Please try again.");
+      toast.error(error.response?.data?.message || "Failed to update address. Please try again.");
     }
   };
 
   const handleprimarybutton = async (id) => {
-    await setprimary(id);
-    await getAddresses();
+    try {
+      await setprimary(id);
+      await getAddresses();
+      toast.success("Primary address updated.");
+    } catch (error) {
+      toast.error("Failed to set primary address.");
+    }
   };
 
   useEffect(() => {
@@ -259,13 +272,13 @@ export default function Profile() {
     try {
       if (!selectedOrder?._id) return;
       await cancelOrder(selectedOrder._id);
-      alert(`Order #${selectedOrder._id} cancelled successfully.`);
+      toast.success(`Order #${selectedOrder._id} cancelled successfully.`);
       setShowCancelModal(false);
       setSelectedOrder(null);
       await getorderedproducts();
     } catch (error) {
       console.error("Failed to cancel order:", error.response?.data || error.message);
-      alert(error.response?.data?.message || "Failed to cancel order. Please try again.");
+      toast.error(error.response?.data?.message || "Failed to cancel order. Please try again.");
     }
   };
 
@@ -273,26 +286,63 @@ export default function Profile() {
     try {
       if (!selectedOrder?._id) return;
       await returnOrder(selectedOrder._id, selectedReturnReason);
-      alert(`Return request for Order #${selectedOrder._id} submitted successfully.`);
+      toast.success(`Return request for Order #${selectedOrder._id} submitted successfully.`);
       setShowReturnModal(false);
       setSelectedOrder(null);
       await getorderedproducts();
     } catch (error) {
       console.error("Failed to process return:", error.response?.data || error.message);
-      alert(error.response?.data?.message || "Failed to submit return request.");
+      toast.error(error.response?.data?.message || "Failed to submit return request.");
     }
   };
 
   const handleLogout = () => {
     localStorage.removeItem("Token");
     localStorage.removeItem("role");
-    navigate('/LogIn');
+    navigate("/LogIn");
   };
 
   return (
     <>
+      <Toaster
+        position="top-center"
+        containerStyle={{
+          top: 85,
+          zIndex: 99999,
+        }}
+        toastOptions={{
+          duration: 5000,
+          style: {
+            background: "#043948",
+            color: "#ffffff",
+            fontSize: "14px",
+            fontWeight: "500",
+            borderRadius: "8px",
+            padding: "12px 20px",
+            boxShadow: "0 4px 14px rgba(0,0,0,0.2)",
+          },
+          success: {
+            iconTheme: {
+              primary: "#2ec4b6",
+              secondary: "#ffffff",
+            },
+          },
+          error: {
+            style: {
+              background: "#721c24",
+              color: "#ffffff",
+            },
+            iconTheme: {
+              primary: "#f5c6cb",
+              secondary: "#721c24",
+            },
+          },
+        }}
+      />
+
+      {/* Navbar */}
       <nav className="navbar navbar-expand-lg navbar-light shadow-sm homepage-navbar">
-        <div className="container-fluid px-0">
+        <div className="container-fluid px-4">
           <span className="navbar-brand homepage-navbar-brand">
             <Link to="/">Fragranzia</Link>
           </span>
@@ -369,13 +419,13 @@ export default function Profile() {
       </nav>
 
       <div className="profile-root-wrapper">
-        <div className="container-fluid px-md-5 px-3">
+        <div className="container-fluid px-4 px-md-5">
           <div className="mx-2 py-4">
-            <h1 className="mb-1" style={{ fontWeight: 700, fontSize: "2.2rem" }}>
+            <h1 className="mb-1 fw-bold" style={{ color: "#043948", fontSize: "2.2rem" }}>
               Profile
             </h1>
             <nav aria-label="breadcrumb" className="mb-4">
-              <span className="text-muted" style={{ fontSize: "0.9rem" }}>
+              <span className="text-muted small">
                 Home &gt; {activeTab === "profile" ? "Profile" : activeTab === "address" ? "Address" : "My Order"}
               </span>
             </nav>
@@ -404,18 +454,6 @@ export default function Profile() {
                   My Order
                 </button>
               </div>
-
-              {/* 👑 ADMIN DASHBOARD BUTTON (Visible only when role === 'admin') */}
-              {isAdmin && (
-                <button
-                  type="button"
-                  className="btn btn-dark fw-semibold px-4 py-2 d-flex align-items-center gap-2 shadow-sm"
-                  onClick={() => navigate("/AdminCategory")}
-                >
-                  <i className="fa-solid fa-user-shield"></i>
-                  Open Admin Dashboard
-                </button>
-              )}
             </div>
 
             {/* PROFILE TAB */}
@@ -427,7 +465,7 @@ export default function Profile() {
                     <input
                       type="text"
                       className="profile-custom-control"
-                      value={formData.name}
+                      value={formData.name || ""}
                       readOnly
                     />
                   </div>
@@ -437,7 +475,7 @@ export default function Profile() {
                     <input
                       type="email"
                       className="profile-custom-control"
-                      value={formData.email}
+                      value={formData.email || ""}
                       readOnly
                     />
                   </div>
@@ -447,11 +485,10 @@ export default function Profile() {
                     <input
                       type="text"
                       className="profile-custom-control"
-                      value={formData.phone}
+                      value={formData.phone || ""}
                       readOnly
                     />
                   </div>
-
 
                   <div className="col-12 text-end d-flex justify-content-end gap-3 align-items-center">
                     <button
@@ -478,15 +515,32 @@ export default function Profile() {
             {activeTab === "address" && (
               <main className={`alladdress-content ${showModal ? "alladdress-content-blurred" : ""}`}>
                 <div className="address-section-inner">
-                  <div className="address-toolbar">
+                  <div className="address-toolbar mb-3">
                     <button type="button" className="btn-address" onClick={() => setShowModal(true)}>
                       <i className="fa-solid fa-plus"></i> Add Address
                     </button>
                   </div>
+
                   {loading ? (
-                    <p>Loading addresses...</p>
+                    <div className="d-flex justify-content-center align-items-center py-5 my-5">
+                      <div
+                        className="spinner-border"
+                        style={{
+                          width: "3.2rem",
+                          height: "3.2rem",
+                          color: "#043948",
+                          borderWidth: "3px",
+                        }}
+                        role="status"
+                      >
+                        <span className="visually-hidden">Loading...</span>
+                      </div>
+                    </div>
                   ) : addresses.length === 0 ? (
-                    <p>No saved addresses found. Click Add Address to save one.</p>
+                    <div className="text-center py-5 text-muted">
+                      <i className="fa-solid fa-location-dot fs-1 mb-2 d-block"></i>
+                      <p className="fs-5">No saved addresses found. Click Add Address to save one.</p>
+                    </div>
                   ) : (
                     <div className="row g-4">
                       {addresses.map((address, index) => {
@@ -561,11 +615,10 @@ export default function Profile() {
                     {orders.map((order) => {
                       const grandTotal = Number(order.totalPrice || 0);
                       const currentDeliveryStatus = order.deliveryStatus || "Pending";
-
                       const isReturnActive = Boolean(order.isReturned === true);
 
                       return (
-                        <div key={order._id} className="card shadow-lg border-0 p-3">
+                        <div key={order._id} className="card shadow-sm border-0 p-3 mb-2 rounded-3">
                           <div className="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
                             <div>
                               <span className="fw-bold text-dark me-2">Order ID: #{order._id}</span>
@@ -593,13 +646,14 @@ export default function Profile() {
                               const itemPrice = Number(item.price || item.product?.price || 0);
                               const itemQty = Number(item.quantity || 1);
                               const itemSubtotal = itemPrice * itemQty;
+                              const itemImage = getCleanImageUrl(item.product?.image || item.image);
 
                               return (
                                 <div key={item._id || idx} className="d-flex align-items-center gap-3 py-2 border-bottom">
                                   <img
-                                    src={item.product?.image || "default.png"}
-                                    alt={item.product?.name || "Product"}
-                                    style={{ width: "70px", height: "70px", objectFit: "cover", borderRadius: "8px" }}
+                                    src={itemImage}
+                                    alt={item.product?.name || item.name || "Product"}
+                                    style={{ width: "70px", height: "70px", objectFit: "contain", borderRadius: "8px", background: "#f8f9fa" }}
                                   />
                                   <div className="flex-grow-1">
                                     <h6 className="mb-1 fw-bold">{item.product?.name || item.name || "Product Title"}</h6>
@@ -732,8 +786,9 @@ export default function Profile() {
                   type="text"
                   name="name"
                   className="profileedit-custom-control"
-                  value={formData.name}
+                  value={formData.name || ""}
                   onChange={handleChange}
+                  required
                 />
               </div>
               <div className="col-12 col-md-4">
@@ -742,8 +797,9 @@ export default function Profile() {
                   type="email"
                   name="email"
                   className="profileedit-custom-control"
-                  value={formData.email}
+                  value={formData.email || ""}
                   onChange={handleChange}
+                  required
                 />
               </div>
               <div className="col-12 col-md-4">
@@ -752,12 +808,19 @@ export default function Profile() {
                   type="text"
                   name="phone"
                   className="profileedit-custom-control"
-                  value={formData.phone}
+                  value={formData.phone || ""}
                   onChange={handleChange}
                 />
               </div>
 
-              <div className="col-12 text-end">
+              <div className="col-12 text-end d-flex justify-content-end gap-2">
+                <button
+                  type="button"
+                  className="btn btn-secondary px-3"
+                  onClick={() => setShowEdit(false)}
+                >
+                  Cancel
+                </button>
                 <button type="submit" className="profileedit-btn-save">
                   Save
                 </button>

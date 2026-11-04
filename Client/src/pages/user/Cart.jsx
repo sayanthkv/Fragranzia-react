@@ -4,6 +4,7 @@ import "./Cart.css";
 
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
+import toast, { Toaster } from "react-hot-toast";
 import UserService from "../../services/user-api-services/UserService";
 
 const Cart = () => {
@@ -11,8 +12,18 @@ const Cart = () => {
 
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
   const [deletingId, setDeletingId] = useState(null);
+
+  const getCleanImageUrl = (url) => {
+    if (!url) return "default.png";
+    if (url.includes("https://")) {
+      return url.substring(url.indexOf("https://"));
+    }
+    if (url.includes("http://") && url.indexOf("http://") !== 0) {
+      return url.substring(url.indexOf("http://"));
+    }
+    return url;
+  };
 
   const formatPrice = (amount) =>
     Number(amount || 0).toLocaleString("en-IN", {
@@ -55,8 +66,6 @@ const Cart = () => {
   const fetchCart = async () => {
     try {
       setLoading(true);
-      setErrorMessage("");
-
       const response = await getCart();
       const items = Array.isArray(response?.cart) ? response.cart : [];
 
@@ -67,7 +76,7 @@ const Cart = () => {
         error.response?.data || error.message
       );
 
-      setErrorMessage(
+      toast.error(
         error.response?.status === 401
           ? "Please log in to view your cart."
           : "Unable to load your cart. Please try again."
@@ -89,7 +98,12 @@ const Cart = () => {
     const stock = Number(targetItem.product?.quantity ?? 0);
     const newQuantity = targetItem.quantity + delta;
 
-    if (newQuantity < 1 || (stock > 0 && newQuantity > stock)) return;
+    if (newQuantity < 1) return;
+
+    if (stock > 0 && newQuantity > stock) {
+      toast.error(`Only ${stock} unit(s) available in stock.`);
+      return;
+    }
 
     // Optimistic UI update
     setCartItems((previousItems) =>
@@ -114,7 +128,7 @@ const Cart = () => {
             : item
         )
       );
-      setErrorMessage(
+      toast.error(
         error.response?.data?.message || "Failed to update item quantity."
       );
     }
@@ -126,20 +140,21 @@ const Cart = () => {
 
     try {
       setDeletingId(String(productId));
-      setErrorMessage("");
 
       await removeProductFromCart(productId);
 
       setCartItems((previousItems) =>
         previousItems.filter((item) => item.id !== String(productId))
       );
+
+      toast.success("Item removed from cart.");
     } catch (error) {
       console.error(
         "Delete error:",
         error.response?.data || error.message
       );
 
-      setErrorMessage(
+      toast.error(
         error.response?.data?.message ||
           "Unable to remove this product from your cart."
       );
@@ -158,7 +173,7 @@ const Cart = () => {
         await navigator.share({ title, url });
       } else if (navigator.clipboard) {
         await navigator.clipboard.writeText(url);
-        alert("Product link copied successfully!");
+        toast.success("Product link copied to clipboard!");
       } else {
         window.prompt("Copy this product link:", url);
       }
@@ -189,9 +204,45 @@ const Cart = () => {
 
   return (
     <>
+      <Toaster
+        position="top-center"
+        containerStyle={{
+          top: 85,
+          zIndex: 99999,
+        }}
+        toastOptions={{
+          duration: 5000,
+          style: {
+            background: "#043948",
+            color: "#ffffff",
+            fontSize: "14px",
+            fontWeight: "500",
+            borderRadius: "8px",
+            padding: "12px 20px",
+            boxShadow: "0 4px 14px rgba(0,0,0,0.2)",
+          },
+          success: {
+            iconTheme: {
+              primary: "#2ec4b6",
+              secondary: "#ffffff",
+            },
+          },
+          error: {
+            style: {
+              background: "#721c24",
+              color: "#ffffff",
+            },
+            iconTheme: {
+              primary: "#f5c6cb",
+              secondary: "#721c24",
+            },
+          },
+        }}
+      />
+
       {/* Navbar */}
       <nav className="navbar navbar-expand-lg navbar-light shadow-sm homepage-navbar">
-        <div className="container-fluid px-0">
+        <div className="container-fluid px-4">
           <span className="navbar-brand homepage-navbar-brand">
             <Link to="/">Fragranzia</Link>
           </span>
@@ -286,10 +337,12 @@ const Cart = () => {
       </nav>
 
       {/* Cart Content */}
-      <div className="container my-4">
+      <div className="container-fluid px-4 px-md-5 my-4">
         <div className="row g-4">
           <div className="col-12">
-            <h2 className="fw-bold mb-1">Cart</h2>
+            <h2 className="fw-bold mb-1" style={{ color: "#043948" }}>
+              Cart
+            </h2>
             <div className="text-muted small mb-4">
               <Link to="/" className="text-decoration-none text-muted">
                 Home
@@ -297,232 +350,240 @@ const Cart = () => {
               &gt; Cart
             </div>
 
-            {errorMessage && (
-              <div className="alert alert-danger" role="alert">
-                {errorMessage}
-                <button
-                  type="button"
-                  className="btn btn-sm btn-outline-danger ms-3"
-                  onClick={fetchCart}
-                >
-                  Retry
-                </button>
-              </div>
-            )}
-
             {loading ? (
-              <div className="text-center py-5">
+              <div className="d-flex justify-content-center align-items-center py-5 my-5">
                 <div
-                  className="spinner-border text-secondary"
+                  className="spinner-border"
+                  style={{
+                    width: "3.2rem",
+                    height: "3.2rem",
+                    color: "#043948",
+                    borderWidth: "3px",
+                  }}
                   role="status"
                 >
                   <span className="visually-hidden">Loading cart...</span>
                 </div>
-                <p className="text-muted mt-3">Loading your cart...</p>
               </div>
             ) : cartItems.length === 0 ? (
               <div className="cart-empty-state text-center p-5">
                 <i className="fa-solid fa-cart-shopping fa-3x mb-3 text-muted"></i>
-                <h4>Your cart is empty</h4>
+                <h4 className="fw-bold">Your cart is empty</h4>
                 <p className="text-muted">
                   Explore our fragrance collection and add items to your cart.
                 </p>
-                <Link to="/Products" className="btn cart-btn-proceed">
+                <Link to="/Products" className="btn cart-btn-proceed px-4 py-2">
                   Explore Products
                 </Link>
               </div>
             ) : (
-              /* Grid for Cart Items: 2 items per row on medium screens and up */
+              /* Grid for Cart Items */
               <div className="row row-cols-1 row-cols-md-2 g-3">
-                {cartItems.map((item) => (
-                  <div className="col" key={item.id}>
-                    <div className="cart-item-card h-100 mb-0">
-                      <div className="row align-items-center g-3">
-                        <div className="col-12 col-sm-4 text-center">
-                          <Link to={`/SpecificProduct/${item.product._id}`}>
-                            <img
-                              src={item.product.image}
-                              alt={item.product.name || "Fragrance"}
-                              className="img-fluid"
-                              style={{
-                                maxHeight: "120px",
-                                objectFit: "contain",
-                              }}
-                            />
-                          </Link>
-                        </div>
+                {cartItems.map((item) => {
+                  const cleanedImage = getCleanImageUrl(
+                    item.product?.image || item.image
+                  );
 
-                        <div className="col-12 col-sm-8">
-                          <Link
-                            to={`/SpecificProduct/${item.product._id}`}
-                            className="text-decoration-none text-dark"
-                          >
-                            <div className="cart-product-title">
-                              {item.product.name || item.product.title}
+                  return (
+                    <div className="col" key={item.id}>
+                      <div className="cart-item-card h-100 mb-0 shadow-sm border rounded-3 p-3 bg-white">
+                        <div className="row align-items-center g-3">
+                          <div className="col-12 col-sm-4 text-center">
+                            <Link to={`/SpecificProduct/${item.product._id}`}>
+                              <img
+                                src={cleanedImage}
+                                alt={item.product.name || "Fragrance"}
+                                className="img-fluid"
+                                style={{
+                                  maxHeight: "120px",
+                                  objectFit: "contain",
+                                }}
+                              />
+                            </Link>
+                          </div>
+
+                          <div className="col-12 col-sm-8">
+                            <Link
+                              to={`/SpecificProduct/${item.product._id}`}
+                              className="text-decoration-none text-dark"
+                            >
+                              <div className="cart-product-title fw-bold fs-6 mb-1">
+                                {item.product.name || item.product.title}
+                              </div>
+                            </Link>
+
+                            {/* Quantity controls */}
+                            <div className="d-flex align-items-center cart-qty-container mb-2 mt-2">
+                              <button
+                                type="button"
+                                className="cart-qty-btn"
+                                onClick={() => handleQuantityChange(item.id, -1)}
+                                disabled={item.quantity <= 1}
+                                aria-label="Decrease quantity"
+                              >
+                                −
+                              </button>
+
+                              <input
+                                type="text"
+                                className="cart-qty-input"
+                                value={item.quantity}
+                                readOnly
+                                aria-label="Product quantity"
+                              />
+
+                              <button
+                                type="button"
+                                className="cart-qty-btn"
+                                onClick={() => handleQuantityChange(item.id, 1)}
+                                disabled={
+                                  Number(item.product?.quantity ?? 0) > 0 &&
+                                  item.quantity >= Number(item.product.quantity)
+                                }
+                                aria-label="Increase quantity"
+                              >
+                                +
+                              </button>
                             </div>
-                          </Link>
 
-                          {/* Quantity controls */}
-                          <div className="d-flex align-items-center cart-qty-container mb-2 mt-2">
-                            <button
-                              type="button"
-                              className="cart-qty-btn"
-                              onClick={() => handleQuantityChange(item.id, -1)}
-                              disabled={item.quantity <= 1}
-                              aria-label="Decrease quantity"
-                            >
-                              −
-                            </button>
-
-                            <input
-                              type="text"
-                              className="cart-qty-input"
-                              value={item.quantity}
-                              readOnly
-                              aria-label="Product quantity"
-                            />
-
-                            <button
-                              type="button"
-                              className="cart-qty-btn"
-                              onClick={() => handleQuantityChange(item.id, 1)}
-                              disabled={
-                                Number(item.product?.quantity ?? 0) > 0 &&
-                                item.quantity >= Number(item.product.quantity)
-                              }
-                              aria-label="Increase quantity"
-                            >
-                              +
-                            </button>
-                          </div>
-
-                          {Number(item.product?.quantity ?? 0) > 0 && (
-                            <small className="text-muted d-block mb-2">
-                              Available stock: {item.product.quantity}
-                            </small>
-                          )}
-
-                          {Number(item.product?.quantity ?? 0) === 0 && (
-                            <small className="text-danger d-block mb-2">
-                              Out of stock
-                            </small>
-                          )}
-
-                          {/* Pricing */}
-                          <div className="mb-3 d-flex flex-wrap align-items-baseline gap-2">
-                            <span className="fw-bold fs-5">
-                              Rs {formatPrice(item.price)}
-                            </span>
-
-                            {item.originalPrice > item.price && (
-                              <>
-                                <span className="text-muted text-decoration-line-through small">
-                                  Rs {formatPrice(item.originalPrice)}
-                                </span>
-
-                                <span className="fw-bold text-success small">
-                                  {item.discountPercent}% off
-                                </span>
-                              </>
+                            {Number(item.product?.quantity ?? 0) > 0 && (
+                              <small className="text-muted d-block mb-2">
+                                Available stock: {item.product.quantity}
+                              </small>
                             )}
-                          </div>
 
-                          <div className="d-flex flex-wrap gap-2">
-                            <button
-                              type="button"
-                              className="btn cart-action-btn cart-btn-delete"
-                              onClick={() => handleDelete(item.id)}
-                              disabled={deletingId === item.id}
-                            >
-                              {deletingId === item.id
-                                ? "Removing..."
-                                : "Delete"}
-                            </button>
+                            {Number(item.product?.quantity ?? 0) === 0 && (
+                              <small className="text-danger d-block mb-2">
+                                Out of stock
+                              </small>
+                            )}
 
-                            <button
-                              type="button"
-                              className="btn cart-action-btn cart-btn-share"
-                              onClick={() => handleShare(item.product)}
-                            >
-                              Share
-                            </button>
-                          </div>
+                            {/* Pricing */}
+                            <div className="mb-3 d-flex flex-wrap align-items-baseline gap-2">
+                              <span
+                                className="fw-bold fs-5"
+                                style={{ color: "#28a745" }}
+                              >
+                                Rs {formatPrice(item.price)}
+                              </span>
 
-                          <div className="small text-muted mt-2">
-                            Item total: Rs{" "}
-                            {formatPrice(item.price * item.quantity)}
+                              {item.originalPrice > item.price && (
+                                <>
+                                  <span className="text-muted text-decoration-line-through small">
+                                    Rs {formatPrice(item.originalPrice)}
+                                  </span>
+
+                                  <span className="fw-bold text-danger small">
+                                    {item.discountPercent}% off
+                                  </span>
+                                </>
+                              )}
+                            </div>
+
+                            <div className="d-flex flex-wrap gap-2">
+                              <button
+                                type="button"
+                                className="btn cart-action-btn cart-btn-delete btn-sm"
+                                onClick={() => handleDelete(item.id)}
+                                disabled={deletingId === item.id}
+                              >
+                                {deletingId === item.id
+                                  ? "Removing..."
+                                  : "Delete"}
+                              </button>
+
+                              <button
+                                type="button"
+                                className="btn cart-action-btn cart-btn-share btn-sm"
+                                onClick={() => handleShare(item.product)}
+                              >
+                                Share
+                              </button>
+                            </div>
+
+                            <div className="small text-muted mt-2">
+                              Item total: Rs{" "}
+                              {formatPrice(item.price * item.quantity)}
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
 
-          {/* Order Summary placed at the bottom */}
-          <div className="col-12 mt-4">
-            <div className="cart-summary-box">
-              <h4 className="fw-bold mb-4">Check Out</h4>
+          {/* Order Summary */}
+          {cartItems.length > 0 && (
+            <div className="col-12 mt-4">
+              <div className="cart-summary-box p-4 border rounded-3 bg-white shadow-sm">
+                <h4 className="fw-bold mb-4" style={{ color: "#043948" }}>
+                  Check Out
+                </h4>
 
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <span>
-                  Price ({totalItemsCount} item
-                  {totalItemsCount !== 1 ? "s" : ""})
-                </span>
-                <span className="fw-bold">
-                  Rs {formatPrice(subtotal)}
-                </span>
-              </div>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <span>
+                    Price ({totalItemsCount} item
+                    {totalItemsCount !== 1 ? "s" : ""})
+                  </span>
+                  <span className="fw-bold">
+                    Rs {formatPrice(subtotal)}
+                  </span>
+                </div>
 
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <span>Discount</span>
-                <span className="fw-bold text-success">
-                  − Rs {formatPrice(totalDiscount)}
-                </span>
-              </div>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <span>Discount</span>
+                  <span className="fw-bold text-success">
+                    − Rs {formatPrice(totalDiscount)}
+                  </span>
+                </div>
 
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <span>Delivery Charge</span>
-                <span className="text-success fw-medium">Free</span>
-              </div>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <span>Delivery Charge</span>
+                  <span className="text-success fw-medium">Free</span>
+                </div>
 
-              <hr
-                style={{
-                  borderTop: "1px solid #cbd5e1",
-                  opacity: 1,
-                }}
-                className="my-3"
-              />
+                <hr
+                  style={{
+                    borderTop: "1px solid #cbd5e1",
+                    opacity: 1,
+                  }}
+                  className="my-3"
+                />
 
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <span className="fw-bold fs-5">Total Amount</span>
-                <span className="fw-bold fs-4">
-                  Rs {formatPrice(totalAmount)}
-                </span>
-              </div>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <span className="fw-bold fs-5">Total Amount</span>
+                  <span
+                    className="fw-bold fs-4"
+                    style={{ color: "#043948" }}
+                  >
+                    Rs {formatPrice(totalAmount)}
+                  </span>
+                </div>
 
-              <Link
-                to="/paymentpage"
-                className={`btn cart-btn-proceed text-center w-100 ${
-                  loading || cartItems.length === 0 ? "disabled" : ""
-                }`}
-              >
-                Proceed to Buy
-              </Link>
+                <Link
+                  to="/paymentpage"
+                  className={`btn cart-btn-proceed text-center w-100 ${
+                    loading || cartItems.length === 0 ? "disabled" : ""
+                  }`}
+                >
+                  Proceed to Buy
+                </Link>
 
-              <div className="cart-trust-text text-center mt-3">
-                Safe and Secure Payments. Easy returns. 100% Authentic products.
+                <div className="cart-trust-text text-center mt-3 text-muted small">
+                  Safe and Secure Payments. Easy returns. 100% Authentic products.
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
       {/* Footer */}
       <footer className="py-5 mt-5 homepage-footer">
-        <div className="container">
+        <div className="container-fluid px-4 px-md-5">
           <div className="row g-4 align-items-start">
             <div className="col-12 col-md-3 pt-5 mt-4">
               <h1
