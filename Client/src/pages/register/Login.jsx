@@ -68,7 +68,13 @@ function Login() {
         if (res?.token) {
           localStorage.setItem("Token", res.token);
           localStorage.setItem("role", res.role);
-          navigate("/");
+
+          // Role-based immediate redirection
+          if (res.role && res.role.toLowerCase() === "admin") {
+            navigate("/AdminCategory", { replace: true });
+          } else {
+            navigate("/", { replace: true });
+          }
         }
       } catch (error) {
         console.error("Login API Error:", error.response?.data || error.message);
@@ -88,7 +94,6 @@ function Login() {
       }
     }
   };
-  
 
   const handleBlur = (event) => {
     const { name } = event.target;

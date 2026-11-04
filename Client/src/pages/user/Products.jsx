@@ -4,6 +4,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import { Link } from "react-router-dom";
+import toast, { Toaster } from "react-hot-toast";
 import UserService from "../../services/user-api-services/UserService";
 import filter from "../../assets/filter.png";
 
@@ -17,10 +18,9 @@ const Products = () => {
   } = UserService();
 
   const [Productsitems, setProductsitems] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [wishlistIds, setWishlistIds] = useState(() => new Set());
   const [wishlistLoadingId, setWishlistLoadingId] = useState(null);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [actionMessage, setActionMessage] = useState("");
 
   // Search & Sorting States
   const [searchTerm, setSearchTerm] = useState("");
@@ -31,35 +31,44 @@ const Products = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [maxPrice, setMaxPrice] = useState(10000);
 
-  // Ref to handle click outside for auto-closing filter panel
   const filterRef = useRef(null);
 
   useEffect(() => {
+    let isMounted = true;
+
     const loadProductsAndWishlist = async () => {
       try {
+        setLoading(true);
         const products = await getProduct();
         const items = Array.isArray(products) ? products : [];
-        setProductsitems(items);
+        if (isMounted) {
+          setProductsitems(items);
 
-        if (items.length > 0) {
-          const highestPrice = Math.max(
-            ...items.map((item) => item.saleprice || item.price || 0)
-          );
-          setMaxPrice(highestPrice || 10000);
+          if (items.length > 0) {
+            const highestPrice = Math.max(
+              ...items.map((item) => item.saleprice || item.price || 0)
+            );
+            setMaxPrice(highestPrice || 10000);
+          }
         }
       } catch (error) {
         console.error("Failed to load products:", error);
+        toast.error("Failed to load products list.");
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
 
       try {
         const response = await getWishlist();
         const wishlist = response?.wishlist || [];
-
         const savedIds = wishlist.map((item) =>
           String(item.productId || item.id || item._id)
         );
-
-        setWishlistIds(new Set(savedIds));
+        if (isMounted) {
+          setWishlistIds(new Set(savedIds));
+        }
       } catch (error) {
         console.error(
           "Failed to load wishlist:",
@@ -69,6 +78,10 @@ const Products = () => {
     };
 
     loadProductsAndWishlist();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Click outside detector to close the filter dropdown
@@ -109,7 +122,7 @@ const Products = () => {
     );
   }, [Productsitems]);
 
-  // Computed filtered & sorted list
+  // Filtered & sorted list
   const processedProducts = useMemo(() => {
     let result = [...Productsitems];
 
@@ -158,13 +171,15 @@ const Products = () => {
 
   const resetFilters = () => {
     setSelectedCategory("All");
+    setSortBy("newest");
     setMaxPrice(absoluteMaxPrice);
+    toast.success("Filters reset to default.");
   };
 
   const Addtocart = async (id) => {
     try {
       const response = await Addproducttocart(id);
-      alert(response.message || "Product added to cart successfully!");
+      toast.success(response?.message || "Product added to cart successfully!");
     } catch (error) {
       console.error(
         "Add to cart error:",
@@ -172,9 +187,9 @@ const Products = () => {
       );
 
       if (error.response?.status === 401) {
-        alert("Please login to add products to your cart.");
+        toast.error("Please login to add products to your cart.");
       } else {
-        alert(
+        toast.error(
           error.response?.data?.message || "Unable to add product to cart."
         );
       }
@@ -183,47 +198,42 @@ const Products = () => {
 
   const addTotheWishlist = async (productId) => {
     const id = String(productId);
-
     if (wishlistLoadingId !== null) return;
 
     const alreadyFavorite = wishlistIds.has(id);
 
     try {
       setWishlistLoadingId(id);
-      setErrorMessage("");
-      setActionMessage("");
 
       if (alreadyFavorite) {
         await removeProductFromWishlist(id);
-
         setWishlistIds((previous) => {
           const updated = new Set(previous);
           updated.delete(id);
           return updated;
         });
-
-        setActionMessage("Product removed from wishlist.");
+        toast.success("Product removed from wishlist.");
       } else {
         await addToWishlist(id);
-
         setWishlistIds((previous) => {
           const updated = new Set(previous);
           updated.add(id);
           return updated;
         });
-
-        setActionMessage("Product added to wishlist.");
+        toast.success("Product added to wishlist.");
       }
     } catch (error) {
       console.error(
         "Wishlist error:",
         error.response?.data || error.message
       );
-
-      setErrorMessage(
-        error.response?.data?.message ||
-          "Unable to update wishlist. Please try again."
-      );
+      if (error.response?.status === 401) {
+        toast.error("Please login to manage your wishlist.");
+      } else {
+        toast.error(
+          error.response?.data?.message || "Unable to update wishlist."
+        );
+      }
     } finally {
       setWishlistLoadingId(null);
     }
@@ -231,8 +241,45 @@ const Products = () => {
 
   return (
     <>
+      <Toaster
+        position="top-center"
+        containerStyle={{
+          top: 85,
+          zIndex: 99999,
+        }}
+        toastOptions={{
+          duration: 5000,
+          style: {
+            background: "#043948",
+            color: "#ffffff",
+            fontSize: "14px",
+            fontWeight: "500",
+            borderRadius: "8px",
+            padding: "12px 20px",
+            boxShadow: "0 4px 14px rgba(0,0,0,0.2)",
+          },
+          success: {
+            iconTheme: {
+              primary: "#2ec4b6",
+              secondary: "#ffffff",
+            },
+          },
+          error: {
+            style: {
+              background: "#721c24",
+              color: "#ffffff",
+            },
+            iconTheme: {
+              primary: "#f5c6cb",
+              secondary: "#721c24",
+            },
+          },
+        }}
+      />
+
+      {/* Navbar */}
       <nav className="navbar navbar-expand-lg navbar-light shadow-sm homepage-navbar">
-        <div className="container-fluid px-0">
+        <div className="container-fluid px-4">
           <span className="navbar-brand homepage-navbar-brand">
             <Link to="/">Fragranzia</Link>
           </span>
@@ -322,91 +369,103 @@ const Products = () => {
         </div>
       </nav>
 
+      {/* Festive Banner */}
       <section className="festive-banner homepage-festive-banner">
         <span>
           <b>ENJOY FESTIVE DISCOUNTS! FREE SHIPPING ABOVE 999 !</b>
         </span>
       </section>
 
-      <section className="productpage-section mx-3 mx-md-5 my-4">
-        <div className="productpage-header-row d-flex flex-wrap align-items-center justify-content-between mb-4 position-relative">
-          <div className="productpage-product-head">
-            <h3 className="productpage-title">All Products</h3>
-            <p className="productpage-breadcrumb">Home &gt; Products</p>
+      {/* Main Content Area: container-fluid stretches edge-to-edge */}
+      <div className="container-fluid px-4 px-md-5 my-4">
+        {/* Header and Filter Row */}
+        <div className="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+          <div>
+            <h3 className="productpage-title mb-1 fw-bold" style={{ color: "#043948" }}>
+              All Products
+            </h3>
+            <p className="productpage-breadcrumb mb-0 text-muted small">
+              Home &gt; Products
+            </p>
           </div>
 
-          <div className="productpage-filteropt position-relative" ref={filterRef}>
-            <ul className="productpage-filter-list">
-              <li className="productpage-filter-label">Sort By:</li>
-              <li
-                className={`productpage-filter-item ${
-                  sortBy === "newest" ? "productpage-filter-active" : ""
-                }`}
-                onClick={() => setSortBy("newest")}
-                style={{ cursor: "pointer" }}
-              >
-                Newest First
-              </li>
-              <li
-                className={`productpage-filter-item ${
-                  sortBy === "popularity" ? "productpage-filter-active" : ""
-                }`}
-                onClick={() => setSortBy("popularity")}
-                style={{ cursor: "pointer" }}
-              >
-                Popularity
-              </li>
-              <li
-                className={`productpage-filter-item ${
-                  sortBy === "lowToHigh" ? "productpage-filter-active" : ""
-                }`}
-                onClick={() => setSortBy("lowToHigh")}
-                style={{ cursor: "pointer" }}
-              >
-                Price--Low to High
-              </li>
-              <li
-                className={`productpage-filter-item ${
-                  sortBy === "highToLow" ? "productpage-filter-active" : ""
-                }`}
-                onClick={() => setSortBy("highToLow")}
-                style={{ cursor: "pointer" }}
-              >
-                Price--High to Low
-              </li>
-              <li className="productpage-filter-item">
-                <button
-                  className="productpage-filterbtn"
-                  type="button"
-                  onClick={() => setIsFilterOpen((prev) => !prev)}
-                >
-                  <img
-                    src={filter}
-                    alt=""
-                    className="productpage-filter-icon"
-                  />
-                  Filter {isFilterOpen ? "▲" : "▼"}
-                </button>
-              </li>
-            </ul>
+          {/* Filter Trigger Button & Dropdown */}
+          <div className="position-relative" ref={filterRef}>
+            <button
+              className="d-flex align-items-center gap-2 px-3 py-2 shadow-sm rounded-pill"
+              type="button"
+              onClick={() => setIsFilterOpen((prev) => !prev)}
+              style={{
+                backgroundColor: isFilterOpen ? "#f1f5f9" : "#ffffff",
+                color: "#111827",
+                border: "1.5px solid #cbd5e1",
+                cursor: "pointer",
+                transition: "all 0.2s ease-in-out",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "#f8fafc";
+                e.currentTarget.style.borderColor = "#94a3b8";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = isFilterOpen ? "#f1f5f9" : "#ffffff";
+                e.currentTarget.style.borderColor = "#cbd5e1";
+              }}
+            >
+              <img
+                src={filter}
+                alt=""
+                style={{ width: "16px", height: "16px", objectFit: "contain" }}
+              />
+              <span className="fw-semibold text-dark">Filter & Sort</span>
+              <span className="small text-muted">
+                {isFilterOpen ? "▲" : "▼"}
+              </span>
+            </button>
 
-            {/* Sliding Filter Dropdown Panel (Anchored to Left with start-0) */}
+            {/* Sliding Dropdown Panel */}
             {isFilterOpen && (
-              <div className="filter-sliding-panel shadow p-3 bg-white rounded position-absolute start-0 mt-2">
+              <div
+                className="filter-sliding-panel shadow-lg p-3 bg-white rounded-3 position-absolute end-0 mt-2"
+                style={{
+                  width: "290px",
+                  maxWidth: "calc(100vw - 32px)",
+                  zIndex: 1050,
+                  border: "1px solid #e2e8f0",
+                }}
+              >
                 <div className="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-                  <h6 className="fw-bold mb-0">Refine Products</h6>
+                  <h6 className="fw-bold mb-0" style={{ color: "#043948" }}>Refine Products</h6>
                   <button
                     type="button"
-                    className="btn btn-sm btn-link text-decoration-none p-0 text-danger"
+                    className="btn btn-sm btn-link text-decoration-none p-0 text-danger fw-semibold"
                     onClick={resetFilters}
                   >
                     Clear All
                   </button>
                 </div>
 
-                {/* Category Filter */}
+                {/* Sort Option */}
                 <div className="mb-3">
-                  <label className="form-label fw-semibold small">Category</label>
+                  <label className="form-label fw-bold small mb-1 text-dark">
+                    Sort By
+                  </label>
+                  <select
+                    className="form-select form-select-sm"
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                  >
+                    <option value="newest">Newest First</option>
+                    <option value="popularity">Popularity</option>
+                    <option value="lowToHigh">Price: Low to High</option>
+                    <option value="highToLow">Price: High to Low</option>
+                  </select>
+                </div>
+
+                {/* Category Option */}
+                <div className="mb-3">
+                  <label className="form-label fw-bold small mb-1 text-dark">
+                    Category
+                  </label>
                   <select
                     className="form-select form-select-sm"
                     value={selectedCategory}
@@ -420,13 +479,13 @@ const Products = () => {
                   </select>
                 </div>
 
-                {/* Price Filter Slider */}
+                {/* Max Price Slider */}
                 <div className="mb-2">
                   <div className="d-flex justify-content-between align-items-center mb-1">
-                    <label className="form-label fw-semibold small mb-0">
+                    <label className="form-label fw-bold small mb-0 text-dark">
                       Max Price
                     </label>
-                    <span className="small text-muted fw-bold">
+                    <span className="small fw-bold" style={{ color: "#28a745" }}>
                       Rs {maxPrice}
                     </span>
                   </div>
@@ -448,118 +507,133 @@ const Products = () => {
             )}
           </div>
         </div>
-      </section>
 
-      <section>
-        {actionMessage && (
-          <div className="alert alert-success mx-3 mx-md-5" role="status">
-            {actionMessage}
+        {/* Product Cards Grid or Loader */}
+        {loading ? (
+          <div className="d-flex justify-content-center align-items-center py-5 my-5">
+            <div
+              className="spinner-border"
+              style={{
+                width: "3.2rem",
+                height: "3.2rem",
+                color: "#043948",
+                borderWidth: "3px",
+              }}
+              role="status"
+            >
+              <span className="visually-hidden">Loading...</span>
+            </div>
           </div>
-        )}
+        ) : (
+          <>
+            <div className="productpage-row row g-4 justify-content-start mb-4">
+              {processedProducts.length > 0 ? (
+                processedProducts.map((products) => {
+                  const productId = String(products._id);
+                  const isFavorite = wishlistIds.has(productId);
 
-        {errorMessage && (
-          <div className="alert alert-danger mx-3 mx-md-5" role="alert">
-            {errorMessage}
-          </div>
-        )}
-
-        <div className="productpage-row row g-4 justify-content-center justify-content-lg-between mb-4">
-          {processedProducts.length > 0 ? (
-            processedProducts.map((products) => {
-              const productId = String(products._id);
-              const isFavorite = wishlistIds.has(productId);
-
-              return (
-                <div
-                  className="productpage-col col-12 col-md-6 col-lg-4 d-flex justify-content-center"
-                  key={products._id}
-                >
-                  <div className="productpage-card card bg-transparent">
-                    <Link
-                      to={`/SpecificProduct/${products._id}`}
-                      className="text-decoration-none"
+                  return (
+                    <div
+                      className="productpage-col col-12 col-md-6 col-lg-4 d-flex justify-content-center"
+                      key={products._id}
                     >
-                      <img
-                        className="productpage-product-img"
-                        src={products.image}
-                        alt={products.name}
-                      />
-                    </Link>
-
-                    <div className="productpage-card-body card-body px-0">
-                      <div className="d-flex justify-content-between align-items-center gap-2">
+                      <div className="productpage-card card bg-transparent w-100">
                         <Link
                           to={`/SpecificProduct/${products._id}`}
-                          className="text-decoration-none text-dark"
+                          className="text-decoration-none"
                         >
-                          <h5 className="productpage-card-title card-title mb-0">
-                            {products.name}
-                          </h5>
+                          <img
+                            className="productpage-product-img"
+                            src={products.image}
+                            alt={products.name}
+                          />
                         </Link>
+
+                        <div className="productpage-card-body card-body px-0">
+                          <div className="d-flex justify-content-between align-items-center gap-2">
+                            <Link
+                              to={`/SpecificProduct/${products._id}`}
+                              className="text-decoration-none text-dark"
+                            >
+                              <h5 className="productpage-card-title card-title mb-0">
+                                {products.name}
+                              </h5>
+                            </Link>
+
+                            <button
+                              type="button"
+                              className="products-wishlist-btn"
+                              onClick={() => addTotheWishlist(productId)}
+                              disabled={wishlistLoadingId !== null}
+                              aria-label={
+                                isFavorite
+                                  ? "Remove from wishlist"
+                                  : "Add to wishlist"
+                              }
+                              aria-pressed={isFavorite}
+                            >
+                              <i
+                                className={
+                                  isFavorite
+                                    ? "bi bi-heart-fill"
+                                    : "bi bi-heart"
+                                }
+                                style={{
+                                  color: isFavorite ? "#e63946" : "#555",
+                                }}
+                              ></i>
+                            </button>
+                          </div>
+
+                          <p className="productpage-card-text card-text mt-2">
+                            <span
+                              className="productpage-price fw-bold"
+                              style={{ color: "#28a745" }}
+                            >
+                              Rs {products.saleprice}
+                            </span>
+
+                            <span className="productpage-old-price ms-2">
+                              <s>Rs {products.price}</s>
+                            </span>
+                          </p>
+                        </div>
 
                         <button
                           type="button"
-                          className="products-wishlist-btn"
-                          onClick={() => addTotheWishlist(productId)}
-                          disabled={wishlistLoadingId !== null}
-                          aria-label={
-                            isFavorite
-                              ? "Remove from wishlist"
-                              : "Add to wishlist"
-                          }
-                          aria-pressed={isFavorite}
+                          onClick={() => Addtocart(products._id)}
+                          className="btn-add-cart homepage-btn-add-cart"
                         >
-                          <i
-                            className={
-                              isFavorite
-                                ? "bi bi-heart-fill"
-                                : "bi bi-heart"
-                            }
-                            style={{
-                              color: isFavorite ? "#e63946" : "#555",
-                            }}
-                          ></i>
+                          Add to Cart
                         </button>
                       </div>
-
-                      <p className="productpage-card-text card-text mt-2">
-                        <span className="productpage-price">
-                          Rs {products.saleprice}
-                        </span>
-
-                        <span className="productpage-old-price">
-                          <s>Rs {products.price}</s>
-                        </span>
-                      </p>
                     </div>
-
-                    <button
-                      type="button"
-                      onClick={() => Addtocart(products._id)}
-                      className="btn-add-cart homepage-btn-add-cart"
-                    >
-                      Add to Cart
-                    </button>
-                  </div>
+                  );
+                })
+              ) : (
+                <div className="text-center py-5 w-100">
+                  <h5 className="text-muted">
+                    No products matching your search criteria.
+                  </h5>
                 </div>
-              );
-            })
-          ) : (
-            <div className="text-center py-5">
-              <h5>No products matching your search criteria.</h5>
+              )}
             </div>
-          )}
-        </div>
 
-        <div className="productpage-loadmore d-flex justify-content-center my-5">
-          <button type="button" className="productpage-loadmore-btn">
-            Load More
-          </button>
-        </div>
-      </section>
+            {/* Load More Button */}
+            {processedProducts.length > 0 && (
+              <div className="productpage-loadmore d-flex justify-content-center my-5">
+                <button type="button" className="productpage-loadmore-btn">
+                  Load More
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
 
+      {/* Footer */}
       <footer className="py-5 mt-5 homepage-footer">
-        <div className="container">
+        <div className="container-fluid px-4 px-md-5">
           <div className="row g-4 align-items-start">
             <div className="col-12 col-md-3 pt-5 mt-4">
               <h1

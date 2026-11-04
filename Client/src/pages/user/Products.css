@@ -180,7 +180,6 @@ section {
 
 /* Filter options */
 .productpage-filteropt {
- 
   padding-right: 70px;
 }
 
@@ -232,33 +231,25 @@ section {
   width: 18px;
   margin-bottom: 3px;
 }
+
 /* Product card */
 .productpage-card {
   width: 400px;
   border: none !important;
   background: transparent !important;
-  
- 
- 
 }
 
 .productpage-product-img {
-  width: 100%;
-  height: auto;
-  object-fit: contain;
- align-items:flex-start ;
-  margin: 0 auto;
-  
   width: 450px;
   height: 450px;
-
+  object-fit: contain;
+  align-items: flex-start;
+  margin: 0 auto;
   opacity: 1;
   border-top-left-radius: 130px;
   border-bottom-right-radius: 130px;
   box-shadow: 0px 0px 16px 0px rgba(0, 0, 0, 0.25);
-
 }
-
 
 .productpage-card-title {
   font-size: 1.2rem;
@@ -281,6 +272,7 @@ section {
   color: #777;
 }
 
+.homepage-btn-add-cart,
 .productpage-add-to-cart {
   width: 100%;
   padding: 10px 0;
@@ -293,6 +285,7 @@ section {
   transition: background 0.2s ease, color 0.2s ease;
 }
 
+.homepage-btn-add-cart:hover,
 .productpage-add-to-cart:hover {
   background: #043948;
   color: #fff;
@@ -315,6 +308,7 @@ section {
   background: #043948;
   color: #fff;
 }
+
 .products-wishlist-btn {
   border: none;
   background: transparent;
@@ -337,12 +331,12 @@ section {
 
 /* Filter Sliding Dropdown Styling */
 .filter-sliding-panel {
-  width: 280px;
-  max-width: 90vw; /* Prevents overflow on mobile screens */
+  width: 290px;
+  max-width: 90vw;
   z-index: 1050;
   top: 100%;
-  left: 0; /* Align to the left edge of the parent container */
-  right: auto;
+  right: 0 !important;
+  left: auto !important;
   border: 1px solid #e0e0e0;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12) !important;
   animation: slideDown 0.25s ease-out forwards;

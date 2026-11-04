@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "razorpay": "^2.9.8"
+    "razorpay": "^2.9.8",
+    "react-hot-toast": "^2.6.1"
   }
 }

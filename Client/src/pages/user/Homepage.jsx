@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import "./Homepage.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
+import { Link } from "react-router-dom";
+import toast, { Toaster } from "react-hot-toast";
 import UserService from "../../services/user-api-services/UserService";
 import MosqueSilhouetteBackground from "../../assets/MosqueSilhouetteBackground.png";
 import photo1 from "../../assets/photo1.png";
@@ -20,7 +22,6 @@ import c3 from "../../assets/c3.png";
 import c4 from "../../assets/c4.png";
 import c5 from "../../assets/c5.png";
 import b1 from "../../assets/b1.png";
-import { Link } from "react-router-dom";
 
 const Homepage = () => {
   const {
@@ -32,53 +33,38 @@ const Homepage = () => {
   } = UserService();
 
   const [Productsitems, setProductsitems] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [wishlistIds, setWishlistIds] = useState(() => new Set());
   const [wishlistLoadingId, setWishlistLoadingId] = useState(null);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [actionMessage, setActionMessage] = useState("");
-
-  const fetchproduct = async () => {
-    let res = await getProduct();
-    setProductsitems(res);
-  };
-
-  const Addtocart = async (id) => {
-    try {
-      const response = await Addproducttocart(id);
-      alert(response.message || "Product added to cart successfully!");
-    } catch (error) {
-      console.error("Add to cart error:", error.response?.data || error.message);
-      if (error.response?.status === 401) {
-        alert("Please login to add products to your cart.");
-      } else {
-        alert(
-          error.response?.data?.message ||
-            "Unable to add product to cart."
-        );
-      }
-    }
-  };
 
   useEffect(() => {
-    fetchproduct();
+    let isMounted = true;
 
     const loadHomepage = async () => {
       try {
+        setLoading(true);
         const products = await getProduct();
-        setProductsitems(Array.isArray(products) ? products : []);
+        if (isMounted) {
+          setProductsitems(Array.isArray(products) ? products : []);
+        }
       } catch (error) {
         console.error("Failed to load products:", error);
+        toast.error("Failed to load products.");
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
 
       try {
         const response = await getWishlist();
         const wishlist = response?.wishlist || [];
-
         const savedIds = wishlist.map((item) =>
           String(item.productId || item.id || item._id)
         );
-
-        setWishlistIds(new Set(savedIds));
+        if (isMounted) {
+          setWishlistIds(new Set(savedIds));
+        }
       } catch (error) {
         console.error(
           "Failed to load wishlist:",
@@ -88,51 +74,66 @@ const Homepage = () => {
     };
 
     loadHomepage();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
+  const Addtocart = async (id) => {
+    try {
+      const response = await Addproducttocart(id);
+      toast.success(response?.message || "Product added to cart successfully!");
+    } catch (error) {
+      console.error("Add to cart error:", error.response?.data || error.message);
+      if (error.response?.status === 401) {
+        toast.error("Please login to add products to your cart.");
+      } else {
+        toast.error(
+          error.response?.data?.message || "Unable to add product to cart."
+        );
+      }
+    }
+  };
 
   const addTotheWishlist = async (productId) => {
     const id = String(productId);
-
     if (wishlistLoadingId !== null) return;
 
     const alreadyFavorite = wishlistIds.has(id);
 
     try {
       setWishlistLoadingId(id);
-      setErrorMessage("");
-      setActionMessage("");
 
       if (alreadyFavorite) {
         await removeProductFromWishlist(id);
-
         setWishlistIds((previous) => {
           const updated = new Set(previous);
           updated.delete(id);
           return updated;
         });
-
-        setActionMessage("Product removed from wishlist.");
+        toast.success("Product removed from wishlist.");
       } else {
         await addToWishlist(id);
-
         setWishlistIds((previous) => {
           const updated = new Set(previous);
           updated.add(id);
           return updated;
         });
-
-        setActionMessage("Product added to wishlist.");
+        toast.success("Product added to wishlist.");
       }
     } catch (error) {
       console.error(
         "Wishlist error:",
         error.response?.data || error.message
       );
-
-      setErrorMessage(
-        error.response?.data?.message ||
-          "Unable to update wishlist. Please try again."
-      );
+      if (error.response?.status === 401) {
+        toast.error("Please login to manage your wishlist.");
+      } else {
+        toast.error(
+          error.response?.data?.message || "Unable to update wishlist. Please try again."
+        );
+      }
     } finally {
       setWishlistLoadingId(null);
     }
@@ -140,6 +141,43 @@ const Homepage = () => {
 
   return (
     <>
+      {/* 🔔 Dedicated Toaster to guarantee toast notifications appear on Homepage */}
+      <Toaster
+        position="top-center"
+        containerStyle={{
+          top: 85,
+          zIndex: 99999,
+        }}
+        toastOptions={{
+          duration: 5000,
+          style: {
+            background: "#043948",
+            color: "#ffffff",
+            fontSize: "14px",
+            fontWeight: "500",
+            borderRadius: "8px",
+            padding: "12px 20px",
+            boxShadow: "0 4px 14px rgba(0,0,0,0.2)",
+          },
+          success: {
+            iconTheme: {
+              primary: "#2ec4b6",
+              secondary: "#ffffff",
+            },
+          },
+          error: {
+            style: {
+              background: "#721c24",
+              color: "#ffffff",
+            },
+            iconTheme: {
+              primary: "#f5c6cb",
+              secondary: "#721c24",
+            },
+          },
+        }}
+      />
+
       <nav className="navbar navbar-expand-lg navbar-light shadow-sm homepage-navbar">
         <div className="container-fluid px-0">
           <span className="navbar-brand homepage-navbar-brand">
@@ -379,7 +417,7 @@ const Homepage = () => {
                     Luxury Scents Starting at ₹4,000
                   </h3>
                 </div>
-                <div className="shop-now-badge homepage-shop-now-badge ">
+                <div className="shop-now-badge homepage-shop-now-badge">
                   Shop
                   <br />
                   Now
@@ -444,6 +482,7 @@ const Homepage = () => {
           </div>
         </div>
 
+        {/* Featured Collection Section */}
         <div className="container-fluid my-5">
           <div className="d-flex justify-content-between align-items-center mb-4">
             <h2 className="fw-bold homepage-section-title homepage-featured-title">
@@ -469,80 +508,100 @@ const Homepage = () => {
             </div>
           </div>
 
-          <div
-            className="product-slider-container homepage-product-slider-container d-flex gap-4"
-            id="featuredSlider"
-          >
-            {Productsitems.map((products, index) => (
+          {loading ? (
+            <div className="d-flex justify-content-center align-items-center py-5 my-4">
               <div
-                className="product-card-custom homepage-product-card-custom"
-                key={index}
+                className="spinner-border"
+                style={{
+                  width: "3.2rem",
+                  height: "3.2rem",
+                  color: "#043948",
+                  borderWidth: "3px",
+                }}
+                role="status"
               >
-                <div className="product-image-frame homepage-product-image-frame mb-3">
-                  <div className="new-badge homepage-new-badge">New</div>
-                  <Link to={`/SpecificProduct/${products._id}`}>
-                    <img
-                      src={products.image}
-                      alt={products.name}
-                    />
-                  </Link>
-                </div>
+                <span className="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          ) : (
+            <div
+              className="product-slider-container homepage-product-slider-container d-flex gap-4"
+              id="featuredSlider"
+            >
+              {Productsitems.map((products, index) => (
+                <div
+                  className="product-card-custom homepage-product-card-custom"
+                  key={products._id || index}
+                >
+                  <div className="product-image-frame homepage-product-image-frame mb-3">
+                    <div className="new-badge homepage-new-badge">New</div>
+                    <Link to={`/SpecificProduct/${products._id}`}>
+                      <img
+                        src={products.image}
+                        alt={products.name}
+                      />
+                    </Link>
+                  </div>
 
-                <div className="d-flex justify-content-between align-items-center mb-2">
-                  <h5 className="product-title homepage-product-title mb-0">
-                    {products.name}
-                  </h5>
-                  <button
-                    className="specificproduct-action-btn"
-                    type="button"
-                    onClick={() => addTotheWishlist(products._id)}
-                    disabled={wishlistLoadingId === String(products._id)}
-                    aria-label={
-                      wishlistIds.has(String(products._id))
-                        ? "Remove from wishlist"
-                        : "Add to wishlist"
-                    }
-                    aria-pressed={wishlistIds.has(String(products._id))}
-                    style={{
-                      border: "none",
-                      background: "transparent",
-                      cursor: "pointer",
-                      flexShrink: 0,
-                      fontSize: "20px",
-                      padding: "4px 8px",
-                    }}
-                  >
-                    <i
-                      className={
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <h5 className="product-title homepage-product-title mb-0">
+                      {products.name}
+                    </h5>
+                    <button
+                      className="specificproduct-action-btn"
+                      type="button"
+                      onClick={() => addTotheWishlist(products._id)}
+                      disabled={wishlistLoadingId === String(products._id)}
+                      aria-label={
                         wishlistIds.has(String(products._id))
-                          ? "bi bi-heart-fill"
-                          : "bi bi-heart"
+                          ? "Remove from wishlist"
+                          : "Add to wishlist"
                       }
+                      aria-pressed={wishlistIds.has(String(products._id))}
                       style={{
-                        color: wishlistIds.has(String(products._id))
-                          ? "#e63946"
-                          : "#555",
-                        transition: "color 0.2s ease",
+                        border: "none",
+                        background: "transparent",
+                        cursor: "pointer",
+                        flexShrink: 0,
+                        fontSize: "20px",
+                        padding: "4px 8px",
                       }}
-                    ></i>
+                    >
+                      <i
+                        className={
+                          wishlistIds.has(String(products._id))
+                            ? "bi bi-heart-fill"
+                            : "bi bi-heart"
+                        }
+                        style={{
+                          color: wishlistIds.has(String(products._id))
+                            ? "#e63946"
+                            : "#555",
+                          transition: "color 0.2s ease",
+                        }}
+                      ></i>
+                    </button>
+                  </div>
+
+                  {/* Sale price in green (#28a745) including Rs */}
+                  <div className="mb-3 homepage-product-price">
+                    <span className="fw-bold fs-5" style={{ color: "#28a745" }}>
+                      Rs {products.saleprice}
+                    </span>
+                    <span className="text-decoration-line-through text-muted ms-2 fs-6 small">
+                      Rs {products.price}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => Addtocart(products._id)}
+                    className="btn-add-cart homepage-btn-add-cart"
+                  >
+                    Add to Cart
                   </button>
                 </div>
-
-                <div className="mb-3 homepage-product-price">
-                  <span className="fw-bold fs-5">Rs {products.saleprice}</span>
-                  <span className="text-decoration-line-through text-muted ms-2 fs-6 small">
-                    Rs {products.price}
-                  </span>
-                </div>
-                <button
-                  onClick={() => Addtocart(products._id)}
-                  className="btn-add-cart homepage-btn-add-cart"
-                >
-                  Add to Cart
-                </button>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="quote-section homepage-quote-section">
@@ -667,6 +726,7 @@ const Homepage = () => {
           </div>
         </div>
 
+        {/* Offer Zone Section */}
         <div className="container-fluid my-5">
           <div className="d-flex justify-content-between align-items-center mb-4">
             <h2 className="fw-bold homepage-section-title homepage-featured-title">
@@ -692,80 +752,100 @@ const Homepage = () => {
             </div>
           </div>
 
-          <div
-            className="product-slider-container homepage-product-slider-container d-flex gap-4"
-            id="featuredSlider"
-          >
-            {Productsitems.map((products, index) => (
+          {loading ? (
+            <div className="d-flex justify-content-center align-items-center py-5 my-4">
               <div
-                className="product-card-custom homepage-product-card-custom"
-                key={index}
+                className="spinner-border"
+                style={{
+                  width: "3.2rem",
+                  height: "3.2rem",
+                  color: "#043948",
+                  borderWidth: "3px",
+                }}
+                role="status"
               >
-                <div className="product-image-frame homepage-product-image-frame mb-3">
-                  <Link to={`/SpecificProduct/${products._id}`}>
-                    <img
-                      src={products.image}
-                      alt={products.name}
-                    />
-                  </Link>
-                </div>
+                <span className="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          ) : (
+            <div
+              className="product-slider-container homepage-product-slider-container d-flex gap-4"
+              id="featuredSlider"
+            >
+              {Productsitems.map((products, index) => (
+                <div
+                  className="product-card-custom homepage-product-card-custom"
+                  key={products._id || index}
+                >
+                  <div className="product-image-frame homepage-product-image-frame mb-3">
+                    <Link to={`/SpecificProduct/${products._id}`}>
+                      <img
+                        src={products.image}
+                        alt={products.name}
+                      />
+                    </Link>
+                  </div>
 
-                <div className="d-flex justify-content-between align-items-center mb-2">
-                  <h5 className="product-title homepage-product-title mb-0">
-                    {products.name}
-                  </h5>
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <h5 className="product-title homepage-product-title mb-0">
+                      {products.name}
+                    </h5>
 
-                  <button
-                    className="specificproduct-action-btn"
-                    type="button"
-                    onClick={() => addTotheWishlist(products._id)}
-                    disabled={wishlistLoadingId === String(products._id)}
-                    aria-label={
-                      wishlistIds.has(String(products._id))
-                        ? "Remove from wishlist"
-                        : "Add to wishlist"
-                    }
-                    aria-pressed={wishlistIds.has(String(products._id))}
-                    style={{
-                      border: "none",
-                      background: "transparent",
-                      cursor: "pointer",
-                      flexShrink: 0,
-                      fontSize: "20px",
-                      padding: "4px 8px",
-                    }}
-                  >
-                    <i
-                      className={
+                    <button
+                      className="specificproduct-action-btn"
+                      type="button"
+                      onClick={() => addTotheWishlist(products._id)}
+                      disabled={wishlistLoadingId === String(products._id)}
+                      aria-label={
                         wishlistIds.has(String(products._id))
-                          ? "bi bi-heart-fill"
-                          : "bi bi-heart"
+                          ? "Remove from wishlist"
+                          : "Add to wishlist"
                       }
+                      aria-pressed={wishlistIds.has(String(products._id))}
                       style={{
-                        color: wishlistIds.has(String(products._id))
-                          ? "#e63946"
-                          : "#555",
-                        transition: "color 0.2s ease",
+                        border: "none",
+                        background: "transparent",
+                        cursor: "pointer",
+                        flexShrink: 0,
+                        fontSize: "20px",
+                        padding: "4px 8px",
                       }}
-                    ></i>
+                    >
+                      <i
+                        className={
+                          wishlistIds.has(String(products._id))
+                            ? "bi bi-heart-fill"
+                            : "bi bi-heart"
+                        }
+                        style={{
+                          color: wishlistIds.has(String(products._id))
+                            ? "#e63946"
+                            : "#555",
+                          transition: "color 0.2s ease",
+                        }}
+                      ></i>
+                    </button>
+                  </div>
+
+                  {/* Sale price in green (#28a745) including Rs */}
+                  <div className="mb-3 homepage-product-price">
+                    <span className="fw-bold fs-5" style={{ color: "#28a745" }}>
+                      Rs {products.saleprice}
+                    </span>
+                    <span className="text-decoration-line-through text-muted ms-2 fs-6 small">
+                      Rs {products.price}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => Addtocart(products._id)}
+                    className="btn-add-cart homepage-btn-add-cart"
+                  >
+                    Add to Cart
                   </button>
                 </div>
-
-                <div className="mb-3 homepage-product-price">
-                  <span className="fw-bold fs-5">Rs {products.saleprice}</span>
-                  <span className="text-decoration-line-through text-muted ms-2 fs-6 small">
-                    Rs {products.price}
-                  </span>
-                </div>
-                <button
-                  onClick={() => Addtocart(products._id)}
-                  className="btn-add-cart homepage-btn-add-cart"
-                >
-                  Add to Cart
-                </button>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="container-fluid my-5">

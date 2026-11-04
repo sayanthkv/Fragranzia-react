@@ -13,12 +13,18 @@ const AdminProtectedRoute = () => {
   return <Outlet />;
 };
 
-// 🔒 2. Protect User Account Routes (Only Logged-in Users/Admins allowed)
+// 🔒 2. Protect User Account Routes (Only Non-Admin Logged-in Users allowed)
 export const UserProtectedRoute = () => {
   const token = localStorage.getItem("Token");
+  const role = localStorage.getItem("role");
 
   if (!token) {
     return <Navigate to="/LogIn" replace />;
+  }
+
+  // If logged in as admin, block access and send to admin panel
+  if (role && role.toLowerCase() === "admin") {
+    return <Navigate to="/AdminCategory" replace />;
   }
 
   return <Outlet />;
@@ -33,7 +39,19 @@ export const PublicOnlyRoute = () => {
     if (role && role.toLowerCase() === "admin") {
       return <Navigate to="/AdminCategory" replace />;
     }
-    return <Navigate to="/Profile" replace />;
+    return <Navigate to="/" replace />;
+  }
+
+  return <Outlet />;
+};
+
+// 🛍️ 4. Storefront Guard (Blocks Admins from viewing public user-facing store pages)
+export const NonAdminRoute = () => {
+  const token = localStorage.getItem("Token");
+  const role = localStorage.getItem("role");
+
+  if (token && role && role.toLowerCase() === "admin") {
+    return <Navigate to="/AdminCategory" replace />;
   }
 
   return <Outlet />;
