@@ -1,19 +1,17 @@
-
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./Wishlist.css";
 
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
+import toast, { Toaster } from "react-hot-toast";
 import UserService from "../../services/user-api-services/UserService";
 
 const Wishlist = () => {
   const [wishlistItems, setWishlistItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
   const [removingId, setRemovingId] = useState(null);
   const [addingCartId, setAddingCartId] = useState(null);
-  const [successMessage, setSuccessMessage] = useState("");
 
   const {
     getWishlist,
@@ -22,56 +20,65 @@ const Wishlist = () => {
   } = UserService();
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchWishlist = async () => {
       try {
         setLoading(true);
-        setErrorMessage("");
-
         const response = await getWishlist();
-
-        setWishlistItems(response.wishlist || []);
+        console.log("Raw Wishlist Item Sample:", response.wishlist?.[0]);
+        if (isMounted) {
+          setWishlistItems(response?.wishlist || []);
+        }
       } catch (error) {
         console.error(
           "Failed to fetch wishlist:",
           error.response?.data || error.message
         );
-
-        setErrorMessage(
-          error.response?.data?.message ||
-            "Unable to load your wishlist. Please try again."
+        toast.error(
+          error.response?.data?.message || "Unable to load your wishlist."
         );
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
+    
 
     fetchWishlist();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleDeleteItem = async (productId) => {
     try {
       setRemovingId(productId);
-      setSuccessMessage("");
-      setErrorMessage("");
-
       await removeProductFromWishlist(productId);
 
       setWishlistItems((prevItems) =>
-        prevItems.filter(
-          (item) => item.productId !== productId && item.id !== productId
-        )
+        prevItems.filter((item) => {
+          const currentId =
+            item.productId?._id ||
+            item.productId ||
+            item.product?._id ||
+            item.product ||
+            item._id ||
+            item.id;
+          return String(currentId) !== String(productId);
+        })
       );
 
-      setSuccessMessage("Product removed from your wishlist.");
+      toast.success("Product removed from wishlist.");
     } catch (error) {
       console.error(
         "Delete wishlist error:",
         error.response?.data || error.message
       );
-
-      setErrorMessage(
-        error.response?.data?.message ||
-          "Unable to remove this product. Please try again."
+      toast.error(
+        error.response?.data?.message || "Unable to remove this product."
       );
     } finally {
       setRemovingId(null);
@@ -81,22 +88,20 @@ const Wishlist = () => {
   const handleAddToCart = async (productId) => {
     try {
       setAddingCartId(productId);
-      setSuccessMessage("");
-      setErrorMessage("");
-
-      await Addproducttocart(productId);
-
-      setSuccessMessage("Product added to your cart successfully.");
+      const response = await Addproducttocart(productId);
+      toast.success(response?.message || "Product added to cart successfully!");
     } catch (error) {
       console.error(
         "Add to cart error:",
         error.response?.data || error.message
       );
-
-      setErrorMessage(
-        error.response?.data?.message ||
-          "Unable to add this product to your cart."
-      );
+      if (error.response?.status === 401) {
+        toast.error("Please login to add products to your cart.");
+      } else {
+        toast.error(
+          error.response?.data?.message || "Unable to add product to cart."
+        );
+      }
     } finally {
       setAddingCartId(null);
     }
@@ -104,8 +109,44 @@ const Wishlist = () => {
 
   return (
     <>
+      <Toaster
+        position="top-center"
+        containerStyle={{
+          top: 85,
+          zIndex: 99999,
+        }}
+        toastOptions={{
+          duration: 5000,
+          style: {
+            background: "#043948",
+            color: "#ffffff",
+            fontSize: "14px",
+            fontWeight: "500",
+            borderRadius: "8px",
+            padding: "12px 20px",
+            boxShadow: "0 4px 14px rgba(0,0,0,0.2)",
+          },
+          success: {
+            iconTheme: {
+              primary: "#2ec4b6",
+              secondary: "#ffffff",
+            },
+          },
+          error: {
+            style: {
+              background: "#721c24",
+              color: "#ffffff",
+            },
+            iconTheme: {
+              primary: "#f5c6cb",
+              secondary: "#721c24",
+            },
+          },
+        }}
+      />
+
       <nav className="navbar navbar-expand-lg navbar-light shadow-sm wishlist-navbar">
-        <div className="container-fluid px-0">
+        <div className="container-fluid px-4">
           <span className="navbar-brand wishlist-brand">
             <Link to="/">Fragranzia</Link>
           </span>
@@ -140,8 +181,8 @@ const Wishlist = () => {
               </li>
 
               <li className="nav-item">
-                <span className="nav-link wishlist-nav-link">
-                  <Link to='/Wishlist'>Wishlist</Link>
+                <span className="nav-link active wishlist-nav-link">
+                  <Link to="/Wishlist">Wishlist</Link>
                 </span>
               </li>
 
@@ -154,7 +195,6 @@ const Wishlist = () => {
               <li className="nav-item me-2">
                 <div className="wishlist-search">
                   <i className="fa-solid fa-magnifying-glass"></i>
-
                   <input
                     className="form-control"
                     type="search"
@@ -194,115 +234,163 @@ const Wishlist = () => {
         </div>
       </nav>
 
-      <main className="container wishlist-container">
-        <h2 className="wishlist-heading">Wishlist</h2>
+      <main className="container-fluid px-4 px-md-5 my-4 wishlist-container">
+        <h2 className="wishlist-heading mb-1 fw-bold" style={{ color: "#043948" }}>
+          Wishlist
+        </h2>
 
-        <div className="wishlist-breadcrumb">
-          <Link to="/">Home</Link> &gt; Wishlist
+        <div className="wishlist-breadcrumb mb-4 text-muted small">
+          <Link to="/" className="text-decoration-none text-muted">Home</Link> &gt; Wishlist
         </div>
 
-        {successMessage && (
-          <div className="alert alert-success mt-3" role="status">
-            {successMessage}
-          </div>
-        )}
-
-        {errorMessage && (
-          <div className="alert alert-danger mt-3" role="alert">
-            {errorMessage}
-          </div>
-        )}
-
         {loading ? (
-          <div className="wishlist-empty">
+          <div className="d-flex justify-content-center align-items-center py-5 my-5">
             <div
               className="spinner-border"
+              style={{
+                width: "3.2rem",
+                height: "3.2rem",
+                color: "#043948",
+                borderWidth: "3px",
+              }}
               role="status"
-              aria-label="Loading wishlist"
-            ></div>
-            <p className="mt-3">Loading your wishlist...</p>
+            >
+              <span className="visually-hidden">Loading...</span>
+            </div>
           </div>
         ) : wishlistItems.length === 0 ? (
-          <div className="wishlist-empty">
-            <i className="fa-regular fa-heart"></i>
-
-            <h4>Your wishlist is empty</h4>
-
-            <p>
+          <div className="wishlist-empty text-center py-5">
+            <i className="fa-regular fa-heart fa-3x mb-3 text-muted"></i>
+            <h4 className="fw-bold">Your wishlist is empty</h4>
+            <p className="text-muted">
               Explore our fragrance collection and add your favorite products.
             </p>
-
-            <Link to="/Products" className="btn btn-dark mt-2">
+            <Link to="/Products" className="btn btn-dark mt-2 px-4 py-2">
               Explore Products
             </Link>
           </div>
         ) : (
           <div className="row g-4">
             {wishlistItems.map((item) => {
-              const productId = item.productId || item.id;
+              const productObj =
+                typeof item.productId === "object" && item.productId !== null
+                  ? item.productId
+                  : typeof item.product === "object" && item.product !== null
+                  ? item.product
+                  : item;
+
+              const productId = String(
+                productObj._id ||
+                productObj.id ||
+                item.productId ||
+                item.id ||
+                item._id
+              );
+
+              const productImage =
+                productObj.image ||
+                productObj.imageUrl ||
+                item.image ||
+                item.imageUrl;
+
+              const productTitle =
+                productObj.name ||
+                productObj.title ||
+                item.title ||
+                item.name ||
+                "Fragrance";
+
+              const salePrice =
+                productObj.saleprice ??
+                productObj.price ??
+                item.saleprice ??
+                item.price ??
+                0;
+
+              const originalPrice =
+                productObj.price ??
+                item.originalPrice ??
+                item.price;
+
+              const hasDiscount =
+                Number(originalPrice) > Number(salePrice) &&
+                productObj.saleprice !== undefined;
 
               return (
-                <div className="col-12 col-md-6" key={productId}>
+                <div className="col-12 col-md-6 col-lg-4" key={productId}>
                   <div className="wishlist-card">
                     <div className="wishlist-image">
-  {item.image || item.product?.image ? (
-    <img
-      src={item.image || item.product?.image}
-      alt={item.alt || item.title || item.product?.name || "Fragrance"}
-    />
-  ) : (
-    <div className="wishlist-no-image">
-      <i className="fa-regular fa-image"></i>
-      <p>No image available</p>
-    </div>
-  )}
-</div>
+                      {productImage ? (
+                        <Link to={`/SpecificProduct/${productId}`}>
+                          <img
+                            src={productImage}
+                            alt={productTitle}
+                            style={{ objectFit: "contain" }}
+                          />
+                        </Link>
+                      ) : (
+                        <div className="wishlist-no-image">
+                          <i className="fa-regular fa-image fa-2x text-muted"></i>
+                          <p className="small text-muted mt-2">No image available</p>
+                        </div>
+                      )}
+                    </div>
 
                     <div className="wishlist-details">
-                      <h3>{item.title || "Fragrance"}</h3>
+                      <Link
+                        to={`/SpecificProduct/${productId}`}
+                        className="text-decoration-none text-dark"
+                      >
+                        <h3 className="fs-5 fw-bold mb-2">{productTitle}</h3>
+                      </Link>
 
-                      <div className="wishlist-price">
-                        <span className="wishlist-current-price">
-                          Rs {item.price ?? 0}
+                      <div className="wishlist-price mb-3">
+                        <span
+                          className="wishlist-current-price fw-bold"
+                          style={{ color: "#28a745" }}
+                        >
+                          Rs {salePrice}
                         </span>
 
-                        {Number(item.originalPrice) >
-                          Number(item.price) && (
+                        {hasDiscount && (
                           <>
-                            <span className="wishlist-original-price">
-                              Rs {item.originalPrice}
+                            <span className="wishlist-original-price ms-2 text-muted text-decoration-line-through">
+                              Rs {originalPrice}
                             </span>
 
-                            <span className="wishlist-discount">
-                              {item.discountPercent ?? 0}% off
+                            <span className="wishlist-discount ms-2 text-danger small fw-semibold">
+                              {Math.round(
+                                ((originalPrice - salePrice) / originalPrice) * 100
+                              )}
+                              % off
                             </span>
                           </>
                         )}
                       </div>
 
-                     <div className="wishlist-actions">
-                       <button
-                        className="wishlist-delete"
-                        type="button"
-                        disabled={removingId === productId}
-                        onClick={() => handleDeleteItem(productId)}
-                      >
-                        {removingId === productId
-                          ? "Removing..."
-                          : "Remove"}
-                      </button>
+                      <div className="wishlist-actions d-flex gap-2">
+                        <button
+                          className="wishlist-delete btn btn-outline-danger btn-sm"
+                          type="button"
+                          disabled={removingId === productId}
+                          onClick={() => handleDeleteItem(productId)}
+                        >
+                          {removingId === productId ? "Removing..." : "Remove"}
+                        </button>
 
-                      <button
-                        className="wishlist-cart"
-                        type="button"
-                        disabled={addingCartId === productId}
-                        onClick={() => handleAddToCart(productId)}
-                      >
-                        {addingCartId === productId
-                          ? "Adding..."
-                          : "Add to cart"}
-                      </button>
-                     </div>
+                        <button
+                          className="wishlist-cart btn btn-primary btn-sm flex-grow-1"
+                          type="button"
+                          disabled={addingCartId === productId}
+                          onClick={() => handleAddToCart(productId)}
+                          style={{
+                            backgroundColor: "#043948",
+                            borderColor: "#043948",
+                          }}
+                        >
+                          {addingCartId === productId ? "Adding..." : "Add to Cart"}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -313,66 +401,51 @@ const Wishlist = () => {
       </main>
 
       <footer className="wishlist-footer">
-        <div className="container">
+        <div className="container-fluid px-4 px-md-5">
           <div className="row g-4">
             <div className="col-12 col-md-3">
-              <h1 className="wishlist-footer-brand">Fragranzia</h1>
+              <h1 className="wishlist-footer-brand" style={{ color: "#043948" }}>
+                <b>Fragranzia</b>
+              </h1>
             </div>
 
             <div className="col-12 col-md-9">
               <div className="row g-4">
                 <div className="col-6 col-sm-4">
                   <h5>Pages</h5>
-
                   <ul>
                     <li><Link to="/">Home</Link></li>
                     <li><Link to="/Products">Products</Link></li>
                     <li><Link to="/Gifting">Gifting</Link></li>
                     <li><Link to="/About">About</Link></li>
                     <li><Link to="/Profile">Profile</Link></li>
-                   
                   </ul>
                 </div>
 
                 <div className="col-6 col-sm-4">
                   <h5>Quick Links</h5>
-
                   <ul>
-                    <li>
-                      <a href="privacy.html">Privacy Policy</a>
-                    </li>
-                    <li>
-                      <a href="terms.html">Terms and Conditions</a>
-                    </li>
-                    <li>
-                      <a href="faqs.html">FAQs</a>
-                    </li>
-                    <li>
-                      <a href="customer-service.html">
-                        Customer Services
-                      </a>
-                    </li>
+                    <li><a href="privacy.html">Privacy Policy</a></li>
+                    <li><a href="terms.html">Terms and Conditions</a></li>
+                    <li><a href="faqs.html">FAQs</a></li>
+                    <li><a href="customer-service.html">Customer Services</a></li>
                   </ul>
                 </div>
 
                 <div className="col-12 col-sm-4">
                   <h5>Contact &amp; Social</h5>
-
                   <p>
-                    <i className="fa-regular fa-envelope"></i>{" "}
+                    <i className="fa-regular fa-envelope me-2"></i>
                     ftrafurniture@gmail.com
                   </p>
-
                   <p>
-                    <i className="fa-solid fa-phone"></i>{" "}
+                    <i className="fa-solid fa-phone me-2"></i>
                     +91 9876543210
                   </p>
-
                   <p>
                     <strong>Social Media</strong>
                   </p>
-
-                  <div className="wishlist-social-icons">
+                  <div className="wishlist-social-icons d-flex gap-3">
                     <i className="fa-brands fa-instagram"></i>
                     <i className="fa-brands fa-facebook"></i>
                     <i className="fa-brands fa-x-twitter"></i>
@@ -386,14 +459,13 @@ const Wishlist = () => {
 
           <hr />
 
-          <div className="wishlist-footer-bottom">
-            <div className="wishlist-footer-links">
+          <div className="wishlist-footer-bottom d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+            <div className="wishlist-footer-links d-flex gap-3 flex-wrap">
               <span>Web Accessibility</span>
               <span>Terms of Use</span>
               <span>Privacy Statement</span>
               <span>Contact Us</span>
             </div>
-
             <div>
               © 2024 Fragranzia Company. All rights reserved
             </div>

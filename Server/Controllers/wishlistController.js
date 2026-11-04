@@ -80,8 +80,8 @@ const getWishlist = async (req, res) => {
         productId: product._id.toString(),
         title: product.name || product.title || "Fragrance",
         image: product.image
-          ? `http://localhost:5000/uploads/${product.image}`
-          : "",
+
+          ,
         alt: product.name || product.title || "Fragrance",
         price,
         originalPrice,
