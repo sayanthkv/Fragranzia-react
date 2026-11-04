@@ -15,6 +15,7 @@ import SpecificProduct from "./pages/user/SpecificProduct.jsx";
 import Wishlist from "./pages/user/Wishlist.jsx";
 
 // Admin Pages
+import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 import Category from "./pages/admin/Category.jsx";
 import Adminproducts from "./pages/admin/Adminproducts.jsx";
 import Adminaddproducts from "./pages/admin/Adminaddproducts.jsx";
@@ -93,6 +94,9 @@ function App() {
 
         {/* 🔒 Protected Admin Routes (Admins only) */}
         <Route element={<AdminProtectedRoute />}>
+          <Route path="/AdminDashboard" element={<AdminDashboard />} />
+          <Route path="/dashboard" element={<Navigate to="/AdminDashboard" replace />} />
+          <Route path="/admin" element={<Navigate to="/AdminDashboard" replace />} />
           <Route path="/AdminCategory" element={<Category />} />
           <Route path="/AdminProducts" element={<Adminproducts />} />
           <Route path="/AdminaddProducts" element={<Adminaddproducts />} />

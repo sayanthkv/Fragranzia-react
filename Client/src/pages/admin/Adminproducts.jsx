@@ -236,10 +236,12 @@ const Adminproducts = () => {
         <div className="adminproduct-navbar-buttons">
           <button className="adminproduct-nav-item">
             <LuLayoutDashboard className="adminproduct-nav-icon" />
-            <span>Dashboard</span>
+            <Link to="/AdminDashboard">
+                        <span>Dashboard</span>
+                        </Link>
           </button>
 
-          <button className="adminproduct-nav-item active">
+          <button className="admin-nav-item active">
             <LuShoppingBag className="adminproduct-nav-icon" />
             <Link to="/Adminproducts">
               <span>Products</span>

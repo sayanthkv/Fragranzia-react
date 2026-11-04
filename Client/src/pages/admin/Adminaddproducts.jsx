@@ -189,7 +189,9 @@ const Adminaddproducts = () => {
         <div className="admin-navbar-buttons">
           <button className="admin-nav-item">
             <LuLayoutDashboard className="admin-nav-icon" />
+            <Link to="/AdminDashboard">
             <span>Dashboard</span>
+            </Link>
           </button>
 
           <button className="admin-nav-item active">

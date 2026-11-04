@@ -45,8 +45,6 @@ const AdminCustomerdetails = () => {
 
   const toggleStatus = async (user) => {
     const userId = user._id || user.id;
-
-    // Toggle state locally
     const updatedStatus = !user.status;
 
     setUsersDetails((prev) =>
@@ -57,7 +55,6 @@ const AdminCustomerdetails = () => {
       )
     );
 
-    // Keep modal customer status in sync if viewing
     if (selectedCustomer && (selectedCustomer._id === userId || selectedCustomer.id === userId)) {
       setSelectedCustomer((prev) => ({ ...prev, status: updatedStatus }));
     }
@@ -74,7 +71,6 @@ const AdminCustomerdetails = () => {
       toast.error(
         error.response?.data?.message || "Failed to update user status"
       );
-      // Revert optimistic update on failure
       setUsersDetails((prev) =>
         prev.map((item) =>
           (item._id === userId || item.id === userId)
@@ -109,7 +105,6 @@ const AdminCustomerdetails = () => {
 
   return (
     <>
-      {/* Brand-Themed Toaster */}
       <Toaster
         position="top-center"
         containerStyle={{
@@ -156,7 +151,9 @@ const AdminCustomerdetails = () => {
           <div className="admin-navbar-buttons">
             <button className="admin-nav-item">
               <LuLayoutDashboard className="admin-nav-icon" />
-              <span>Dashboard</span>
+              <Link to="/AdminDashboard">
+                <span>Dashboard</span>
+              </Link>
             </button>
 
             <button className="admin-nav-item">
@@ -198,8 +195,10 @@ const AdminCustomerdetails = () => {
 
         {/* Main Content Area */}
         <div className="AdminCustomerdetails-content">
-          <h2>User List</h2>
-          <p>Manage registered Customers account and status</p>
+          <div className="customer-page-header">
+            <h2>User List</h2>
+            <p>Manage registered Customers account and status</p>
+          </div>
 
           <div className="product-table-card">
             {loading ? (
@@ -281,7 +280,7 @@ const AdminCustomerdetails = () => {
                     })
                   ) : (
                     <tr>
-                      <td colSpan="5" className="text-center py-4">
+                      <td colSpan="5" className="text-center py-4 text-muted">
                         No customers found.
                       </td>
                     </tr>

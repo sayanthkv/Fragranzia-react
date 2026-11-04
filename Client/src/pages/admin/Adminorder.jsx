@@ -202,7 +202,9 @@ const Adminorder = () => {
           <div className="admin-navbar-buttons">
             <button className="admin-nav-item">
               <LuLayoutDashboard className="admin-nav-icon" />
-              <span>Dashboard</span>
+              <Link to="/AdminDashboard">
+                          <span>Dashboard</span>
+                          </Link>
             </button>
 
             <button className="admin-nav-item">
