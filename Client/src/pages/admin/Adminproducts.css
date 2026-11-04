@@ -1023,3 +1023,36 @@ a {
   }
 }
 
+/* Spinner Loader styling */
+.adminproduct-loader-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 4rem 1rem;
+  gap: 1rem;
+  color: #043948;
+  font-weight: 500;
+}
+
+.adminproduct-spinner {
+  width: 3rem;
+  height: 3rem;
+  border: 3.5px solid rgba(4, 57, 72, 0.15);
+  border-top-color: #043948;
+  border-radius: 50%;
+  animation: adminProductSpin 0.75s linear infinite;
+}
+
+@keyframes adminProductSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.adminproduct-empty-state {
+  text-align: center;
+  padding: 3.5rem 1rem;
+  color: #6c757d;
+  font-size: 1.05rem;
+}

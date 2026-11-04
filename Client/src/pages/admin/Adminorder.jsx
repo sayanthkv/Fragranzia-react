@@ -170,10 +170,7 @@ const Adminorder = () => {
               </Link>
             </button>
 
-            <button className="admin-nav-item">
-              <LuTag className="admin-nav-icon" />
-              <span>Offers</span>
-            </button>
+           
 
             <button className="admin-nav-item">
               <LuUsers className="admin-nav-icon" />
@@ -191,13 +188,7 @@ const Adminorder = () => {
           </div>
 
           <div className="admin-navbar-logout">
-            {/* 🏠 GO TO HOME PAGE BUTTON */}
-            <button className="admin-logout-btn mb-2" style={{ backgroundColor: '#4b5563' }}>
-              <Link to="/" style={{ color: 'inherit', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <LuHouse className="admin-nav-icon" />
-                <span>Go to home page</span>
-              </Link>
-            </button>
+           
 
             {/* 🚪 LOG OUT BUTTON */}
             <button className="admin-logout-btn" onClick={handleLogout}>

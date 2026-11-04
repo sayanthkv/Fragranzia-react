@@ -420,3 +420,14 @@ body {
     border-radius: 6px;
     cursor: pointer;
 }
+
+.category-page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.category-page-btn {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}

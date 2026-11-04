@@ -3,30 +3,28 @@ import {
   LuLayoutDashboard,
   LuShoppingBag,
   LuList,
-  LuTag,
   LuUsers,
   LuShoppingCart,
   LuLogOut,
-  LuPencil,
-  LuDownload,
-  LuUpload,
-  LuHouse
+  LuPencil
 } from 'react-icons/lu';
 import './Category.css';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import AdminService from '../../services/admin-api-services/AdminService';
-import { useNavigate } from 'react-router-dom';
+import toast, { Toaster } from 'react-hot-toast';
 
 function Category() {
   const [categories, setCategories] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const { AddCategory, getCategory, EditCategory, editStatus } = AdminService();
-  const navigate = useNavigate();
 
   const [editDetails, setEditDetails] = useState({
     id: '',
@@ -34,68 +32,84 @@ function Category() {
     description: ''
   });
 
-  const fetchCategory = async () => {
+  const { AddCategory, getCategory, EditCategory, editStatus } = AdminService();
+  const navigate = useNavigate();
+
+  const fetchCategory = async (page = 1) => {
     try {
-      const res = await getCategory();
-      setCategories(res);
+      setLoading(true);
+      const res = await getCategory(page, 10);
+
+      if (Array.isArray(res)) {
+        // Fallback if backend still returns an array
+        setCategories(res);
+        setTotalPages(Math.ceil(res.length / 10) || 1);
+      } else {
+        setCategories(res?.categories || []);
+        setCurrentPage(res?.currentPage || page);
+        setTotalPages(res?.totalPages || 1);
+      }
     } catch (error) {
-      console.log(
-        'Error fetching categories:',
-        error.response?.data || error.message
-      );
+      console.error('Error fetching categories:', error);
+      toast.error('Failed to load categories');
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchCategory();
-  }, []);
+    fetchCategory(currentPage);
+  }, [currentPage]);
 
   const submitdetails = async () => {
     if (!name.trim() || !description.trim()) {
-      alert('Please enter category name and description');
+      toast.error('Please enter category name and description');
       return;
     }
 
     try {
+      setIsSubmitting(true);
       await AddCategory({
         name,
         description,
         isActive: true
       });
 
-      await fetchCategory();
-
+      toast.success('Category added successfully!');
       setName('');
       setDescription('');
       setIsDrawerOpen(false);
 
-      alert('Category added successfully');
+      if (currentPage === 1) {
+        await fetchCategory(1);
+      } else {
+        setCurrentPage(1);
+      }
     } catch (error) {
-      console.log(
-        'Error adding category:',
-        error.response?.data || error.message
-      );
-
-      alert(
-        error.response?.data?.message || 'Failed to add category'
-      );
+      console.error('Error adding category:', error);
+      toast.error(error.response?.data?.message || 'Failed to add category');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const toggleStatus = async (id) => {
     try {
       const res = await editStatus(id);
+      const updatedCategory = res?.category || res;
 
       setCategories((prevCategories) =>
         prevCategories.map((cat) =>
-          cat._id === id ? res : cat
+          cat._id === id ? { ...cat, isActive: updatedCategory.isActive } : cat
         )
       );
-    } catch (error) {
-      console.log(
-        'Error updating category status:',
-        error.response?.data || error.message
+
+      toast.success(
+        `Category ${updatedCategory.isActive ? 'unblocked' : 'blocked'} successfully!`
       );
+    } catch (error) {
+      console.error('Error updating category status:', error);
+      toast.error(error.response?.data?.message || 'Error updating status');
     }
   };
 
@@ -105,13 +119,11 @@ function Category() {
       name: data.name,
       description: data.description
     });
-
     setIsEditDrawerOpen(true);
   };
 
   const handleEditChange = (e) => {
     const { name, value } = e.target;
-
     setEditDetails((prev) => ({
       ...prev,
       [name]: value
@@ -119,70 +131,95 @@ function Category() {
   };
 
   const submiteditdetails = async () => {
-    if (
-      !editDetails.name.trim() ||
-      !editDetails.description.trim()
-    ) {
-      alert('Please enter category name and description');
+    if (!editDetails.name.trim() || !editDetails.description.trim()) {
+      toast.error('Please enter category name and description');
       return;
     }
 
     try {
+      setIsSubmitting(true);
       const res = await EditCategory(editDetails.id, {
         name: editDetails.name,
         description: editDetails.description
       });
 
+      const updatedCategory = res?.category || res;
+
       setCategories((prevCategories) =>
         prevCategories.map((cat) =>
-          cat._id === editDetails.id ? res : cat
+          cat._id === editDetails.id ? updatedCategory : cat
         )
       );
 
-      setEditDetails({
-        id: '',
-        name: '',
-        description: ''
-      });
-
+      setEditDetails({ id: '', name: '', description: '' });
       setIsEditDrawerOpen(false);
-
-      alert('Category updated successfully');
+      toast.success('Category updated successfully!');
     } catch (error) {
-      console.log(
-        'Error updating category:',
-        error.response?.data || error.message
-      );
-
-      alert(
-        error.response?.data?.message || 'Failed to update category'
-      );
+      console.error('Error updating category:', error);
+      toast.error(error.response?.data?.message || 'Failed to update category');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const closeAddDrawer = () => {
+    if (isSubmitting) return;
     setIsDrawerOpen(false);
     setName('');
     setDescription('');
   };
 
   const closeEditDrawer = () => {
+    if (isSubmitting) return;
     setIsEditDrawerOpen(false);
-    setEditDetails({
-      id: '',
-      name: '',
-      description: ''
-    });
+    setEditDetails({ id: '', name: '', description: '' });
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("Token");
-    localStorage.removeItem("role");
+    localStorage.removeItem('Token');
+    localStorage.removeItem('role');
+    toast.success('Logged out successfully');
     navigate('/LogIn');
   };
 
   return (
     <>
+      <Toaster
+        position="top-center"
+        containerStyle={{
+          top: 85,
+          zIndex: 99999
+        }}
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#043948',
+            color: '#ffffff',
+            fontSize: '14px',
+            fontWeight: '500',
+            borderRadius: '8px',
+            padding: '12px 20px',
+            boxShadow: '0 4px 14px rgba(0,0,0,0.2)'
+          },
+          success: {
+            iconTheme: {
+              primary: '#2ec4b6',
+              secondary: '#ffffff'
+            }
+          },
+          error: {
+            style: {
+              background: '#721c24',
+              color: '#ffffff'
+            },
+            iconTheme: {
+              primary: '#f5c6cb',
+              secondary: '#721c24'
+            }
+          }
+        }}
+      />
+
       <div className="category-main-container">
         <nav className="admin-navbar">
           <div className="admin-navbar-brand">
@@ -202,16 +239,11 @@ function Category() {
               </Link>
             </button>
 
-            <button className="admin-nav-item">
+            <button className="admin-nav-item active">
               <LuList className="admin-nav-icon" />
               <Link to="/AdminCategory">
                 <span>Categories</span>
               </Link>
-            </button>
-
-            <button className="admin-nav-item">
-              <LuTag className="admin-nav-icon" />
-              <span>Offers</span>
             </button>
 
             <button className="admin-nav-item">
@@ -230,15 +262,6 @@ function Category() {
           </div>
 
           <div className="admin-navbar-logout">
-            {/* 🏠 GO TO HOME PAGE BUTTON */}
-            <button className="admin-logout-btn mb-2" style={{ backgroundColor: '#4b5563' }}>
-              <Link to="/" style={{ color: 'inherit', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <LuHouse className="admin-nav-icon" />
-                <span>Go to home page</span>
-              </Link>
-            </button>
-
-            {/* 🚪 LOG OUT BUTTON */}
             <button className="admin-logout-btn" onClick={handleLogout}>
               <LuLogOut className="admin-nav-icon" />
               <span>Log Out</span>
@@ -248,17 +271,7 @@ function Category() {
 
         <div className="category-main-content">
           <div className="category-action-bar">
-            <div className="category-action-left">
-              <button className="category-btn category-btn-secondary">
-                <LuDownload className="btn-icon" />
-                Export
-              </button>
-
-              <button className="category-btn category-btn-secondary">
-                <LuUpload className="btn-icon" />
-                Import
-              </button>
-            </div>
+            <div className="category-action-left"></div>
 
             <button
               onClick={() => setIsDrawerOpen(true)}
@@ -268,75 +281,122 @@ function Category() {
             </button>
           </div>
 
-          <div className="category-table-card">
-            <table className="category-table">
-              <thead className="category-table-head">
-                <tr>
-                  <th>Name</th>
-                  <th>Description</th>
-                  <th>Actions</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-
-              <tbody className="category-table-body">
-                {categories.map((cat) => (
-                  <tr key={cat._id}>
-                    <td className="category-col-name">{cat.name}</td>
-
-                    <td className="category-col-desc">{cat.description}</td>
-
-                    <td className="category-col-actions">
-                      <button
-                        onClick={() => onhandleeditdrawer(cat)}
-                        className="category-action-edit-btn"
-                      >
-                        <LuPencil className="action-icon" />
-                        Edit
-                      </button>
-                    </td>
-
-                    <td className="category-col-status">
-                      <button
-                        onClick={() => toggleStatus(cat._id)}
-                        className={`category-status-btn ${
-                          cat.isActive
-                            ? 'isActive-unblock'
-                            : 'isActive-block'
-                        }`}
-                      >
-                        {cat.isActive ? 'Unblocked' : 'Blocked'}
-                      </button>
-                    </td>
+       <div className="category-table-card">
+            {loading ? (
+              <div className="d-flex flex-column justify-content-center align-items-center py-5 my-5 gap-3">
+                <div
+                  className="spinner-border"
+                  style={{
+                    width: '3rem',
+                    height: '3rem',
+                    color: '#043948',
+                    borderWidth: '3px'
+                  }}
+                  role="status"
+                >
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+                <span
+                  style={{
+                    color: '#043948',
+                    fontSize: '0.95rem',
+                    fontWeight: '600',
+                    letterSpacing: '0.3px'
+                  }}
+                >
+                  Loading categories...
+                </span>
+              </div>
+            ) : categories.length === 0 ? (
+              <div className="text-center py-5 text-muted">
+                <p>No categories found.</p>
+              </div>
+            ) : (
+              <table className="category-table">
+                <thead className="category-table-head">
+                  <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                    <th>Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
 
-            <div className="category-pagination">
-              <button className="category-page-btn" disabled>
-                Previous
-              </button>
+                <tbody className="category-table-body">
+                  {categories.map((cat) => (
+                    <tr key={cat._id}>
+                      <td className="category-col-name">{cat.name}</td>
+                      <td className="category-col-desc">{cat.description}</td>
+                      <td className="category-col-actions">
+                        <button
+                          onClick={() => onhandleeditdrawer(cat)}
+                          className="category-action-edit-btn"
+                        >
+                          <LuPencil className="action-icon" />
+                          Edit
+                        </button>
+                      </td>
+                      <td className="category-col-status">
+                        <button
+                          onClick={() => toggleStatus(cat._id)}
+                          className={`category-status-btn ${
+                            cat.isActive
+                              ? 'isActive-unblock'
+                              : 'isActive-block'
+                          }`}
+                        >
+                          {cat.isActive ? 'Unblocked' : 'Blocked'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
 
-              <span className="category-page-info">Page 1</span>
+            {/* Pagination Controls */}
+            {!loading && categories.length > 0 && (
+              <div className="category-pagination">
+                <button
+                  className="category-page-btn"
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </button>
 
-              <button className="category-page-btn">Next</button>
-            </div>
+                <span className="category-page-info">
+                  Page {currentPage} of {totalPages}
+                </span>
+
+                <button
+                  className="category-page-btn"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
+                  disabled={currentPage >= totalPages}
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
+      {/* Drawer: Add Category */}
       <div
-        className={`category-drawer-overlay ${
-          isDrawerOpen ? 'open' : ''
-        }`}
+        className={`category-drawer-overlay ${isDrawerOpen ? 'open' : ''}`}
         onClick={closeAddDrawer}
       />
-
       <div className={`category-drawer ${isDrawerOpen ? 'open' : ''}`}>
         <div className="category-drawer-header">
           <h3>Add Category</h3>
-          <button className="close-btn" onClick={closeAddDrawer}>
+          <button
+            className="close-btn"
+            onClick={closeAddDrawer}
+            disabled={isSubmitting}
+          >
             ×
           </button>
         </div>
@@ -363,27 +423,50 @@ function Category() {
           </div>
 
           <div className="drawer-actions">
-            <button className="cancel-btn" onClick={closeAddDrawer}>
+            <button
+              className="cancel-btn"
+              onClick={closeAddDrawer}
+              disabled={isSubmitting}
+            >
               Cancel
             </button>
-            <button className="submit-btn" onClick={submitdetails}>
-              Add Category
+            <button
+              className="submit-btn d-flex align-items-center justify-content-center gap-2"
+              onClick={submitdetails}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <div
+                    className="spinner-border spinner-border-sm text-light"
+                    role="status"
+                    style={{ width: '1rem', height: '1rem', borderWidth: '2px' }}
+                  >
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                  <span>Adding...</span>
+                </>
+              ) : (
+                'Add Category'
+              )}
             </button>
           </div>
         </div>
       </div>
 
+      {/* Drawer: Edit Category */}
       <div
-        className={`category-drawer-overlay ${
-          isEditDrawerOpen ? 'open' : ''
-        }`}
+        className={`category-drawer-overlay ${isEditDrawerOpen ? 'open' : ''}`}
         onClick={closeEditDrawer}
       />
-
       <div className={`category-drawer ${isEditDrawerOpen ? 'open' : ''}`}>
         <div className="category-drawer-header">
           <h3>Edit Category</h3>
-          <button className="close-btn" onClick={closeEditDrawer}>
+          <button
+            className="close-btn"
+            onClick={closeEditDrawer}
+            disabled={isSubmitting}
+          >
             ×
           </button>
         </div>
@@ -412,11 +495,32 @@ function Category() {
           </div>
 
           <div className="drawer-actions">
-            <button className="cancel-btn" onClick={closeEditDrawer}>
+            <button
+              className="cancel-btn"
+              onClick={closeEditDrawer}
+              disabled={isSubmitting}
+            >
               Cancel
             </button>
-            <button className="submit-btn" onClick={submiteditdetails}>
-              Update Category
+            <button
+              className="submit-btn d-flex align-items-center justify-content-center gap-2"
+              onClick={submiteditdetails}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <div
+                    className="spinner-border spinner-border-sm text-light"
+                    role="status"
+                    style={{ width: '1rem', height: '1rem', borderWidth: '2px' }}
+                  >
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                  <span>Updating...</span>
+                </>
+              ) : (
+                'Update Category'
+              )}
             </button>
           </div>
         </div>

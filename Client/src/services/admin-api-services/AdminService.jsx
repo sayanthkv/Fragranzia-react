@@ -24,8 +24,8 @@ const AdminService = () => {
     return response?.data;
   };
 
-  const getCategory = async () => {
-    const response = await axiosPrivate.get("/Category");
+const getCategory = async (page = 1, limit = 10) => {
+    const response = await axiosPrivate.get(`/Category?page=${page}&limit=${limit}`);
     return response.data;
   };
 
@@ -72,6 +72,7 @@ const AdminService = () => {
     return response.data;
   };
 
+  
   return {
     addToProduct,
     AddCategory,

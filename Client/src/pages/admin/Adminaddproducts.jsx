@@ -1,19 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import axios from 'axios';
+import { Link, useNavigate } from 'react-router-dom';
+import toast, { Toaster } from 'react-hot-toast';
 import AdminService from '../../services/admin-api-services/AdminService';
 
 import {
   LuLayoutDashboard,
   LuShoppingBag,
   LuList,
-  LuTag,
   LuUsers,
   LuShoppingCart,
-  LuLogOut,
-  LuHouse
+  LuLogOut
 } from 'react-icons/lu';
-import { useNavigate } from 'react-router-dom';
 
 import './Adminaddproducts.css';
 
@@ -29,10 +26,11 @@ const Adminaddproducts = () => {
     status: 'Unblock'
   });
 
+  const [categoriesData, setCategoriesData] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const { getCategory, addToProduct } = AdminService();
   const navigate = useNavigate();
-
-  const [categoriesData, setCategoriesData] = useState([]);
 
   const handlechange = (e) => {
     const { name, value } = e.target;
@@ -58,12 +56,13 @@ const Adminaddproducts = () => {
     const handleCategories = async () => {
       try {
         const res = await getCategory();
-        setCategoriesData(res);
+        setCategoriesData(Array.isArray(res) ? res : res?.categories || []);
       } catch (error) {
-        console.log(
+        console.error(
           'Error fetching categories:',
           error.response?.data || error.message
         );
+        toast.error('Failed to load categories');
       }
     };
 
@@ -73,45 +72,8 @@ const Adminaddproducts = () => {
   const handleLogout = () => {
     localStorage.removeItem("Token");
     localStorage.removeItem("role");
+    toast.success('Logged out successfully');
     navigate('/LogIn');
-  };
-
-  const Onhandlesubmit = async (event) => {
-    event.preventDefault();
-
-    try {
-      const formData = new FormData();
-
-      formData.append('name', productData.name);
-      formData.append('price', productData.price);
-      formData.append('saleprice', productData.saleprice);
-      formData.append('quantity', productData.quantity);
-      formData.append('category', productData.category);
-      formData.append('description', productData.description);
-      formData.append('status', productData.status);
-
-      if (productData.image) {
-        formData.append('image', productData.image);
-      }
-
-      const res = await addToProduct(formData);
-
-      console.log('Product added:', res.data);
-
-      alert('Product added successfully!');
-
-      handleCancel();
-
-    } catch (error) {
-      console.log(
-        'Error adding product:',
-        error.response?.data || error.message
-      );
-
-      alert(
-        error.response?.data?.message || 'Failed to add product'
-      );
-    }
   };
 
   const handleCancel = () => {
@@ -125,25 +87,112 @@ const Adminaddproducts = () => {
       image: null,
       status: 'Unblock'
     });
+
+    const fileInput = document.querySelector('input[name="image"]');
+    if (fileInput) fileInput.value = '';
+  };
+
+  const Onhandlesubmit = async (event) => {
+    event.preventDefault();
+
+    if (!productData.name.trim()) {
+      toast.error('Product name is required');
+      return;
+    }
+
+    if (!productData.category) {
+      toast.error('Please select a category');
+      return;
+    }
+
+    if (!productData.image) {
+      toast.error('Please select a product image');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const formData = new FormData();
+
+      formData.append('name', productData.name);
+      formData.append('price', productData.price);
+      formData.append('saleprice', productData.saleprice);
+      formData.append('quantity', productData.quantity);
+      formData.append('category', productData.category);
+      formData.append('description', productData.description);
+      formData.append('status', productData.status);
+      formData.append('image', productData.image);
+
+      await addToProduct(formData);
+
+      toast.success('Product added successfully!');
+      handleCancel();
+      navigate('/Adminproducts');
+    } catch (error) {
+      console.error(
+        'Error adding product:',
+        error.response?.data || error.message
+      );
+
+      toast.error(
+        error.response?.data?.message || 'Failed to add product'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="addproduct-main-container">
+      {/* Brand-Themed Toaster Notification */}
+      <Toaster
+        position="top-center"
+        containerStyle={{
+          top: 85,
+          zIndex: 99999
+        }}
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#043948',
+            color: '#ffffff',
+            fontSize: '14px',
+            fontWeight: '500',
+            borderRadius: '8px',
+            padding: '12px 20px',
+            boxShadow: '0 4px 14px rgba(0,0,0,0.2)'
+          },
+          success: {
+            iconTheme: {
+              primary: '#2ec4b6',
+              secondary: '#ffffff'
+            }
+          },
+          error: {
+            style: {
+              background: '#721c24',
+              color: '#ffffff'
+            },
+            iconTheme: {
+              primary: '#f5c6cb',
+              secondary: '#721c24'
+            }
+          }
+        }}
+      />
 
       <nav className="admin-navbar">
-
         <div className="admin-navbar-brand">
           <h2>Dashtar</h2>
         </div>
 
         <div className="admin-navbar-buttons">
-
           <button className="admin-nav-item">
             <LuLayoutDashboard className="admin-nav-icon" />
             <span>Dashboard</span>
           </button>
 
-          <button className="admin-nav-item">
+          <button className="admin-nav-item active">
             <LuShoppingBag className="admin-nav-icon" />
             <Link to="/Adminproducts">
               <span>Products</span>
@@ -158,11 +207,6 @@ const Adminaddproducts = () => {
           </button>
 
           <button className="admin-nav-item">
-            <LuTag className="admin-nav-icon" />
-            <span>Offers</span>
-          </button>
-
-          <button className="admin-nav-item">
             <LuUsers className="admin-nav-icon" />
             <Link to="/AdminCustomerdetails">
               <span>Customers</span>
@@ -171,44 +215,28 @@ const Adminaddproducts = () => {
 
           <button className="admin-nav-item">
             <LuShoppingCart className="admin-nav-icon" />
-            <Link to='/Adminorder'><span>Orders</span></Link>
+            <Link to="/Adminorder">
+              <span>Orders</span>
+            </Link>
           </button>
-
         </div>
 
         <div className="admin-navbar-logout">
-          {/* 🏠 GO TO HOME PAGE BUTTON */}
-          <button className="admin-logout-btn mb-2" style={{ backgroundColor: '#4b5563' }}>
-            <Link to="/" style={{ color: 'inherit', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <LuHouse className="admin-nav-icon" />
-              <span>Go to home page</span>
-            </Link>
-          </button>
-
-          {/* 🚪 LOG OUT BUTTON */}
           <button className="admin-logout-btn" onClick={handleLogout}>
             <LuLogOut className="admin-nav-icon" />
             <span>Log Out</span>
           </button>
         </div>
-
       </nav>
 
       <div className="addproduct-main">
-
         <h3>Add Product</h3>
-
-        <span>
-          Add your product and necessary information here
-        </span>
+        <span>Add your product and necessary information here</span>
 
         <form onSubmit={Onhandlesubmit}>
-
           <div className="input-row">
-
             <div className="col">
               <label>Product name</label>
-
               <input
                 type="text"
                 name="name"
@@ -220,7 +248,6 @@ const Adminaddproducts = () => {
 
             <div className="col">
               <label>Product price</label>
-
               <input
                 type="number"
                 name="price"
@@ -230,14 +257,11 @@ const Adminaddproducts = () => {
                 required
               />
             </div>
-
           </div>
 
           <div className="input-row">
-
             <div className="col">
               <label>Saleprice</label>
-
               <input
                 type="number"
                 name="saleprice"
@@ -250,7 +274,6 @@ const Adminaddproducts = () => {
 
             <div className="col">
               <label>Product quantity</label>
-
               <input
                 type="number"
                 name="quantity"
@@ -263,39 +286,27 @@ const Adminaddproducts = () => {
 
             <div className="col">
               <label>Category</label>
-
               <select
                 name="category"
                 value={productData.category}
                 onChange={handlechange}
                 required
               >
-                <option value="">
-                  Select Category
-                </option>
-
-                {/* FILTER OUT BLOCKED CATEGORIES */}
+                <option value="">Select Category</option>
                 {categoriesData
                   .filter((item) => item.isActive === true)
                   .map((item) => (
-                    <option
-                      key={item._id}
-                      value={item._id}
-                    >
+                    <option key={item._id} value={item._id}>
                       {item.name}
                     </option>
                   ))}
-
               </select>
             </div>
-
           </div>
 
           <div className="input-row">
-
             <div className="col">
               <label>Product Description</label>
-
               <textarea
                 className="textarea"
                 name="description"
@@ -303,17 +314,12 @@ const Adminaddproducts = () => {
                 onChange={handlechange}
                 required
               />
-
             </div>
-
           </div>
 
           <div className="input-row">
-
             <div className="col">
-
               <label>Product image</label>
-
               <input
                 type="file"
                 name="image"
@@ -321,34 +327,42 @@ const Adminaddproducts = () => {
                 onChange={handlefilechange}
                 required
               />
-
             </div>
-
           </div>
 
           <div className="Adminaddproduct-actions">
-
             <button
               type="button"
               className="cancel-btn"
               onClick={handleCancel}
+              disabled={isSubmitting}
             >
               Cancel
             </button>
 
             <button
               type="submit"
-              className="submit-btn"
+              className="submit-btn d-flex align-items-center justify-content-center gap-2"
+              disabled={isSubmitting}
             >
-              Add Product
+              {isSubmitting ? (
+                <>
+                  <div
+                    className="spinner-border spinner-border-sm text-light"
+                    role="status"
+                    style={{ width: "1rem", height: "1rem", borderWidth: "2px" }}
+                  >
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                  <span>Adding Product...</span>
+                </>
+              ) : (
+                'Add Product'
+              )}
             </button>
-
           </div>
-
         </form>
-
       </div>
-
     </div>
   );
 };
