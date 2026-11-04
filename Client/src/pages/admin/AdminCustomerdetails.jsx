@@ -3,18 +3,16 @@ import {
   LuLayoutDashboard,
   LuShoppingBag,
   LuList,
-  LuTag,
   LuUsers,
   LuShoppingCart,
   LuLogOut,
   LuEye,
-  LuX,
-  LuHouse
+  LuX
 } from 'react-icons/lu';
 import './AdminCustomerdetails.css';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import AdminService from '../../services/admin-api-services/AdminService';
-import { useNavigate } from 'react-router-dom';
+import toast, { Toaster } from 'react-hot-toast';
 
 const AdminCustomerdetails = () => {
   const [usersDetails, setUsersDetails] = useState([]);
@@ -38,6 +36,7 @@ const AdminCustomerdetails = () => {
       setUsersDetails(users);
     } catch (error) {
       console.error("Failed to fetch customer details:", error);
+      toast.error("Failed to load customer details");
       setUsersDetails([]);
     } finally {
       setLoading(false);
@@ -46,7 +45,7 @@ const AdminCustomerdetails = () => {
 
   const toggleStatus = async (user) => {
     const userId = user._id || user.id;
-    
+
     // Toggle state locally
     const updatedStatus = !user.status;
 
@@ -67,8 +66,25 @@ const AdminCustomerdetails = () => {
       if (typeof toggleUserBlockStatus === 'function') {
         await toggleUserBlockStatus(userId, { status: updatedStatus });
       }
+      toast.success(
+        `User ${updatedStatus ? "unblocked" : "blocked"} successfully!`
+      );
     } catch (error) {
       console.error("Failed to update user block status:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to update user status"
+      );
+      // Revert optimistic update on failure
+      setUsersDetails((prev) =>
+        prev.map((item) =>
+          (item._id === userId || item.id === userId)
+            ? { ...item, status: user.status }
+            : item
+        )
+      );
+      if (selectedCustomer && (selectedCustomer._id === userId || selectedCustomer.id === userId)) {
+        setSelectedCustomer((prev) => ({ ...prev, status: user.status }));
+      }
     }
   };
 
@@ -83,6 +99,7 @@ const AdminCustomerdetails = () => {
   const handleLogout = () => {
     localStorage.removeItem("Token");
     localStorage.removeItem("role");
+    toast.success("Logged out successfully");
     navigate('/LogIn');
   };
 
@@ -92,6 +109,43 @@ const AdminCustomerdetails = () => {
 
   return (
     <>
+      {/* Brand-Themed Toaster */}
+      <Toaster
+        position="top-center"
+        containerStyle={{
+          top: 85,
+          zIndex: 99999,
+        }}
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: "#043948",
+            color: "#ffffff",
+            fontSize: "14px",
+            fontWeight: "500",
+            borderRadius: "8px",
+            padding: "12px 20px",
+            boxShadow: "0 4px 14px rgba(0,0,0,0.2)",
+          },
+          success: {
+            iconTheme: {
+              primary: "#2ec4b6",
+              secondary: "#ffffff",
+            },
+          },
+          error: {
+            style: {
+              background: "#721c24",
+              color: "#ffffff",
+            },
+            iconTheme: {
+              primary: "#f5c6cb",
+              secondary: "#721c24",
+            },
+          },
+        }}
+      />
+
       <div className="product-main-container">
         {/* Navigation Sidebar */}
         <nav className="admin-navbar">
@@ -119,7 +173,6 @@ const AdminCustomerdetails = () => {
               </Link>
             </button>
 
-            
             <button className="admin-nav-item active">
               <LuUsers className="admin-nav-icon" />
               <Link to="/AdminCustomerdetails">
@@ -136,9 +189,6 @@ const AdminCustomerdetails = () => {
           </div>
 
           <div className="admin-navbar-logout">
-            
-
-            {/* 🚪 LOG OUT BUTTON */}
             <button className="admin-logout-btn" onClick={handleLogout}>
               <LuLogOut className="admin-nav-icon" />
               <span>Log Out</span>
@@ -153,7 +203,30 @@ const AdminCustomerdetails = () => {
 
           <div className="product-table-card">
             {loading ? (
-              <div className="p-4 text-center">Loading customers...</div>
+              <div className="d-flex flex-column justify-content-center align-items-center py-5 my-5 gap-3">
+                <div
+                  className="spinner-border"
+                  style={{
+                    width: "3rem",
+                    height: "3rem",
+                    color: "#043948",
+                    borderWidth: "3px",
+                  }}
+                  role="status"
+                >
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+                <span
+                  style={{
+                    color: "#043948",
+                    fontSize: "0.95rem",
+                    fontWeight: "600",
+                    letterSpacing: "0.3px",
+                  }}
+                >
+                  Loading customers...
+                </span>
+              </div>
             ) : (
               <table className="product-table">
                 <thead className="product-table-head">
@@ -170,13 +243,18 @@ const AdminCustomerdetails = () => {
                   {usersDetails.length > 0 ? (
                     usersDetails.map((data) => {
                       const userId = data._id || data.id;
-                      const isBlocked = data.status === false || data.status === "Blocked";
+                      const isBlocked =
+                        data.status === false || data.status === "Blocked" || data.status === "Block";
 
                       return (
                         <tr key={userId}>
                           <td className="product-col-name">{data.name || "N/A"}</td>
-                          <td className="product-col-category">{data.phone || "N/A"}</td>
-                          <td className="product-col-category">{data.email || "N/A"}</td>
+                          <td className="product-col-category">
+                            {data.phone || "N/A"}
+                          </td>
+                          <td className="product-col-category">
+                            {data.email || "N/A"}
+                          </td>
 
                           <td className="product-col-category">
                             <button
@@ -192,10 +270,10 @@ const AdminCustomerdetails = () => {
                             <button
                               onClick={() => toggleStatus(data)}
                               className={`product-status-btn ${
-                                isBlocked ? "status-unblock" : "status-block"
+                                isBlocked ? "status-block" : "status-unblock"
                               }`}
                             >
-                              {isBlocked ? "Blocked" : "Active"}
+                              {isBlocked ? "Blocked" : "Unblocked"}
                             </button>
                           </td>
                         </tr>
@@ -214,7 +292,10 @@ const AdminCustomerdetails = () => {
 
             {/* Modal Overlay for Viewing Customer Details */}
             {selectedCustomer && (() => {
-              const isModalBlocked = selectedCustomer.status === false || selectedCustomer.status === "Blocked";
+              const isModalBlocked =
+                selectedCustomer.status === false ||
+                selectedCustomer.status === "Blocked" ||
+                selectedCustomer.status === "Block";
 
               return (
                 <div className="admincustomer-overlay" onClick={handleCloseProduct}>
@@ -250,11 +331,11 @@ const AdminCustomerdetails = () => {
                         <label>Status</label>
                         <button
                           className={`customer-status-badge ${
-                            isModalBlocked ? "status-unblock" : "status-block"
+                            isModalBlocked ? "status-block" : "status-unblock"
                           }`}
                           onClick={() => toggleStatus(selectedCustomer)}
                         >
-                          {isModalBlocked ? "Blocked" : "Active"}
+                          {isModalBlocked ? "Blocked" : "Unblocked"}
                         </button>
                       </div>
 
@@ -271,16 +352,22 @@ const AdminCustomerdetails = () => {
                       readOnly
                       value={
                         selectedCustomer.createdAt
-                          ? new Date(selectedCustomer.createdAt).toLocaleDateString("en-IN", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                            })
+                          ? new Date(selectedCustomer.createdAt).toLocaleDateString(
+                              "en-IN",
+                              {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                              }
+                            )
                           : "N/A"
                       }
                     />
 
-                    <button className="close-button" onClick={handleCloseProduct}>
+                    <button
+                      className="close-button"
+                      onClick={handleCloseProduct}
+                    >
                       Close
                     </button>
                   </div>

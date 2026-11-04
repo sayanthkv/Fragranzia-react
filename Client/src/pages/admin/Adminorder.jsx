@@ -3,7 +3,6 @@ import {
   LuLayoutDashboard,
   LuShoppingBag,
   LuList,
-  LuTag,
   LuUsers,
   LuShoppingCart,
   LuLogOut,
@@ -19,13 +18,12 @@ import {
   LuClock,
   LuRotateCcw,
   LuCircleCheck,
-  LuCircleX,
-  LuHouse
+  LuCircleX
 } from 'react-icons/lu';
 import './Adminorder.css';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import AdminService from '../../services/admin-api-services/AdminService';
-import { useNavigate } from 'react-router-dom';
+import toast, { Toaster } from 'react-hot-toast';
 
 const Adminorder = () => {
   const [orders, setOrders] = useState([]);
@@ -48,6 +46,7 @@ const Adminorder = () => {
       }
     } catch (error) {
       console.error("Failed to fetch user orders:", error);
+      toast.error(error.response?.data?.message || "Failed to load orders");
       setOrders([]);
     } finally {
       setLoading(false);
@@ -67,6 +66,9 @@ const Adminorder = () => {
   };
 
   const handleStatusChange = async (id, status) => {
+    // Keep reference of previous status for clean rollback if API fails
+    const previousOrders = [...orders];
+
     setOrders((prevOrders) =>
       prevOrders.map((item) =>
         item._id === id
@@ -83,10 +85,18 @@ const Adminorder = () => {
       if (typeof updateStatus === 'function') {
         await updateStatus(id, { status });
       }
+      toast.success(`Delivery status updated to "${status}"`);
     } catch (error) {
       console.error("Failed to update status on server:", error);
-      alert("Failed to update status on server. Reloading orders.");
-      fetchOrderedProducts();
+      toast.error(error.response?.data?.message || "Failed to update delivery status");
+      // Revert state
+      setOrders(previousOrders);
+      if (selectedOrder && selectedOrder._id === id) {
+        const originalItem = previousOrders.find((o) => o._id === id);
+        if (originalItem) {
+          setSelectedOrder((prev) => ({ ...prev, deliveryStatus: originalItem.deliveryStatus }));
+        }
+      }
     }
   };
 
@@ -94,7 +104,7 @@ const Adminorder = () => {
     try {
       if (typeof processReturnStatus === 'function') {
         const res = await processReturnStatus(orderId, status);
-        alert(res.message || `Return request ${status.toLowerCase()} successfully.`);
+        toast.success(res?.message || `Return request ${status.toLowerCase()} successfully.`);
         fetchOrderedProducts();
         if (selectedOrder && selectedOrder._id === orderId) {
           setSelectedOrder(null);
@@ -102,14 +112,14 @@ const Adminorder = () => {
       }
     } catch (error) {
       console.error("Failed to process return request:", error);
-      alert(error.response?.data?.message || "Failed to process return request.");
+      toast.error(error.response?.data?.message || "Failed to process return request.");
     }
   };
 
   const copyOrderId = (id) => {
     if (id) {
       navigator.clipboard.writeText(id);
-      alert("Order ID copied to clipboard!");
+      toast.success("Order ID copied to clipboard!");
     }
   };
 
@@ -139,12 +149,51 @@ const Adminorder = () => {
   const handleLogout = () => {
     localStorage.removeItem("Token");
     localStorage.removeItem("role");
+    toast.success("Logged out successfully");
     navigate('/LogIn');
   };
 
   return (
     <>
+      {/* Brand-Themed Toaster */}
+      <Toaster
+        position="top-center"
+        containerStyle={{
+          top: 85,
+          zIndex: 99999,
+        }}
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: "#043948",
+            color: "#ffffff",
+            fontSize: "14px",
+            fontWeight: "500",
+            borderRadius: "8px",
+            padding: "12px 20px",
+            boxShadow: "0 4px 14px rgba(0,0,0,0.2)",
+          },
+          success: {
+            iconTheme: {
+              primary: "#2ec4b6",
+              secondary: "#ffffff",
+            },
+          },
+          error: {
+            style: {
+              background: "#721c24",
+              color: "#ffffff",
+            },
+            iconTheme: {
+              primary: "#f5c6cb",
+              secondary: "#721c24",
+            },
+          },
+        }}
+      />
+
       <div className="product-main-container">
+        {/* Navigation Sidebar */}
         <nav className="admin-navbar">
           <div className="admin-navbar-brand">
             <h2>Dashtar</h2>
@@ -170,8 +219,6 @@ const Adminorder = () => {
               </Link>
             </button>
 
-           
-
             <button className="admin-nav-item">
               <LuUsers className="admin-nav-icon" />
               <Link to="/AdminCustomerdetails">
@@ -188,9 +235,6 @@ const Adminorder = () => {
           </div>
 
           <div className="admin-navbar-logout">
-           
-
-            {/* 🚪 LOG OUT BUTTON */}
             <button className="admin-logout-btn" onClick={handleLogout}>
               <LuLogOut className="admin-nav-icon" />
               <span>Log Out</span>
@@ -198,6 +242,7 @@ const Adminorder = () => {
           </div>
         </nav>
 
+        {/* Main Content Area */}
         <div className="AdminCustomerdetails-content">
           <div className="order-page-header">
             <div className="order-heading">
@@ -218,7 +263,30 @@ const Adminorder = () => {
 
           <div className="product-table-card">
             {loading ? (
-              <div className="p-4 text-center">Loading orders...</div>
+              <div className="d-flex flex-column justify-content-center align-items-center py-5 my-5 gap-3">
+                <div
+                  className="spinner-border"
+                  style={{
+                    width: "3rem",
+                    height: "3rem",
+                    color: "#043948",
+                    borderWidth: "3px",
+                  }}
+                  role="status"
+                >
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+                <span
+                  style={{
+                    color: "#043948",
+                    fontSize: "0.95rem",
+                    fontWeight: "600",
+                    letterSpacing: "0.3px",
+                  }}
+                >
+                  Loading orders...
+                </span>
+              </div>
             ) : (
               <table className="product-table">
                 <thead className="product-table-head">
@@ -561,7 +629,7 @@ const Adminorder = () => {
                       <div className="ordered-product-information">
                         <h3 className="fs-6 mb-1">{item.product?.name || 'Product Name'}</h3>
                         <div className="ordered-product-meta text-muted small">
-                          <span>Category: <strong>{item.product?.categories?.name || 'General'}</strong></span>
+                          <span>Category: <strong>{item.product?.categories?.name || item.product?.category?.name || 'General'}</strong></span>
                         </div>
                       </div>
                     </div>

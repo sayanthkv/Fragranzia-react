@@ -237,6 +237,8 @@ a {
 
 /* Status */
 
+/* Status */
+
 .product-status-btn {
   padding: 6px 14px;
   border-radius: 20px;
@@ -245,20 +247,33 @@ a {
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
+/* Blocked: Soft Red Background + Dark Red Text */
 .status-block {
-  background-color: #dcfce7;
-  color: #15803d;
-}
-
-.status-unblock {
   background-color: #fee2e2;
   color: #dc2626;
+  border: 1px solid #fecaca;
 }
 
-.product-status-btn:hover {
-  opacity: 0.85;
+.status-block:hover {
+  background-color: #fecaca;
+  color: #b91c1c;
+}
+
+/* Unblocked: Soft Green Background + Dark Green Text */
+.status-unblock {
+  background-color: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.status-unblock:hover {
+  background-color: #bbf7d0;
+  color: #166534;
 }
 
 .product-table-body td:nth-child(4) {
@@ -484,4 +499,18 @@ a {
   .admincustomer-content {
     width: 380px;
   }
+}
+
+.customer-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-width: 85px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
