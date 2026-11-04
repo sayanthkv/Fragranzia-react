@@ -1127,3 +1127,19 @@ section {
 .homepage-sale-price {
   color: #198754;
 }
+
+.homepage-product-image-frame a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.homepage-product-image-frame img {
+  max-height: 80%;
+  max-width: 80%;
+  object-fit: contain;
+  margin: auto;
+  display: block;
+}

@@ -1,10 +1,8 @@
-import React from 'react';
-import useAxiosPrivate from '../../hooks/useAxiosprivate';
+import useAxiosPrivate from "../../hooks/useAxiosprivate";
 
 const UserService = () => {
   const axiosPrivate = useAxiosPrivate();
 
-  // Hits GET /Products -> Calls getUserProducts on backend (Unblocked items only)
   const getProduct = async (params = {}) => {
     const response = await axiosPrivate.get("/Products", { params });
     return response.data;
@@ -16,9 +14,7 @@ const UserService = () => {
   };
 
   const Addproducttocart = async (id, quantity = 1) => {
-    const response = await axiosPrivate.post(`/Cart/add/${id}`, {
-      quantity,
-    });
+    const response = await axiosPrivate.post(`/Cart/add/${id}`, { quantity });
     return response.data;
   };
 
@@ -68,10 +64,7 @@ const UserService = () => {
   };
 
   const updateaddress = async (id, data) => {
-    const response = await axiosPrivate.put(
-      `/address/updateaddress/${id}`,
-      data
-    );
+    const response = await axiosPrivate.put(`/address/updateaddress/${id}`, data);
     return response.data;
   };
 
@@ -100,8 +93,21 @@ const UserService = () => {
     return response.data;
   };
 
-  const placeorder = async (orderData) => {
-    const response = await axiosPrivate.post("/api/orders/placeorder", orderData);
+  // --- Step 1 Online: Create Razorpay Order token ---
+  const createRazorpayOrder = async (amount) => {
+    const response = await axiosPrivate.post("/api/orders/create-razorpay-order", { amount });
+    return response.data;
+  };
+
+  // --- Step 2 Online: Verify signature and place order ---
+  const verifyAndPlaceOrder = async (orderPayload) => {
+    const response = await axiosPrivate.post("/api/orders/verify-order", orderPayload);
+    return response.data;
+  };
+
+  // --- Direct COD Placement ---
+  const placeCodOrder = async (orderPayload) => {
+    const response = await axiosPrivate.post("/api/orders/place-cod", orderPayload);
     return response.data;
   };
 
@@ -146,11 +152,13 @@ const UserService = () => {
     setprimary,
     fetchprimaryaddress,
     updateCartQuantity,
-    placeorder,
+    createRazorpayOrder,
+    verifyAndPlaceOrder,
+    placeCodOrder,
     getOrders,
     getOrderById,
     cancelOrder,
-    returnOrder
+    returnOrder,
   };
 };
 

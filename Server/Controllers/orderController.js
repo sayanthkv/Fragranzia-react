@@ -1,11 +1,52 @@
+const crypto = require("crypto");
 const { Order } = require("../models/Order");
 const { User } = require("../models/User");
 const { Products } = require("../models/productModel");
+const razorpay = require("../utils/razorpay");
 
-const razorpay = require("../utils/razorpay")
+// Step 1: Create Razorpay Order instance ONLY (No DB document created)
+const createRazorpayOrder = async (req, res) => {
+  try {
+    const { amount, currency = "INR" } = req.body;
 
-// 1. User: Place a new order (Stock Decremented)
-const placeOrder = async (req, res) => {
+    if (!amount || amount <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order amount.",
+      });
+    }
+
+    const options = {
+      amount: Math.round(Number(amount) * 100), // in paise
+      currency,
+      receipt: `receipt_${Date.now()}`,
+    };
+
+    const razorpayOrder = await razorpay.orders.create(options);
+
+    if (!razorpayOrder) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to create Razorpay order.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      razorpayOrder,
+    });
+  } catch (error) {
+    console.error("Error in createRazorpayOrder:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while initializing payment gateway.",
+      error: error.message,
+    });
+  }
+};
+
+// Step 2: Verify Razorpay Signature & Save Order into MongoDB
+const verifyAndPlaceOrder = async (req, res) => {
   try {
     const userId = req.userId || req.user?._id || req.user?.id;
 
@@ -17,23 +58,38 @@ const placeOrder = async (req, res) => {
     }
 
     const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
       orderItems,
       shippingAddress,
-      paymentMethod,
+      paymentMethod = "online",
       totalPrice,
-      balanceTotal,
-      paymentStatus,
-      currency = "INR"
     } = req.body;
 
     if (!orderItems || !Array.isArray(orderItems) || orderItems.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "No items provided in order.",
+        message: "No order items provided.",
       });
     }
 
-    // Step 1: Stock Check — Ensure all requested items are in stock
+    // Verify HMAC-SHA256 Signature
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    const body = `${razorpay_order_id}|${razorpay_payment_id}`;
+    const expectedSignature = crypto
+      .createHmac("sha256", keySecret)
+      .update(body.toString())
+      .digest("hex");
+
+    if (expectedSignature !== razorpay_signature) {
+      return res.status(400).json({
+        success: false,
+        message: "Payment verification failed. Invalid signature.",
+      });
+    }
+
+    // Stock Check
     for (const item of orderItems) {
       const productId = item.product?._id || item.product;
       const product = await Products.findById(productId);
@@ -48,58 +104,34 @@ const placeOrder = async (req, res) => {
       if (product.quantity < item.quantity) {
         return res.status(400).json({
           success: false,
-          message: `Insufficient stock for "${product.name}". Available: ${product.quantity}, Requested: ${item.quantity}`,
+          message: `Insufficient stock for "${product.name}".`,
         });
       }
     }
 
-    const isCOD = paymentMethod.toLowerCase() === "cod";
-    const computedPaymentStatus = paymentStatus || (isCOD ? "Pending" : "Paid");
-    const computedBalance = balanceTotal ?? (isCOD ? totalPrice : 0);
-
-    // Step 2: Instantiate new order
+    // Instantiate and save order
     const newOrder = new Order({
       user: userId,
       orderItems,
       shippingAddress,
       paymentMethod,
       totalPrice,
-      balanceTotal: computedBalance,
-      paymentStatus: computedPaymentStatus,
-      paidAt: isCOD ? null : new Date(),
+      balanceTotal: 0,
+      paymentStatus: "Paid",
+      paidAt: new Date(),
+      deliveryStatus: "Processing",
+      paymentDetails: {
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature,
+      },
       isReturned: false,
       isStockRestored: false,
-      returnReason: null,
-      returnStatus: null,
     });
 
     const savedOrder = await newOrder.save();
 
-    let razorpayOrder = null;
-
-    // Create one Razorpay order if payment is not COD
-    if (paymentMethod !== "COD") {
-      const options = {
-        amount: totalPrice * 100, // in paise
-        currency,
-        receipt: `receipt_${savedOrder._id}`,
-      };
-
-
-      razorpayOrder = await razorpay.orders.create(options);
-
-
-      if (!razorpayOrder) {
-        return res
-          .status(500)
-          .json({ message: "Razorpay order creation failed" });
-      }
-
-      // Save razorpay ID to all orders
-
-    }
-
-    // Step 3: Decrement Inventory — Deduct purchased quantities from product stock
+    // Deduct stock
     await Promise.all(
       orderItems.map((item) => {
         const productId = item.product?._id || item.product;
@@ -111,29 +143,117 @@ const placeOrder = async (req, res) => {
       })
     );
 
-    // Step 4: Clear User's Cart
+    // Clear cart
     await User.findByIdAndUpdate(userId, {
       $set: { cart: [], cart_total: 0 },
     });
 
     return res.status(201).json({
       success: true,
-      message: "Order placed successfully and product stock updated!",
+      message: "Payment verified and order placed successfully!",
       order: savedOrder,
-      razorpayOrder: razorpayOrder || null,
-      paymentMethod
     });
   } catch (error) {
-    console.error("Error in placeOrder:", error);
+    console.error("Error in verifyAndPlaceOrder:", error);
     return res.status(500).json({
       success: false,
-      message: "Server error while placing order.",
+      message: "Server error while saving order.",
       error: error.message,
     });
   }
 };
 
-// 2. User: Get all personal orders
+// Step 3: Cash On Delivery (COD) Direct Placement
+const placeCodOrder = async (req, res) => {
+  try {
+    const userId = req.userId || req.user?._id || req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: User identification missing.",
+      });
+    }
+
+    const { orderItems, shippingAddress, totalPrice } = req.body;
+
+    if (!orderItems || !Array.isArray(orderItems) || orderItems.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No order items provided.",
+      });
+    }
+
+    // Stock Check
+    for (const item of orderItems) {
+      const productId = item.product?._id || item.product;
+      const product = await Products.findById(productId);
+
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+          message: `Product not found for ID: ${productId}`,
+        });
+      }
+
+      if (product.quantity < item.quantity) {
+        return res.status(400).json({
+          success: false,
+          message: `Insufficient stock for "${product.name}".`,
+        });
+      }
+    }
+
+    // Save COD order
+    const newOrder = new Order({
+      user: userId,
+      orderItems,
+      shippingAddress,
+      paymentMethod: "cod",
+      totalPrice,
+      balanceTotal: totalPrice,
+      paymentStatus: "Pending",
+      deliveryStatus: "Pending",
+      paidAt: null,
+      isReturned: false,
+      isStockRestored: false,
+    });
+
+    const savedOrder = await newOrder.save();
+
+    // Deduct stock
+    await Promise.all(
+      orderItems.map((item) => {
+        const productId = item.product?._id || item.product;
+        return Products.findByIdAndUpdate(
+          productId,
+          { $inc: { quantity: -Number(item.quantity) } },
+          { new: true }
+        );
+      })
+    );
+
+    // Clear cart
+    await User.findByIdAndUpdate(userId, {
+      $set: { cart: [], cart_total: 0 },
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Cash on Delivery order placed successfully!",
+      order: savedOrder,
+    });
+  } catch (error) {
+    console.error("Error in placeCodOrder:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while placing COD order.",
+      error: error.message,
+    });
+  }
+};
+
+// 4. User: Get all personal orders
 const getMyOrders = async (req, res) => {
   try {
     const userId = req.userId || req.user?._id || req.user?.id;
@@ -157,7 +277,7 @@ const getMyOrders = async (req, res) => {
   }
 };
 
-// 3. User: Get single order details by ID
+// 5. User: Get single order details by ID
 const getOrderById = async (req, res) => {
   try {
     const userId = req.userId || req.user?._id || req.user?.id;
@@ -190,7 +310,7 @@ const getOrderById = async (req, res) => {
   }
 };
 
-// 4. User: Cancel an order (Stock Restored)
+// 6. User: Cancel an order (Stock Restored)
 const cancelOrder = async (req, res) => {
   try {
     const userId = req.userId || req.user?._id || req.user?.id;
@@ -235,7 +355,6 @@ const cancelOrder = async (req, res) => {
       );
     }
 
-    // Update delivery status
     order.deliveryStatus = "Cancelled";
     await order.save();
 
@@ -254,7 +373,7 @@ const cancelOrder = async (req, res) => {
   }
 };
 
-// 5. Admin: Fetch ALL orders across all users
+// 7. Admin: Fetch ALL orders
 const getAllOrdersAdmin = async (req, res) => {
   try {
     const orders = await Order.find()
@@ -277,7 +396,7 @@ const getAllOrdersAdmin = async (req, res) => {
   }
 };
 
-// 6. Admin: Update order delivery status
+// 8. Admin: Update order delivery status
 const updateOrderStatusAdmin = async (req, res) => {
   try {
     const { status } = req.body;
@@ -317,7 +436,7 @@ const updateOrderStatusAdmin = async (req, res) => {
   }
 };
 
-// 7. User: Request order return
+// 9. User: Request order return
 const requestReturnOrder = async (req, res) => {
   try {
     const userId = req.userId || req.user?._id || req.user?.id;
@@ -375,7 +494,6 @@ const requestReturnOrder = async (req, res) => {
       });
     }
 
-    // Update return fields together
     order.isReturned = true;
     order.returnReason = returnReason;
     order.returnStatus = "Requested";
@@ -398,11 +516,11 @@ const requestReturnOrder = async (req, res) => {
   }
 };
 
-// 8. Admin: Approve or Reject Return Request (Conditional Stock Restoration)
+// 10. Admin: Process return status
 const processReturnStatusAdmin = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body; // Expects "Approved" or "Rejected"
+    const { status } = req.body;
 
     if (!["Approved", "Rejected"].includes(status)) {
       return res.status(400).json({
@@ -424,7 +542,6 @@ const processReturnStatusAdmin = async (req, res) => {
       const nonRestockableReasons = ["Damaged Product", "Defective Product"];
       const isDamagedOrDefective = nonRestockableReasons.includes(order.returnReason);
 
-      // Restock ONLY if reason is NOT Damaged or Defective AND stock has not yet been restored
       if (!isDamagedOrDefective && !order.isStockRestored && Array.isArray(order.orderItems)) {
         for (const item of order.orderItems) {
           const productId = item.product?._id || item.product;
@@ -449,17 +566,9 @@ const processReturnStatusAdmin = async (req, res) => {
 
     await order.save();
 
-    const isDamagedOrDefective = ["Damaged Product", "Defective Product"].includes(order.returnReason);
-
     return res.status(200).json({
       success: true,
-      message: `Return request ${status.toLowerCase()} successfully.${
-        status === "Approved"
-          ? isDamagedOrDefective
-            ? " Stock was NOT restored because the item was damaged/defective."
-            : " Stock HAS been restored to product inventory."
-          : ""
-      }`,
+      message: `Return request ${status.toLowerCase()} successfully.`,
       order,
     });
   } catch (error) {
@@ -473,7 +582,9 @@ const processReturnStatusAdmin = async (req, res) => {
 };
 
 module.exports = {
-  placeOrder,
+  createRazorpayOrder,
+  verifyAndPlaceOrder,
+  placeCodOrder,
   getMyOrders,
   getOrderById,
   cancelOrder,

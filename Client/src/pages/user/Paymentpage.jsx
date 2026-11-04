@@ -25,7 +25,13 @@ const loadRazorpayScript = () => {
 
 const Paymentpage = () => {
   const navigate = useNavigate();
-  const { fetchprimaryaddress, getCart, placeorder } = UserService();
+  const {
+    fetchprimaryaddress,
+    getCart,
+    createRazorpayOrder,
+    verifyAndPlaceOrder,
+    placeCodOrder,
+  } = UserService();
 
   const [details, setDetails] = useState(null);
   const [cartItems, setCartItems] = useState([]);
@@ -125,7 +131,7 @@ const Paymentpage = () => {
     0
   );
 
-  const handlePayment = async (data) => {
+  const handlePayment = async (razorpayOrder, baseOrderPayload) => {
     try {
       const isScriptLoaded = await loadRazorpayScript();
       if (!isScriptLoaded) {
@@ -137,20 +143,46 @@ const Paymentpage = () => {
 
       const options = {
         key: "rzp_test_TtcgxkiZwyZJ7b",
-        amount: data.amount,
+        amount: razorpayOrder.amount,
         currency: "INR",
         name: "Fragranzia",
         description: "Order Purchase",
-        order_id: data.id,
-        handler: function () {
-          setIsPlacingOrder(false);
-          setOrderStatus("success");
-          toast.success("Payment completed successfully!");
+        order_id: razorpayOrder.id,
+        handler: async function (response) {
+          try {
+            // Commit and verify order on backend
+            const verifyPayload = {
+              ...baseOrderPayload,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            };
+
+            const verificationRes = await verifyAndPlaceOrder(verifyPayload);
+
+            if (verificationRes?.success) {
+              setOrderStatus("success");
+              toast.success("Payment completed and order placed successfully!");
+            } else {
+              setFailureReason(verificationRes?.message || "Payment verification failed.");
+              setOrderStatus("failure");
+            }
+          } catch (err) {
+            console.error("Verification Error:", err);
+            setFailureReason(
+              err.response?.data?.message ||
+                "Payment completed, but failed to confirm order. Please contact support."
+            );
+            setOrderStatus("failure");
+          } finally {
+            setIsPlacingOrder(false);
+          }
         },
         modal: {
           ondismiss: function () {
+            // No order exists in the DB if the user exits
             setIsPlacingOrder(false);
-            toast.error("Payment cancelled.");
+            toast.error("Payment cancelled. No order was placed.");
           },
         },
         theme: {
@@ -162,7 +194,7 @@ const Paymentpage = () => {
 
       rzp1.on("payment.failed", function (response) {
         console.error("Payment failed:", response.error);
-        setFailureReason(response.error?.description || "Your order can't be completed.");
+        setFailureReason(response.error?.description || "Payment transaction failed.");
         setOrderStatus("failure");
         setIsPlacingOrder(false);
         toast.error("Payment transaction failed.");
@@ -170,11 +202,11 @@ const Paymentpage = () => {
 
       rzp1.open();
     } catch (error) {
-      console.error("Payment Error:", error);
-      setFailureReason("Something went wrong while initializing payment.");
+      console.error("Payment Gateway Error:", error);
+      setFailureReason("Failed to initialize payment gateway.");
       setOrderStatus("failure");
       setIsPlacingOrder(false);
-      toast.error("Failed to initialize payment.");
+      toast.error("Failed to initialize payment gateway.");
     }
   };
 
@@ -194,53 +226,48 @@ const Paymentpage = () => {
 
       const isCod = selectedPaymentMethod.toLowerCase() === "cod";
 
-      const orderPayload = {
+      const baseOrderPayload = {
         orderItems: cartItems.map((item) => ({
           product: item.productId,
           quantity: item.quantity,
         })),
         shippingAddress: details._id,
-        // Send both formats to ensure backend schema compatibility
-        paymentMethod: isCod ? "cod" : selectedPaymentMethod,
+        paymentMethod: selectedPaymentMethod,
         totalPrice: totalSellingPrice,
-        balanceTotal: isCod ? totalSellingPrice : 0,
-        paymentStatus: "Pending",
       };
 
-      const response = await placeorder(orderPayload);
+      if (isCod) {
+        // Direct COD checkout
+        const response = await placeCodOrder(baseOrderPayload);
 
-      // Verify success status
-      if (response?.success || response?.status === "success" || response?._id) {
-        const returnedMethod = (
-          response?.paymentMethod ||
-          response?.order?.paymentMethod ||
-          selectedPaymentMethod
-        ).toLowerCase();
-
-        if (returnedMethod === "cod" || isCod) {
+        if (response?.success) {
           setOrderStatus("success");
           toast.success("Order placed successfully with Cash on Delivery!");
-        } else if (response?.razorpayOrder || response?.order?.razorpayOrder) {
-          const razorpayData = response?.razorpayOrder || response?.order?.razorpayOrder;
-          await handlePayment(razorpayData);
         } else {
-          // If online was chosen but no Razorpay payload returned, fallback to success
-          setOrderStatus("success");
-          toast.success("Order registered successfully!");
+          setFailureReason(response?.message || "COD Order creation failed.");
+          setOrderStatus("failure");
+          toast.error(response?.message || "COD Order creation failed.");
         }
+        setIsPlacingOrder(false);
       } else {
-        setFailureReason(response?.message || "Order creation failed.");
-        setOrderStatus("failure");
-        toast.error(response?.message || "Order creation failed.");
+        // Online: Request Razorpay Order ID first without saving to DB
+        const razorpayRes = await createRazorpayOrder(totalSellingPrice);
+
+        if (razorpayRes?.success && razorpayRes.razorpayOrder) {
+          await handlePayment(razorpayRes.razorpayOrder, baseOrderPayload);
+        } else {
+          setFailureReason(razorpayRes?.message || "Unable to start payment gateway.");
+          setOrderStatus("failure");
+          setIsPlacingOrder(false);
+        }
       }
     } catch (error) {
-      console.error("Order error:", error);
+      console.error("Order Checkout error:", error);
       setFailureReason(
         error.response?.data?.message || "Something went wrong while placing your order."
       );
       setOrderStatus("failure");
       toast.error("Something went wrong while placing your order.");
-    } finally {
       setIsPlacingOrder(false);
     }
   };
@@ -693,7 +720,7 @@ const Paymentpage = () => {
                   disabled={isPlacingOrder || cartItems.length === 0}
                 >
                   {isPlacingOrder
-                    ? "Placing Order..."
+                    ? "Processing..."
                     : selectedPaymentMethod === "cod"
                     ? "Place Order (COD)"
                     : "Pay Now"}

@@ -2,7 +2,9 @@ const express = require("express");
 const router = express.Router();
 const checkAuth = require("../middleware/authMiddleware");
 const {
-  placeOrder,
+  createRazorpayOrder,
+  verifyAndPlaceOrder,
+  placeCodOrder,
   getMyOrders,
   getOrderById,
   cancelOrder,
@@ -12,19 +14,23 @@ const {
   processReturnStatusAdmin,
 } = require("../Controllers/orderController");
 
-// Protected order routes
+// Protect all order routes
 router.use(checkAuth);
 
-// 1. User Order Routes
-router.post("/placeorder", placeOrder);
+// 1. Payment & Checkout Initiation
+router.post("/create-razorpay-order", createRazorpayOrder);
+router.post("/verify-order", verifyAndPlaceOrder);
+router.post("/place-cod", placeCodOrder);
+
+// 2. User Order Routes
 router.get("/my-orders", getMyOrders);
 
-// 2. Admin Order Routes (MUST be placed before dynamic /:id)
+// 3. Admin Order Routes (Defined before dynamic /:id)
 router.get("/admin/all", getAllOrdersAdmin);
 router.put("/admin/status/:id", updateOrderStatusAdmin);
 router.put("/admin/return-status/:id", processReturnStatusAdmin);
 
-// 3. Dynamic User ID Routes (Placed at the bottom)
+// 4. Dynamic User Routes
 router.get("/:id", getOrderById);
 router.put("/cancel/:id", cancelOrder);
 router.put("/return/:id", requestReturnOrder);
