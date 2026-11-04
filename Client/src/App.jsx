@@ -13,8 +13,6 @@ import { Route, Routes } from "react-router-dom";
 import Category from "./pages/admin/Category.jsx";
 import Adminproducts from "./pages/admin/Adminproducts.jsx";
 import Adminaddproducts from "./pages/admin/Adminaddproducts.jsx";
-import Ordersuccess from "./pages/user/Ordersuccess.jsx";
-import Orderfailure from "./pages/user/Orderfailure.jsx";
 import AdminCustomerdetails from "./pages/admin/AdminCustomerdetails.jsx";
 import SpecificProduct from "./pages/user/SpecificProduct.jsx";
 import Wishlist from "./pages/user/Wishlist.jsx";
@@ -47,8 +45,6 @@ function App() {
           <Route path="/Paymentpage" element={<Paymentpage />} />
           <Route path="/Cart" element={<Cart />} />
           <Route path="/Profile" element={<Profile />} />
-          <Route path="/Ordersuccess" element={<Ordersuccess />} />
-          <Route path="/Orderfailure" element={<Orderfailure />} />
           <Route path="/Wishlist" element={<Wishlist />} />
         </Route>
 
