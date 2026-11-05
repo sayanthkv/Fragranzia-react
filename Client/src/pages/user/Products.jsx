@@ -3,12 +3,16 @@ import "./Products.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import UserService from "../../services/user-api-services/UserService";
 import filter from "../../assets/filter.png";
 
+const INITIAL_VISIBLE_COUNT = 12;
+
 const Products = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const {
     getProduct,
     Addproducttocart,
@@ -29,9 +33,46 @@ const Products = () => {
   // Panel & Filter States
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [specialFilter, setSpecialFilter] = useState("all");
   const [maxPrice, setMaxPrice] = useState(10000);
 
+  // Pagination / Load More State
+  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT);
+
   const filterRef = useRef(null);
+
+  // Sync state with URL query parameters
+  useEffect(() => {
+    const urlCategory = searchParams.get("category");
+    const urlType = searchParams.get("type");
+    const urlSearch = searchParams.get("search");
+    const urlMinPrice = searchParams.get("minPrice");
+
+    if (urlCategory) {
+      setSelectedCategory(urlCategory);
+    } else {
+      setSelectedCategory("All");
+    }
+
+    if (urlType) {
+      setSpecialFilter(urlType);
+      if (urlType === "newArrivals") setSortBy("newest");
+      if (urlType === "bestSellers") setSortBy("popularity");
+    } else {
+      setSpecialFilter("all");
+    }
+
+    if (urlSearch) {
+      setSearchTerm(urlSearch);
+    }
+
+    if (urlMinPrice) {
+      setMaxPrice(20000);
+    }
+
+    // Reset visible count to initial 12 whenever filters or routes change
+    setVisibleCount(INITIAL_VISIBLE_COUNT);
+  }, [searchParams]);
 
   useEffect(() => {
     let isMounted = true;
@@ -141,8 +182,27 @@ const Products = () => {
           typeof product.category === "object"
             ? product.category?.name
             : product.category;
-        return catName === selectedCategory;
+        return (
+          catName &&
+          catName.trim().toLowerCase() === selectedCategory.trim().toLowerCase()
+        );
       });
+    }
+
+    if (specialFilter === "limitedEdition") {
+      result = result.filter(
+        (product) =>
+          (product.quantity || 0) <= 10 ||
+          product.name?.toLowerCase().includes("limited") ||
+          product.description?.toLowerCase().includes("limited")
+      );
+    }
+
+    const minPriceParam = searchParams.get("minPrice");
+    if (minPriceParam) {
+      result = result.filter(
+        (product) => (product.saleprice || product.price || 0) >= Number(minPriceParam)
+      );
     }
 
     result = result.filter(
@@ -167,13 +227,38 @@ const Products = () => {
     }
 
     return result;
-  }, [Productsitems, searchTerm, sortBy, selectedCategory, maxPrice]);
+  }, [Productsitems, searchTerm, sortBy, selectedCategory, specialFilter, maxPrice, searchParams]);
+
+  // Sliced items based on visibleCount
+  const displayedProducts = useMemo(() => {
+    return processedProducts.slice(0, visibleCount);
+  }, [processedProducts, visibleCount]);
+
+  const handleLoadMore = () => {
+    setVisibleCount(processedProducts.length);
+  };
 
   const resetFilters = () => {
     setSelectedCategory("All");
+    setSpecialFilter("all");
     setSortBy("newest");
+    setSearchTerm("");
     setMaxPrice(absoluteMaxPrice);
+    setVisibleCount(INITIAL_VISIBLE_COUNT);
+    setSearchParams({});
     toast.success("Filters reset to default.");
+  };
+
+  const handleCategoryChange = (category) => {
+    setSelectedCategory(category);
+    setVisibleCount(INITIAL_VISIBLE_COUNT);
+    if (category === "All") {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete("category");
+      setSearchParams(nextParams);
+    } else {
+      setSearchParams({ ...Object.fromEntries(searchParams), category });
+    }
   };
 
   const Addtocart = async (id) => {
@@ -181,11 +266,7 @@ const Products = () => {
       const response = await Addproducttocart(id);
       toast.success(response?.message || "Product added to cart successfully!");
     } catch (error) {
-      console.error(
-        "Add to cart error:",
-        error.response?.data || error.message
-      );
-
+      console.error("Add to cart error:", error.response?.data || error.message);
       if (error.response?.status === 401) {
         toast.error("Please login to add products to your cart.");
       } else {
@@ -223,10 +304,7 @@ const Products = () => {
         toast.success("Product added to wishlist.");
       }
     } catch (error) {
-      console.error(
-        "Wishlist error:",
-        error.response?.data || error.message
-      );
+      console.error("Wishlist error:", error.response?.data || error.message);
       if (error.response?.status === 401) {
         toast.error("Please login to manage your wishlist.");
       } else {
@@ -333,7 +411,10 @@ const Products = () => {
                     type="search"
                     placeholder="Search Here"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setVisibleCount(INITIAL_VISIBLE_COUNT);
+                    }}
                     aria-label="Search"
                   />
                 </div>
@@ -376,16 +457,24 @@ const Products = () => {
         </span>
       </section>
 
-      {/* Main Content Area: container-fluid stretches edge-to-edge */}
-      <div className="container-fluid px-4 px-md-5 my-4">
+      {/* Main Content Area */}
+      <div className="container-fluid px-3 px-md-5 my-4">
         {/* Header and Filter Row */}
         <div className="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
           <div>
             <h3 className="productpage-title mb-1 fw-bold" style={{ color: "#043948" }}>
-              All Products
+              {selectedCategory !== "All"
+                ? `${selectedCategory}`
+                : specialFilter === "newArrivals"
+                ? "New Arrivals"
+                : specialFilter === "limitedEdition"
+                ? "Limited Edition"
+                : specialFilter === "bestSellers"
+                ? "Best Sellers"
+                : "All Products"}
             </h3>
             <p className="productpage-breadcrumb mb-0 text-muted small">
-              Home &gt; Products
+              Home &gt; Products {selectedCategory !== "All" && `> ${selectedCategory}`}
             </p>
           </div>
 
@@ -401,14 +490,6 @@ const Products = () => {
                 border: "1.5px solid #cbd5e1",
                 cursor: "pointer",
                 transition: "all 0.2s ease-in-out",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "#f8fafc";
-                e.currentTarget.style.borderColor = "#94a3b8";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = isFilterOpen ? "#f1f5f9" : "#ffffff";
-                e.currentTarget.style.borderColor = "#cbd5e1";
               }}
             >
               <img
@@ -469,13 +550,33 @@ const Products = () => {
                   <select
                     className="form-select form-select-sm"
                     value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    onChange={(e) => handleCategoryChange(e.target.value)}
                   >
                     {categories.map((cat, idx) => (
                       <option key={idx} value={cat}>
                         {cat}
                       </option>
                     ))}
+                  </select>
+                </div>
+
+                {/* Special Tag Filter */}
+                <div className="mb-3">
+                  <label className="form-label fw-bold small mb-1 text-dark">
+                    Collection / Tag
+                  </label>
+                  <select
+                    className="form-select form-select-sm"
+                    value={specialFilter}
+                    onChange={(e) => {
+                      setSpecialFilter(e.target.value);
+                      setVisibleCount(INITIAL_VISIBLE_COUNT);
+                    }}
+                  >
+                    <option value="all">All Items</option>
+                    <option value="newArrivals">New Arrivals</option>
+                    <option value="limitedEdition">Limited Edition</option>
+                    <option value="bestSellers">Best Sellers</option>
                   </select>
                 </div>
 
@@ -496,7 +597,10 @@ const Products = () => {
                     max={absoluteMaxPrice}
                     step="50"
                     value={maxPrice}
-                    onChange={(e) => setMaxPrice(Number(e.target.value))}
+                    onChange={(e) => {
+                      setMaxPrice(Number(e.target.value));
+                      setVisibleCount(INITIAL_VISIBLE_COUNT);
+                    }}
                   />
                   <div className="d-flex justify-content-between small text-muted">
                     <span>Rs 0</span>
@@ -508,7 +612,7 @@ const Products = () => {
           </div>
         </div>
 
-        {/* Product Cards Grid or Loader */}
+        {/* Product Cards Grid */}
         {loading ? (
           <div className="d-flex justify-content-center align-items-center py-5 my-5">
             <div
@@ -527,20 +631,20 @@ const Products = () => {
         ) : (
           <>
             <div className="productpage-row row g-4 justify-content-start mb-4">
-              {processedProducts.length > 0 ? (
-                processedProducts.map((products) => {
+              {displayedProducts.length > 0 ? (
+                displayedProducts.map((products) => {
                   const productId = String(products._id);
                   const isFavorite = wishlistIds.has(productId);
 
                   return (
                     <div
-                      className="productpage-col col-12 col-md-6 col-lg-4 d-flex justify-content-center"
+                      className="productpage-col col-12 col-sm-6 col-md-4 col-xl-3 d-flex justify-content-center"
                       key={products._id}
                     >
                       <div className="productpage-card card bg-transparent w-100">
                         <Link
                           to={`/SpecificProduct/${products._id}`}
-                          className="text-decoration-none"
+                          className="productpage-img-link text-decoration-none"
                         >
                           <img
                             className="productpage-product-img"
@@ -549,16 +653,21 @@ const Products = () => {
                           />
                         </Link>
 
-                        <div className="productpage-card-body card-body px-0">
-                          <div className="d-flex justify-content-between align-items-center gap-2">
-                            <Link
-                              to={`/SpecificProduct/${products._id}`}
-                              className="text-decoration-none text-dark"
-                            >
-                              <h5 className="productpage-card-title card-title mb-0">
-                                {products.name}
-                              </h5>
-                            </Link>
+                        <div className="productpage-card-body card-body px-0 pt-3 pb-1">
+                          <div className="d-flex justify-content-between align-items-start gap-2 mb-1">
+                            <div className="d-flex flex-column text-start pe-2" style={{ gap: "2px" }}>
+                              <Link
+                                to={`/SpecificProduct/${products._id}`}
+                                className="text-decoration-none text-dark"
+                              >
+                                <h5 className="productpage-card-title card-title mb-0">
+                                  {products.name}
+                                </h5>
+                              </Link>
+                              <span className="productpage-category-text text-muted">
+                                {products.category?.name || products.category || "Perfume"}
+                              </span>
+                            </div>
 
                             <button
                               type="button"
@@ -585,7 +694,7 @@ const Products = () => {
                             </button>
                           </div>
 
-                          <p className="productpage-card-text card-text mt-2">
+                          <p className="productpage-card-text card-text mb-3">
                             <span
                               className="productpage-price fw-bold"
                               style={{ color: "#28a745" }}
@@ -615,16 +724,34 @@ const Products = () => {
                   <h5 className="text-muted">
                     No products matching your search criteria.
                   </h5>
+                  <button
+                    className="btn btn-outline-dark btn-sm mt-3 rounded-pill px-3"
+                    onClick={resetFilters}
+                  >
+                    Reset All Filters
+                  </button>
                 </div>
               )}
             </div>
 
-            {/* Load More Button */}
-            {processedProducts.length > 0 && (
-              <div className="productpage-loadmore d-flex justify-content-center my-5">
-                <button type="button" className="productpage-loadmore-btn">
-                  Load More
+            {/* Load More Button: Displays only when there are more products to reveal */}
+            {processedProducts.length > visibleCount && (
+              <div className="productpage-loadmore d-flex flex-column align-items-center justify-content-center my-5">
+                <button
+                  type="button"
+                  className="productpage-loadmore-btn btn px-4 py-2"
+                  onClick={handleLoadMore}
+                  style={{
+                    backgroundColor: "#043948",
+                    color: "#ffffff",
+                    
+                    fontWeight: "600",
+                    transition: "all 0.3s ease",
+                  }}
+                >
+                  Load More ({processedProducts.length - visibleCount} more)
                 </button>
+               
               </div>
             )}
           </>
@@ -671,7 +798,7 @@ const Products = () => {
                     <b>Quick Links</b>
                   </h5>
 
-                  <ul className="list-unstyled lh-lg homepage-footer-list">
+                  <ul className="list list-unstyled lh-lg homepage-footer-list">
                     <li><a href="privacy.html">Privacy Policy</a></li>
                     <li><a href="terms.html">Terms and Conditions</a></li>
                     <li><a href="faqs.html">FAQs</a></li>

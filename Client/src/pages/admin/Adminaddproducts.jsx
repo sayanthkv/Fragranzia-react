@@ -9,15 +9,15 @@ import {
   LuList,
   LuUsers,
   LuShoppingCart,
-  LuLogOut
+  LuLogOut,
+  LuX
 } from 'react-icons/lu';
 
 import './Adminaddproducts.css';
 
 const Adminaddproducts = () => {
-
   const [images, setImages] = useState([]);
-const [previewUrls, setPreviewUrls] = useState([]);
+  const [previewUrls, setPreviewUrls] = useState([]);
   const [productData, setProductData] = useState({
     name: '',
     price: '',
@@ -25,7 +25,6 @@ const [previewUrls, setPreviewUrls] = useState([]);
     quantity: '',
     category: '',
     description: '',
-    image: null,
     status: 'Unblock'
   });
 
@@ -37,18 +36,44 @@ const [previewUrls, setPreviewUrls] = useState([]);
 
   const handlechange = (e) => {
     const { name, value } = e.target;
-
     setProductData((prev) => ({
       ...prev,
       [name]: value
     }));
   };
 
- const handlefilechange = (e) => {
-  const selectedFiles = Array.from(e.target.files).slice(0, 3);
-  setImages(selectedFiles);
-  setPreviewUrls(selectedFiles.map(file => URL.createObjectURL(file)));
-};
+  // Append new files up to a maximum of 3
+  const handlefilechange = (e) => {
+    const selectedFiles = Array.from(e.target.files);
+    if (!selectedFiles.length) return;
+
+    const availableSlots = 3 - images.length;
+    if (availableSlots <= 0) {
+      toast.error('You can only upload a maximum of 3 images');
+      e.target.value = '';
+      return;
+    }
+
+    const filesToAdd = selectedFiles.slice(0, availableSlots);
+    if (selectedFiles.length > availableSlots) {
+      toast('Only the first 3 images were kept.', { icon: 'ℹ️' });
+    }
+
+    const newPreviews = filesToAdd.map((file) => URL.createObjectURL(file));
+
+    setImages((prev) => [...prev, ...filesToAdd]);
+    setPreviewUrls((prev) => [...prev, ...newPreviews]);
+
+    // Reset input so re-selecting the same file works if needed
+    e.target.value = '';
+  };
+
+  // Remove individual preview and revoke object URL
+  const handleRemoveImage = (indexToRemove) => {
+    URL.revokeObjectURL(previewUrls[indexToRemove]);
+    setImages((prev) => prev.filter((_, idx) => idx !== indexToRemove));
+    setPreviewUrls((prev) => prev.filter((_, idx) => idx !== indexToRemove));
+  };
 
   useEffect(() => {
     const handleCategories = async () => {
@@ -65,16 +90,24 @@ const [previewUrls, setPreviewUrls] = useState([]);
     };
 
     handleCategories();
+
+    // Cleanup previews on component unmount
+    return () => {
+      previewUrls.forEach((url) => URL.revokeObjectURL(url));
+    };
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("Token");
-    localStorage.removeItem("role");
+    localStorage.removeItem('Token');
+    localStorage.removeItem('role');
     toast.success('Logged out successfully');
     navigate('/LogIn');
   };
 
   const handleCancel = () => {
+    previewUrls.forEach((url) => URL.revokeObjectURL(url));
+    setImages([]);
+    setPreviewUrls([]);
     setProductData({
       name: '',
       price: '',
@@ -82,11 +115,10 @@ const [previewUrls, setPreviewUrls] = useState([]);
       quantity: '',
       category: '',
       description: '',
-      image: null,
       status: 'Unblock'
     });
 
-    const fileInput = document.querySelector('input[name="image"]');
+    const fileInput = document.querySelector('input[name="images"]');
     if (fileInput) fileInput.value = '';
   };
 
@@ -94,9 +126,9 @@ const [previewUrls, setPreviewUrls] = useState([]);
     event.preventDefault();
 
     if (images.length === 0) {
-  toast.error('Please upload at least 1 image (up to 3)');
-  return;
-}
+      toast.error('Please upload at least 1 image (up to 3)');
+      return;
+    }
 
     if (!productData.name.trim()) {
       toast.error('Product name is required');
@@ -108,28 +140,23 @@ const [previewUrls, setPreviewUrls] = useState([]);
       return;
     }
 
-    if (!productData.image) {
-      toast.error('Please select a product image');
-      return;
-    }
-
     try {
       setIsSubmitting(true);
       const formData = new FormData();
-formData.append('name', productData.name);
-formData.append('price', productData.price);
-formData.append('saleprice', productData.saleprice);
-formData.append('quantity', productData.quantity);
-formData.append('category', productData.category);
-formData.append('description', productData.description);
-formData.append('status', productData.status);
+      formData.append('name', productData.name);
+      formData.append('price', productData.price);
+      formData.append('saleprice', productData.saleprice);
+      formData.append('quantity', productData.quantity);
+      formData.append('category', productData.category);
+      formData.append('description', productData.description);
+      formData.append('status', productData.status);
 
+      // Append files. Note: check backend key expectation ('images' or 'images[]')
+      images.forEach((file) => {
+        formData.append('images', file);
+      });
 
-images.forEach((file) => {
-  formData.append('images', file);
-});
-
-await addToProduct(formData);
+      await addToProduct(formData);
 
       toast.success('Product added successfully!');
       handleCancel();
@@ -139,7 +166,6 @@ await addToProduct(formData);
         'Error adding product:',
         error.response?.data || error.message
       );
-
       toast.error(
         error.response?.data?.message || 'Failed to add product'
       );
@@ -150,7 +176,6 @@ await addToProduct(formData);
 
   return (
     <div className="addproduct-main-container">
-      {/* Brand-Themed Toaster Notification */}
       <Toaster
         position="top-center"
         containerStyle={{
@@ -196,7 +221,7 @@ await addToProduct(formData);
           <button className="admin-nav-item">
             <LuLayoutDashboard className="admin-nav-icon" />
             <Link to="/AdminDashboard">
-            <span>Dashboard</span>
+              <span>Dashboard</span>
             </Link>
           </button>
 
@@ -325,29 +350,60 @@ await addToProduct(formData);
             </div>
           </div>
 
-         <div className="input-row">
-  <div className="col">
-    <label>Product Images (Select up to 3)</label>
-    <input
-      type="file"
-      name="images"
-      accept="image/*"
-      multiple
-      onChange={handlefilechange}
-      required
-    />
-    <div className="d-flex gap-2 mt-2">
-      {previewUrls.map((url, i) => (
-        <img
-          key={i}
-          src={url}
-          alt={`Preview ${i + 1}`}
-          style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 4 }}
-        />
-      ))}
-    </div>
-  </div>
-</div>
+          <div className="input-row">
+            <div className="col">
+              <label>Product Images ({images.length}/3)</label>
+              <input
+                type="file"
+                name="images"
+                accept="image/*"
+                multiple
+                onChange={handlefilechange}
+                disabled={images.length >= 3}
+              />
+              <div className="d-flex gap-2 mt-2">
+                {previewUrls.map((url, i) => (
+                  <div
+                    key={i}
+                    style={{ position: 'relative', display: 'inline-block' }}
+                  >
+                    <img
+                      src={url}
+                      alt={`Preview ${i + 1}`}
+                      style={{
+                        width: 60,
+                        height: 60,
+                        objectFit: 'cover',
+                        borderRadius: 4
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage(i)}
+                      style={{
+                        position: 'absolute',
+                        top: -6,
+                        right: -6,
+                        background: '#e63946',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '50%',
+                        width: 20,
+                        height: 20,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        padding: 0
+                      }}
+                    >
+                      <LuX size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
 
           <div className="Adminaddproduct-actions">
             <button
@@ -369,7 +425,11 @@ await addToProduct(formData);
                   <div
                     className="spinner-border spinner-border-sm text-light"
                     role="status"
-                    style={{ width: "1rem", height: "1rem", borderWidth: "2px" }}
+                    style={{
+                      width: '1rem',
+                      height: '1rem',
+                      borderWidth: '2px'
+                    }}
                   >
                     <span className="visually-hidden">Loading...</span>
                   </div>

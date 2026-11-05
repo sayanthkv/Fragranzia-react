@@ -339,12 +339,7 @@ const AdminDashboard = () => {
               </Link>
             </button>
 
-            <button className="admin-nav-item">
-              <LuTag className="admin-nav-icon" />
-              <Link to="/AdminOffers">
-                <span>Offers</span>
-              </Link>
-            </button>
+            
 
             <button className="admin-nav-item">
               <LuUsers className="admin-nav-icon" />
