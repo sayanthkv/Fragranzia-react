@@ -43,6 +43,7 @@ const productSchema = new mongoose.Schema(
       enum: ['Block', 'Unblock'],
       default: 'Unblock'
     },
+    images: [{ type: String }],
     image:{
       type:String,
       required:true

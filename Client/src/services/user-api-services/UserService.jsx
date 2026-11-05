@@ -133,7 +133,13 @@ const UserService = () => {
     return response.data;
   };
 
+  const googleAuthUser = async (credentialToken) => {
+  const response = await axiosPrivate.post("/api/auth/google", { token: credentialToken });
+  return response.data;
+};
+
   return {
+    googleAuthUser,
     regUser,
     logUser,
     getProduct,

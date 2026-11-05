@@ -3,32 +3,31 @@ import { Link, useNavigate } from "react-router-dom";
 import styles from "./Login.module.css";
 import loginImg from "../../assets/login.jpg";
 import { User, Lock, Eye, EyeOff } from "lucide-react";
-import { FcGoogle } from "react-icons/fc";
-import { FaFacebookF } from "react-icons/fa";
+import { GoogleLogin } from "@react-oauth/google";
 import UserService from "../../services/user-api-services/UserService";
 
 function Login() {
   const [formData, setFormData] = useState({
     email: "",
-    password: ""
+    password: "",
   });
 
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState("");
 
   const navigate = useNavigate();
-  const { logUser } = UserService();
+  const { logUser, googleAuthUser } = UserService();
 
   const [formErr, setFormErr] = useState({
     email: false,
-    password: false
+    password: false,
   });
 
   const onHandleChange = (event) => {
     const { name, value } = event.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
     if (serverError) setServerError("");
   };
@@ -37,15 +36,25 @@ function Login() {
     setShowPassword((prev) => !prev);
   };
 
+  const handleAuthSuccess = (res) => {
+    if (res?.token) {
+      localStorage.setItem("Token", res.token);
+      localStorage.setItem("role", res.role);
+
+      if (res.role && res.role.toLowerCase() === "admin") {
+        navigate("/AdminCategory", { replace: true });
+      } else {
+        navigate("/", { replace: true });
+      }
+    }
+  };
+
   const onHandleSubmit = async (event) => {
     event.preventDefault();
     setServerError("");
 
     let next = true;
-    let err = {
-      email: false,
-      password: false
-    };
+    let err = { email: false, password: false };
 
     if (formData.email.trim() === "") {
       next = false;
@@ -64,22 +73,8 @@ function Login() {
     if (next) {
       try {
         const res = await logUser(formData);
-
-        if (res?.token) {
-          localStorage.setItem("Token", res.token);
-          localStorage.setItem("role", res.role);
-
-          // Role-based immediate redirection
-          if (res.role && res.role.toLowerCase() === "admin") {
-            navigate("/AdminCategory", { replace: true });
-          } else {
-            navigate("/", { replace: true });
-          }
-        }
+        handleAuthSuccess(res);
       } catch (error) {
-        console.error("Login API Error:", error.response?.data || error.message);
-
-        // Capture blocked status (403 Forbidden)
         if (error.response?.status === 403) {
           setServerError(
             error.response?.data?.message ||
@@ -91,6 +86,22 @@ function Login() {
               "Invalid email or password. Please try again."
           );
         }
+      }
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const res = await googleAuthUser(credentialResponse.credential);
+      handleAuthSuccess(res);
+    } catch (error) {
+      if (error.response?.status === 403) {
+        setServerError(
+          error.response?.data?.message ||
+            "Your account is blocked by admin, please contact support."
+        );
+      } else {
+        setServerError("Google login failed. Please try again.");
       }
     }
   };
@@ -113,7 +124,7 @@ function Login() {
 
     setFormErr((prev) => ({
       ...prev,
-      [name]: err
+      [name]: err,
     }));
   };
 
@@ -136,22 +147,22 @@ function Login() {
         {/* Right Side: Form */}
         <section className={styles.formSection}>
           <form className={styles.loginForm} onSubmit={onHandleSubmit}>
-            <div className={styles.socialButtons}>
-              <button type="button" className={styles.socialButton}>
-                <FcGoogle size={20} />
-                <span>Google</span>
-              </button>
-              <button type="button" className={styles.socialButton}>
-                <FaFacebookF style={{ color: "#1877f2" }} size={18} />
-                <span>Facebook</span>
-              </button>
+            {/* Full-width Google Sign-in */}
+            <div style={{ width: "100%", display: "flex", justifyContent: "center", marginBottom: "16px" }}>
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => setServerError("Google Sign-In was unsuccessful")}
+                useOneTap
+                width="100%"
+                shape="rectangular"
+                theme="outline"
+              />
             </div>
 
             <div className={styles.divider}>
               <span>Or sign in with email</span>
             </div>
 
-            {/* Server Block / Error Alert Banner */}
             {serverError && (
               <div
                 style={{
@@ -163,7 +174,7 @@ function Login() {
                   marginBottom: "16px",
                   fontSize: "14px",
                   fontWeight: "500",
-                  textAlign: "center"
+                  textAlign: "center",
                 }}
               >
                 {serverError}

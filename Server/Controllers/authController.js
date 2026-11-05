@@ -1,6 +1,83 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { User } = require("../models/User");
+const { OAuth2Client } = require("google-auth-library");
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+
+const googleAuth = async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (!token) {
+      return res.status(400).json({ message: "Google credential token missing" });
+    }
+
+    // Verify token with Google's servers
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { sub: googleId, email, name, picture } = payload;
+
+    // Check if user exists by googleId or email
+    let user = await User.findOne({
+      $or: [{ googleId }, { email }],
+    });
+
+    if (user) {
+      // Check block/active status
+      if (user.status === false || user.isActive === false) {
+        return res.status(403).json({
+          message: "Your account has been blocked by the admin. Please contact support.",
+        });
+      }
+
+      // Link googleId if they previously signed up via email/password
+      if (!user.googleId) {
+        user.googleId = googleId;
+        user.loginMethod = "google";
+        if (!user.image && picture) user.image = picture;
+        await user.save();
+      }
+    } else {
+      // Register new user via Google
+      user = await User.create({
+        name,
+        email,
+        googleId,
+        loginMethod: "google",
+        image: picture,
+        status: true,
+        isActive: true,
+      });
+    }
+
+    // Issue JWT session token
+    const appToken = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1y",
+    });
+
+    return res.status(200).json({
+      token: appToken,
+      role: user.role,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        image: user.image,
+      },
+    });
+  } catch (error) {
+    console.error("Google Auth Error:", error);
+    return res.status(500).json({
+      message: "Google verification failed",
+      error: error.message,
+    });
+  }
+};
 
 let getdata = async (req, res) => {
   const userId = req.userId;
@@ -132,4 +209,5 @@ module.exports = {
   updatedata,
   getallusers,
   toggleUserBlockStatus,
+  googleAuth
 };
