@@ -808,43 +808,41 @@ section {
 @media (max-width: 991.98px) {
   .navbar-collapse {
     margin-top: 1rem;
-    padding: 1rem;
+    padding: 1.5rem 1rem;
     border-top: 1px solid #eeeeee;
+    text-align: center;
   }
 
   .navbar-nav {
-    align-items: stretch !important;
-    gap: 0 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100%;
+    text-align: center;
+    gap: 0.75rem !important;
   }
 
   .navbar-nav .nav-item {
     width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 !important; /* clears Bootstrap me-2/me-3 margins */
   }
 
   .homepage-nav-link {
-    padding: 0.75rem 0 !important;
+    padding: 0.5rem 0 !important;
+    display: inline-block;
+    text-align: center;
   }
 
   .homepage-search-wrapper {
     width: 100%;
-    margin: 0.5rem 0;
+    max-width: 280px;
+    margin: 0.5rem auto;
   }
 
   .homepage-icon-btn {
-    margin: 0.35rem 0.35rem 0.35rem 0;
-  }
-
-  .homepage-hero-content {
-    padding-left: 5%;
-    padding-right: 5%;
-  }
-
-  .homepage-hero-text-side h1 {
-    font-size: clamp(2rem, 4vw, 2.8rem);
-  }
-
-  .homepage-promo-card {
-    min-height: 260px;
+    margin: 0 auto;
   }
 }
 
@@ -953,7 +951,11 @@ section {
   }
 
   .homepage-mainbox {
-    padding: 1.5rem 1rem !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    max-width: 92%; /* keeps neat spacing on mobile */
+    padding: 2rem 1.5rem !important;
+    justify-content: center !important;
   }
 
   .homepage-feature-item {
@@ -1050,13 +1052,7 @@ section {
     font-size: 2rem;
   }
 
-  .homepage-footer .col-6 {
-    width: 50%;
-  }
-
-  .homepage-footer .col-sm-4 {
-    width: 100%;
-  }
+  
 }
 
 @media (max-width: 400px) {
@@ -1142,4 +1138,91 @@ section {
   object-fit: contain;
   margin: auto;
   display: block;
+}
+
+/* Adjusted rotation and position for the orange bottles (Slide 2) */
+.homepage-floating-bottle-1-alt {
+  position: absolute;
+  max-height: 360px;
+  width: auto;
+  object-fit: contain;
+  top: 10%;
+  left: 10%;
+  /* Reduced negative angle so it matches the blue bottle's upright posture */
+  transform: rotate(-3deg);
+  z-index: 1;
+}
+
+.homepage-floating-bottle-2-alt {
+  position: absolute;
+  max-height: 280px;
+  width: auto;
+  object-fit: contain;
+  bottom: 10%;
+  right: 5%;
+  /* Reduced positive angle so it aligns with the small blue bottle */
+  transform: rotate(4deg);
+  z-index: 2;
+}
+
+/* Also add responsive rules for mobile screens */
+@media (max-width: 767.98px) {
+  .homepage-floating-bottle-1-alt {
+    width: 55%;
+    max-height: 210px;
+    top: 0;
+    left: 8%;
+    transform: rotate(-3deg);
+  }
+
+  .homepage-floating-bottle-2-alt {
+    width: 42%;
+    max-height: 160px;
+    right: 5%;
+    bottom: 0;
+    transform: rotate(4deg);
+  }
+}
+
+@media (max-width: 767.98px) {
+  /* Center footer columns and text */
+  .homepage-footer {
+    text-align: center;
+  }
+
+  /* Reset brand header spacing on mobile so it doesn't leave extra gap */
+  .homepage-footer .col-12.col-md-3 {
+    padding-top: 1rem !important;
+    margin-top: 0 !important;
+  }
+
+  .homepage-footer-brand {
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  /* Make footer columns take full width and center items */
+  .homepage-footer .col-6,
+  .homepage-footer .col-sm-4,
+  .homepage-footer .col-12 {
+    width: 100% !important;
+    text-align: center;
+  }
+
+  .homepage-footer-list {
+    padding-left: 0;
+    margin-bottom: 1.5rem;
+  }
+
+  /* Center contact line items */
+  .homepage-footer-contact {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* Center social media icons */
+  .homepage-footer-social-icons {
+    justify-content: center !important;
+  }
 }

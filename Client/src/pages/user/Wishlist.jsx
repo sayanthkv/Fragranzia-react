@@ -400,78 +400,121 @@ const Wishlist = () => {
         )}
       </main>
 
-      <footer className="wishlist-footer">
-        <div className="container-fluid px-4 px-md-5">
-          <div className="row g-4">
-            <div className="col-12 col-md-3">
-              <h1 className="wishlist-footer-brand" style={{ color: "#043948" }}>
-                <b>Fragranzia</b>
-              </h1>
-            </div>
-
-            <div className="col-12 col-md-9">
-              <div className="row g-4">
-                <div className="col-6 col-sm-4">
-                  <h5>Pages</h5>
-                  <ul>
-                    <li><Link to="/">Home</Link></li>
-                    <li><Link to="/Products">Products</Link></li>
-                    <li><Link to="/Gifting">Gifting</Link></li>
-                    <li><Link to="/About">About</Link></li>
-                    <li><Link to="/Profile">Profile</Link></li>
-                  </ul>
+      <footer className="py-5 mt-5 homepage-footer">
+              <div className="container">
+                <div className="row g-4 align-items-start">
+                  <div className="col-12 col-md-3 pt-5 mt-4">
+                    <h1
+                      className="homepage-footer-brand"
+                      style={{ color: "#043948" }}
+                    >
+                      <b>Fragranzia</b>
+                    </h1>
+                  </div>
+      
+                  <div className="col-12 col-md-9">
+                    <div className="row g-4">
+                      <div className="col-6 col-sm-4">
+                        <h5
+                          className="homepage-footer-heading"
+                          style={{ color: "#043948" }}
+                        >
+                          <b>Pages</b>
+                        </h5>
+                        <ul className="list list-unstyled lh-lg homepage-footer-list">
+                          <li>
+                            <span>
+                              <Link to="/">Home</Link>
+                            </span>
+                          </li>
+                          <li>
+                            <span>
+                              <Link to="/Products">Products</Link>
+                            </span>
+                          </li>
+                          <li>
+                            <span>
+                              <Link to="/Gifting">Gifting</Link>
+                            </span>
+                          </li>
+                          <li>
+                            <span>
+                              <Link to="/About">About</Link>
+                            </span>
+                          </li>
+                          <li>
+                            <span>
+                              <Link to="/Profile">Profile</Link>
+                            </span>
+                          </li>
+                        </ul>
+                      </div>
+                      <div className="col-6 col-sm-4">
+                        <h5
+                          className="homepage-footer-heading"
+                          style={{ color: "#043948" }}
+                        >
+                          <b>Quick Links</b>
+                        </h5>
+                        <ul className="list-unstyled lh-lg homepage-footer-list">
+                          <li>
+                            <a href="privacy.html">Privacy Policy</a>
+                          </li>
+                          <li>
+                            <a href="terms.html">Terms and Conditions</a>
+                          </li>
+                          <li>
+                            <a href="faqs.html">FAQs</a>
+                          </li>
+                          <li>
+                            <a href="customer-service.html">Customer Services</a>
+                          </li>
+                        </ul>
+                      </div>
+                      <div className="col-12 col-sm-4">
+                        <h5
+                          className="homepage-footer-heading"
+                          style={{ color: "#043948" }}
+                        >
+                          <b>Contact & Social</b>
+                        </h5>
+                        <p className="mb-1 homepage-footer-contact">
+                          <i className="fa-regular fa-envelope me-2"></i>
+                          ftrafurniture@gmail.com
+                        </p>
+                        <p className="mb-3 homepage-footer-contact">
+                          <i className="fa-solid fa-phone me-2"></i>
+                          +91 9876543210
+                        </p>
+                        <p className="mb-2 homepage-footer-social-title">
+                          <b>Social Media</b>
+                        </p>
+                        <div className="d-flex gap-3 homepage-footer-social-icons">
+                          <i className="fa-brands fa-instagram fa-lg"></i>
+                          <i className="fa-brands fa-facebook fa-lg"></i>
+                          <i className="fa-brands fa-x-twitter fa-lg"></i>
+                          <i className="fa-brands fa-youtube fa-lg"></i>
+                          <i className="fa-brands fa-linkedin fa-lg"></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-
-                <div className="col-6 col-sm-4">
-                  <h5>Quick Links</h5>
-                  <ul>
-                    <li><a href="privacy.html">Privacy Policy</a></li>
-                    <li><a href="terms.html">Terms and Conditions</a></li>
-                    <li><a href="faqs.html">FAQs</a></li>
-                    <li><a href="customer-service.html">Customer Services</a></li>
+                <hr className="my-4 homepage-footer-divider" />
+      
+                <div className="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                  <ul className="d-flex list-unstyled gap-3 mb-0 flex-wrap justify-content-center homepage-footer-bottom-links">
+                    <li>Web Accessibility</li>
+                    <li>Terms of Use</li>
+                    <li>Privacy Statement</li>
+                    <li>Contact Us</li>
                   </ul>
-                </div>
-
-                <div className="col-12 col-sm-4">
-                  <h5>Contact &amp; Social</h5>
-                  <p>
-                    <i className="fa-regular fa-envelope me-2"></i>
-                    ftrafurniture@gmail.com
-                  </p>
-                  <p>
-                    <i className="fa-solid fa-phone me-2"></i>
-                    +91 9876543210
-                  </p>
-                  <p>
-                    <strong>Social Media</strong>
-                  </p>
-                  <div className="wishlist-social-icons d-flex gap-3">
-                    <i className="fa-brands fa-instagram"></i>
-                    <i className="fa-brands fa-facebook"></i>
-                    <i className="fa-brands fa-x-twitter"></i>
-                    <i className="fa-brands fa-youtube"></i>
-                    <i className="fa-brands fa-linkedin"></i>
+                  <div className="text-muted text-center text-md-end small homepage-footer-copyright">
+                    © 2024 fragranzia Company. All rights reserved
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <hr />
-
-          <div className="wishlist-footer-bottom d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
-            <div className="wishlist-footer-links d-flex gap-3 flex-wrap">
-              <span>Web Accessibility</span>
-              <span>Terms of Use</span>
-              <span>Privacy Statement</span>
-              <span>Contact Us</span>
-            </div>
-            <div>
-              © 2024 Fragranzia Company. All rights reserved
-            </div>
-          </div>
-        </div>
-      </footer>
+            </footer>
     </>
   );
 };

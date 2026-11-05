@@ -328,45 +328,46 @@ const Homepage = () => {
               </div>
             </div>
 
-            <div
-              className="carousel-item"
-              style={{ backgroundColor: "rgba(195, 116, 0, 1)" }}
-            >
-              <img
-                src={MosqueSilhouetteBackground}
-                className="d-block hero-bg homepage-hero-bg"
-                alt="Alternative Slide Background"
-              />
-              <div className="hero-content homepage-hero-content">
-                <div className="hero-text-side homepage-hero-text-side">
-                  <h1>
-                    Discover perfumes that
-                    <br />
-                    celebrate individuality
-                  </h1>
-                  <p className="homepage-hero-text-paragraph">
-                    Every moment with an unforgettable essence.
-                  </p>
-                  <span className="homepage-carousel-shop-btn">
-                    <Link to="/Products">Shop Now</Link>
-                  </span>
-                </div>
-                <div className="hero-image-side homepage-hero-image-side">
-                  <div className="bottle-container homepage-bottle-container">
-                    <img
-                      src={PerfumeBottleLarge2}
-                      className="floating-bottle-1 homepage-floating-bottle-1"
-                      alt="Alternative Perfume Bottle Large"
-                    />
-                    <img
-                      src={PerfumeBottleSmall2}
-                      className="floating-bottle-2 homepage-floating-bottle-2"
-                      alt="Alternative Perfume Bottle Small"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
+            
+<div
+  className="carousel-item"
+  style={{ backgroundColor: "rgba(195, 116, 0, 1)" }}
+>
+  <img
+    src={MosqueSilhouetteBackground}
+    className="d-block hero-bg homepage-hero-bg"
+    alt="Alternative Slide Background"
+  />
+  <div className="hero-content homepage-hero-content">
+    <div className="hero-text-side homepage-hero-text-side">
+      <h1>
+        Discover perfumes that
+        <br />
+        celebrate individuality
+      </h1>
+      <p className="homepage-hero-text-paragraph">
+        Every moment with an unforgettable essence.
+      </p>
+      <span className="homepage-carousel-shop-btn">
+        <Link to="/Products">Shop Now</Link>
+      </span>
+    </div>
+    <div className="hero-image-side homepage-hero-image-side">
+      <div className="bottle-container homepage-bottle-container">
+        <img
+          src={PerfumeBottleLarge2}
+          className="floating-bottle-1 homepage-floating-bottle-1-alt"
+          alt="Alternative Perfume Bottle Large"
+        />
+        <img
+          src={PerfumeBottleSmall2}
+          className="floating-bottle-2 homepage-floating-bottle-2-alt"
+          alt="Alternative Perfume Bottle Small"
+        />
+      </div>
+    </div>
+  </div>
+</div>
           </div>
         </div>
       </section>

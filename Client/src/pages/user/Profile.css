@@ -221,30 +221,32 @@
   background: #ffffff;
 }
 
+/* Ensure the order header wraps and spaces items cleanly */
 .profile-order-top {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
+  flex-wrap: wrap; /* Allows badge to drop below if space is tight */
   margin-bottom: 16px;
 }
 
+/* Allow the long hex hash/order number to break across lines */
 .profile-order-id {
   margin: 0;
   color: #1a1a1a;
   font-weight: 700;
   font-size: 14px;
+  min-width: 0;
+  flex: 1 1 auto;
+  word-break: break-all;      /* Prevents long hashes from overflowing horizontally */
+  overflow-wrap: anywhere;
 }
 
+/* Ensure status badge doesn't shrink awkwardly */
 .profile-order-status {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
+  flex-shrink: 0;
 }
-
 .profile-order-status.status-delivered {
   background: #15803d;
   color: #ffffff;
@@ -396,4 +398,83 @@
 
 .setprimary:active {
   transform: scale(0.97);
+}
+
+@media (max-width: 767px) {
+  .tab-container {
+    display: flex;
+    align-items: stretch; /* Ensures all buttons match the tallest item */
+    gap: 7px;
+    margin: 18px 0 22px;
+  }
+
+  .tab-btn {
+    flex: 1 1 0; /* Equal width distribution */
+    min-width: 0;
+    display: inline-flex;
+    align-items: center; /* Centers text vertically */
+    justify-content: center; /* Centers text horizontally */
+    text-align: center;
+    padding: 8px 6px;
+    font-size: 13px;
+    white-space: nowrap; /* Prevents "My Order" from wrapping onto two lines */
+  }
+}
+
+@media (max-width: 767px) {
+  .profile-order-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .profile-order-id {
+    width: 100%;
+  }
+}
+
+/* 1. Prevent the card and its flex children from overflowing */
+.profile-order-card {
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* 2. Force the top header to wrap onto a new line if there isn't enough horizontal space */
+.profile-order-top {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: space-between !important;
+  align-items: flex-start !important;
+  gap: 10px !important;
+}
+
+/* 3. Target whatever wrapper holds the Order ID and Date so it doesn't push the badge out */
+.profile-order-top > div,
+.profile-order-top > *:first-child {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  flex: 1 1 auto;
+}
+
+/* 4. Force the long hash string to wrap onto the next line */
+.profile-order-id,
+.profile-order-top h6,
+.profile-order-top p,
+.profile-order-top span {
+  word-break: break-all !important;
+  overflow-wrap: anywhere !important;
+}
+
+/* 5. Keep the badge from shrinking or getting cut off */
+.profile-order-status {
+  flex-shrink: 0 !important;
+  max-width: fit-content;
+}
+
+/* 6. On mobile screens, cleanly stack the badge below the order details */
+@media (max-width: 767px) {
+  .profile-order-top {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
 }
