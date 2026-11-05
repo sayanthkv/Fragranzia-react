@@ -1,10 +1,11 @@
+// routes/productsRoutes.js
 const express = require('express');
-const upload = require('../middleware/upload');
+const upload = require('../middleware/upload.js'); 
 
 const {
   addproduct,
   getproduct,
-  getUserProducts, // Import the new user filtering method
+  getUserProducts,
   updateProduct,
   updateProductStatus,
   getitems
@@ -12,18 +13,12 @@ const {
 
 const router = express.Router();
 
-// User Route -> Returns ONLY unblocked products (status: 'Unblock')
 router.get('/', getUserProducts);
-
-// Admin Route -> Returns ALL products (both Block and Unblock)
 router.get('/admin/all', getproduct);
-
-// Single Product Details Route
 router.get('/:id', getitems);
 
-// Product Mutation Routes
-router.post('/', upload.single('image'), addproduct);
-router.put('/:id', upload.single('image'), updateProduct);
+router.post('/', upload.array('images', 3), addproduct);
+router.put('/:id', upload.array('images', 3), updateProduct);
 router.put('/:id/status', updateProductStatus);
 
 module.exports = router;

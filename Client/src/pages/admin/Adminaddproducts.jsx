@@ -15,6 +15,9 @@ import {
 import './Adminaddproducts.css';
 
 const Adminaddproducts = () => {
+
+  const [images, setImages] = useState([]);
+const [previewUrls, setPreviewUrls] = useState([]);
   const [productData, setProductData] = useState({
     name: '',
     price: '',
@@ -41,16 +44,11 @@ const Adminaddproducts = () => {
     }));
   };
 
-  const handlefilechange = (e) => {
-    const file = e.target.files[0];
-
-    if (file) {
-      setProductData((prev) => ({
-        ...prev,
-        image: file
-      }));
-    }
-  };
+ const handlefilechange = (e) => {
+  const selectedFiles = Array.from(e.target.files).slice(0, 3);
+  setImages(selectedFiles);
+  setPreviewUrls(selectedFiles.map(file => URL.createObjectURL(file)));
+};
 
   useEffect(() => {
     const handleCategories = async () => {
@@ -95,6 +93,11 @@ const Adminaddproducts = () => {
   const Onhandlesubmit = async (event) => {
     event.preventDefault();
 
+    if (images.length === 0) {
+  toast.error('Please upload at least 1 image (up to 3)');
+  return;
+}
+
     if (!productData.name.trim()) {
       toast.error('Product name is required');
       return;
@@ -113,17 +116,20 @@ const Adminaddproducts = () => {
     try {
       setIsSubmitting(true);
       const formData = new FormData();
+formData.append('name', productData.name);
+formData.append('price', productData.price);
+formData.append('saleprice', productData.saleprice);
+formData.append('quantity', productData.quantity);
+formData.append('category', productData.category);
+formData.append('description', productData.description);
+formData.append('status', productData.status);
 
-      formData.append('name', productData.name);
-      formData.append('price', productData.price);
-      formData.append('saleprice', productData.saleprice);
-      formData.append('quantity', productData.quantity);
-      formData.append('category', productData.category);
-      formData.append('description', productData.description);
-      formData.append('status', productData.status);
-      formData.append('image', productData.image);
 
-      await addToProduct(formData);
+images.forEach((file) => {
+  formData.append('images', file);
+});
+
+await addToProduct(formData);
 
       toast.success('Product added successfully!');
       handleCancel();
@@ -319,18 +325,29 @@ const Adminaddproducts = () => {
             </div>
           </div>
 
-          <div className="input-row">
-            <div className="col">
-              <label>Product image</label>
-              <input
-                type="file"
-                name="image"
-                accept="image/*"
-                onChange={handlefilechange}
-                required
-              />
-            </div>
-          </div>
+         <div className="input-row">
+  <div className="col">
+    <label>Product Images (Select up to 3)</label>
+    <input
+      type="file"
+      name="images"
+      accept="image/*"
+      multiple
+      onChange={handlefilechange}
+      required
+    />
+    <div className="d-flex gap-2 mt-2">
+      {previewUrls.map((url, i) => (
+        <img
+          key={i}
+          src={url}
+          alt={`Preview ${i + 1}`}
+          style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 4 }}
+        />
+      ))}
+    </div>
+  </div>
+</div>
 
           <div className="Adminaddproduct-actions">
             <button

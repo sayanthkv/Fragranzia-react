@@ -4,15 +4,11 @@ const { Products } = require('../models/productModel');
 // Add a new product (Admin)
 const addproduct = async (req, res) => {
   try {
-    const {
-      name,
-      price,
-      saleprice,
-      quantity,
-      category,
-      description,
-      status
-    } = req.body;
+    const { name, price, saleprice, quantity, category, description, status } = req.body;
+
+    const imageUrls = req.files && req.files.length > 0 
+      ? req.files.map(file => file.path) 
+      : [];
 
     const newProduct = new Products({
       name,
@@ -22,22 +18,19 @@ const addproduct = async (req, res) => {
       category,
       description,
       status: status || 'Unblock',
-      image: req.file ? req.file.path : ''
+      images: imageUrls,
+      image: imageUrls[0] || '' // Fallback for components expecting product.image
     });
 
     await newProduct.save();
 
-    const product = await Products
-      .findById(newProduct._id)
+    const product = await Products.findById(newProduct._id)
       .populate('category', 'name isActive');
 
     res.status(201).json(product);
   } catch (error) {
     console.error('Error adding product:', error);
-
-    res.status(500).json({
-      message: error.message
-    });
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -83,23 +76,17 @@ const getUserProducts = async (req, res) => {
   }
 };
 
-// Update existing product details (Admin)
 const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        message: 'Invalid product ID'
-      });
+      return res.status(400).json({ message: 'Invalid product ID' });
     }
 
     const product = await Products.findById(id);
-
     if (!product) {
-      return res.status(404).json({
-        message: 'Product not found'
-      });
+      return res.status(404).json({ message: 'Product not found' });
     }
 
     const {
@@ -108,7 +95,8 @@ const updateProduct = async (req, res) => {
       saleprice,
       quantity,
       category,
-      description
+      description,
+      existingImages
     } = req.body;
 
     product.name = name;
@@ -118,27 +106,46 @@ const updateProduct = async (req, res) => {
     product.category = category;
     product.description = description;
 
-    if (req.file) {
-  product.image = req.file.path;
-}
+    // Parse existingImages preserved by admin
+    let retainedImages = [];
+    if (existingImages) {
+      if (Array.isArray(existingImages)) {
+        retainedImages = existingImages;
+      } else {
+        try {
+          const parsed = JSON.parse(existingImages);
+          retainedImages = Array.isArray(parsed) ? parsed : [existingImages];
+        } catch {
+          retainedImages = [existingImages];
+        }
+      }
+    }
+
+    // New images uploaded via multer
+    const newUploadedImages = req.files && req.files.length > 0 
+      ? req.files.map((file) => file.path) 
+      : [];
+
+    const combinedImages = [...retainedImages, ...newUploadedImages].slice(0, 3);
+
+    if (combinedImages.length === 0) {
+      return res.status(400).json({ message: 'A product must have at least 1 image' });
+    }
+
+    product.images = combinedImages;
+    product.image = combinedImages[0] || ''; // Fallback for single-image references
 
     await product.save();
 
-    const updatedProduct = await Products
-      .findById(id)
-      .populate('category', 'name isActive');
-
+    const updatedProduct = await Products.findById(id).populate('category', 'name isActive');
     res.status(200).json(updatedProduct);
   } catch (error) {
     console.error('Error updating product:', error);
-
     res.status(500).json({
-      message: 'Error updating product',
-      error: error.message
+      message: error.message || 'Error updating product'
     });
   }
 };
-
 // Update product status - Toggle Block/Unblock (Admin)
 const updateProductStatus = async (req, res) => {
   try {

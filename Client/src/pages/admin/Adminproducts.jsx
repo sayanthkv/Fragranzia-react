@@ -22,11 +22,13 @@ const Adminproducts = () => {
   const [product, setProduct] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null);
-  const [imagePreview, setImagePreview] = useState('');
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [categories, setCategories] = useState([]);
 
-  // Loading states
+  // Multi-image management state
+  const [existingImages, setExistingImages] = useState([]);
+  const [newImages, setNewImages] = useState([]);
+  const [newImagePreviews, setNewImagePreviews] = useState([]);
+
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -69,15 +71,23 @@ const Adminproducts = () => {
       ...item,
       category: item.category?._id || item.category || ''
     });
-    setImagePreview(item.image || '');
-    setSelectedImage(null);
+
+    // Populate existing images array from DB
+    const currentImgs = item.images && item.images.length > 0 
+      ? item.images 
+      : item.image ? [item.image] : [];
+
+    setExistingImages(currentImgs);
+    setNewImages([]);
+    setNewImagePreviews([]);
   };
 
   const handleCloseEdit = () => {
     if (isSubmitting) return;
     setEditingProduct(null);
-    setImagePreview('');
-    setSelectedImage(null);
+    setExistingImages([]);
+    setNewImages([]);
+    setNewImagePreviews([]);
   };
 
   const handleInputChange = (e) => {
@@ -88,13 +98,54 @@ const Adminproducts = () => {
     }));
   };
 
+  // Add new image files without exceeding 3 total
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
 
-    setSelectedImage(file);
-    const imageUrl = URL.createObjectURL(file);
-    setImagePreview(imageUrl);
+    const currentTotal = existingImages.length + newImages.length;
+    const availableSlots = 3 - currentTotal;
+
+    if (availableSlots <= 0) {
+      toast.error('Maximum 3 images allowed');
+      e.target.value = '';
+      return;
+    }
+
+    const acceptedFiles = files.slice(0, availableSlots);
+    if (files.length > availableSlots) {
+      toast(`Only ${availableSlots} more image(s) could be added (max 3).`);
+    }
+
+    const updatedNewFiles = [...newImages, ...acceptedFiles];
+    setNewImages(updatedNewFiles);
+
+    const previews = updatedNewFiles.map((file) => URL.createObjectURL(file));
+    setNewImagePreviews(previews);
+
+    e.target.value = '';
+  };
+
+  // Remove existing DB image
+  const handleRemoveExistingImage = (indexToRemove) => {
+    const totalRemaining = (existingImages.length - 1) + newImages.length;
+    if (totalRemaining < 1) {
+      toast.error('Product must have at least 1 image');
+      return;
+    }
+    setExistingImages((prev) => prev.filter((_, idx) => idx !== indexToRemove));
+  };
+
+  // Remove newly selected image file
+  const handleRemoveNewImage = (indexToRemove) => {
+    const totalRemaining = existingImages.length + (newImages.length - 1);
+    if (totalRemaining < 1) {
+      toast.error('Product must have at least 1 image');
+      return;
+    }
+    const updatedFiles = newImages.filter((_, idx) => idx !== indexToRemove);
+    setNewImages(updatedFiles);
+    setNewImagePreviews(updatedFiles.map((file) => URL.createObjectURL(file)));
   };
 
   const handleSave = async (e) => {
@@ -102,6 +153,12 @@ const Adminproducts = () => {
 
     if (!editingProduct.name?.trim()) {
       toast.error('Product name is required');
+      return;
+    }
+
+    const totalImages = existingImages.length + newImages.length;
+    if (totalImages === 0) {
+      toast.error('Please keep or upload at least 1 image');
       return;
     }
 
@@ -116,13 +173,17 @@ const Adminproducts = () => {
       formData.append('quantity', editingProduct.quantity || '');
       formData.append('category', editingProduct.category || '');
 
-      if (selectedImage) {
-        formData.append('image', selectedImage);
-      }
+      // Send retained existing image URLs
+      existingImages.forEach((imgUrl) => {
+        formData.append('existingImages', imgUrl);
+      });
+
+      // Send newly selected image files
+      newImages.forEach((file) => {
+        formData.append('images', file);
+      });
 
       const res = await EditProduct(editingProduct._id, formData);
-
-      // Support direct object returns or wrapped responses { success, product }
       const updatedItem = res?.product || res;
 
       setProduct((prevProducts) =>
@@ -131,7 +192,6 @@ const Adminproducts = () => {
         )
       );
 
-      // Update active view modal if open
       setSelectedProduct((prev) =>
         prev && prev._id === editingProduct._id ? updatedItem : prev
       );
@@ -152,7 +212,6 @@ const Adminproducts = () => {
       if (!currentProduct) return;
 
       const newStatus = currentProduct.status === 'Block' ? 'Unblock' : 'Block';
-
       const res = await editProductStatus(id, { status: newStatus });
       const updatedItem = res?.product || res;
 
@@ -164,18 +223,14 @@ const Adminproducts = () => {
         prev && prev._id === id ? updatedItem : prev
       );
 
-      toast.success(
-        `Product ${newStatus === 'Block' ? 'blocked' : 'unblocked'} successfully!`
-      );
+      toast.success(`Product ${newStatus === 'Block' ? 'blocked' : 'unblocked'} successfully!`);
     } catch (error) {
       console.error('Error updating status:', error);
       toast.error(error.response?.data?.message || 'Error updating product status');
     }
   };
 
-  const formatStatusLabel = (status) => {
-    return status === 'Block' ? 'Blocked' : 'Unblocked';
-  };
+  const formatStatusLabel = (status) => (status === 'Block' ? 'Blocked' : 'Unblocked');
 
   const handleLogout = () => {
     localStorage.removeItem('Token');
@@ -191,39 +246,17 @@ const Adminproducts = () => {
 
   return (
     <div className="adminproduct-main-container">
-      {/* react-hot-toast configured to match brand theme */}
       <Toaster
         position="top-center"
-        containerStyle={{
-          top: 85,
-          zIndex: 99999
-        }}
+        containerStyle={{ top: 85, zIndex: 99999 }}
         toastOptions={{
           duration: 4000,
           style: {
             background: '#043948',
             color: '#ffffff',
             fontSize: '14px',
-            fontWeight: '500',
             borderRadius: '8px',
-            padding: '12px 20px',
-            boxShadow: '0 4px 14px rgba(0,0,0,0.2)'
-          },
-          success: {
-            iconTheme: {
-              primary: '#2ec4b6',
-              secondary: '#ffffff'
-            }
-          },
-          error: {
-            style: {
-              background: '#721c24',
-              color: '#ffffff'
-            },
-            iconTheme: {
-              primary: '#f5c6cb',
-              secondary: '#721c24'
-            }
+            padding: '12px 20px'
           }
         }}
       />
@@ -237,8 +270,8 @@ const Adminproducts = () => {
           <button className="adminproduct-nav-item">
             <LuLayoutDashboard className="adminproduct-nav-icon" />
             <Link to="/AdminDashboard">
-                        <span>Dashboard</span>
-                        </Link>
+              <span>Dashboard</span>
+            </Link>
           </button>
 
           <button className="admin-nav-item active">
@@ -281,7 +314,6 @@ const Adminproducts = () => {
       <div className="adminproduct-main-content">
         <div className="adminproduct-action-bar">
           <div className="adminproduct-action-left"></div>
-
           <button className="adminproduct-btn adminproduct-btn-primary">
             <Link to="/Adminaddproducts">
               <LuPlus className="adminproduct-btn-icon" />
@@ -364,10 +396,7 @@ const Adminproducts = () => {
 
       {/* --- View Modal --- */}
       {selectedProduct && (
-        <div
-          className="adminproduct-modal-overlay"
-          onClick={handleCloseProduct}
-        >
+        <div className="adminproduct-modal-overlay" onClick={handleCloseProduct}>
           <div
             className="adminproduct-modal-content adminproduct-details-modal"
             onClick={(e) => e.stopPropagation()}
@@ -377,10 +406,7 @@ const Adminproducts = () => {
                 <LuEye className="adminproduct-view-modal-icon" />
                 Product Details
               </h3>
-              <button
-                className="adminproduct-modal-close-btn"
-                onClick={handleCloseProduct}
-              >
+              <button className="adminproduct-modal-close-btn" onClick={handleCloseProduct}>
                 <LuX />
               </button>
             </div>
@@ -389,16 +415,25 @@ const Adminproducts = () => {
 
             <div className="adminproduct-view-product-info">
               <div className="adminproduct-view-product-image-section">
-                <label>Product Image</label>
-                <div className="adminproduct-view-product-image">
-                  {selectedProduct.image ? (
+                <label>Product Images</label>
+                <div className="d-flex gap-2 flex-wrap">
+                  {(selectedProduct.images?.length > 0
+                    ? selectedProduct.images
+                    : selectedProduct.image ? [selectedProduct.image] : []
+                  ).map((img, i) => (
                     <img
-                      src={selectedProduct.image}
+                      key={i}
+                      src={img}
                       alt={selectedProduct.name}
+                      style={{
+                        width: '70px',
+                        height: '70px',
+                        objectFit: 'cover',
+                        borderRadius: '6px',
+                        border: '1px solid #ddd'
+                      }}
                     />
-                  ) : (
-                    <span>No Image</span>
-                  )}
+                  ))}
                 </div>
               </div>
 
@@ -418,16 +453,12 @@ const Adminproducts = () => {
                 <div className="adminproduct-view-price-section">
                   <div className="adminproduct-view-detail-group">
                     <label>Price</label>
-                    <p className="adminproduct-view-regular-price">
-                      ₹{selectedProduct.price}
-                    </p>
+                    <p className="adminproduct-view-regular-price">₹{selectedProduct.price}</p>
                   </div>
 
                   <div className="adminproduct-view-detail-group">
                     <label>Sale Price</label>
-                    <p className="adminproduct-view-sale-price">
-                      ₹{selectedProduct.saleprice}
-                    </p>
+                    <p className="adminproduct-view-sale-price">₹{selectedProduct.saleprice}</p>
                   </div>
                 </div>
 
@@ -446,20 +477,6 @@ const Adminproducts = () => {
                         : 'Out of Stock'}
                     </span>
                   </div>
-
-                  <div className="adminproduct-view-detail-group">
-                    <label>Status</label>
-                    <button
-                      className={`adminproduct-status-btn ${
-                        selectedProduct.status === 'Unblock'
-                          ? 'adminproduct-status-unblock'
-                          : 'adminproduct-status-block'
-                      }`}
-                      onClick={() => toggleStatus(selectedProduct._id)}
-                    >
-                      {formatStatusLabel(selectedProduct.status)}
-                    </button>
-                  </div>
                 </div>
               </div>
             </div>
@@ -474,13 +491,9 @@ const Adminproducts = () => {
             </div>
 
             <div className="adminproduct-view-modal-footer">
-              <button
-                className="adminproduct-view-close-btn"
-                onClick={handleCloseProduct}
-              >
+              <button className="adminproduct-view-close-btn" onClick={handleCloseProduct}>
                 Close
               </button>
-
               <button
                 className="adminproduct-view-edit-product-btn"
                 onClick={() => {
@@ -498,10 +511,7 @@ const Adminproducts = () => {
 
       {/* --- Edit Modal --- */}
       {editingProduct && (
-        <div
-          className="adminproduct-modal-overlay"
-          onClick={handleCloseEdit}
-        >
+        <div className="adminproduct-modal-overlay" onClick={handleCloseEdit}>
           <div
             className="adminproduct-modal-content adminproduct-edit-modal"
             onClick={(e) => e.stopPropagation()}
@@ -596,26 +606,120 @@ const Adminproducts = () => {
                 </select>
               </div>
 
+              {/* Product Images (Up to 3 with 'x' remove buttons) */}
               <div className="adminproduct-form-group">
-                <label htmlFor="productImage">Product Image</label>
-                <div className="adminproduct-edit-image-container">
-                  {imagePreview ? (
-                    <img
-                      className="adminproduct-editimageview"
-                      src={imagePreview}
-                      alt="Product"
-                    />
-                  ) : (
-                    <div className="adminproduct-edit-no-image">No Image</div>
-                  )}
+                <label>
+                  Product Images (Min 1, Max 3) — Currently: {existingImages.length + newImages.length}/3
+                </label>
+
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: '12px',
+                    flexWrap: 'wrap',
+                    marginBottom: '10px'
+                  }}
+                >
+                  {/* Saved Existing Images */}
+                  {existingImages.map((imgUrl, idx) => (
+                    <div
+                      key={`existing-${idx}`}
+                      style={{
+                        position: 'relative',
+                        width: '78px',
+                        height: '78px',
+                        border: '1px solid #dcdcdc',
+                        borderRadius: '8px',
+                        overflow: 'hidden'
+                      }}
+                    >
+                      <img
+                        src={imgUrl}
+                        alt="Product Existing"
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveExistingImage(idx)}
+                        style={{
+                          position: 'absolute',
+                          top: '3px',
+                          right: '3px',
+                          width: '20px',
+                          height: '20px',
+                          borderRadius: '50%',
+                          background: 'rgba(230, 57, 70, 0.9)',
+                          color: '#fff',
+                          border: 'none',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          fontSize: '11px',
+                          padding: 0
+                        }}
+                        title="Remove image"
+                      >
+                        <LuX />
+                      </button>
+                    </div>
+                  ))}
+
+                  {/* Newly selected images before upload */}
+                  {newImagePreviews.map((previewUrl, idx) => (
+                    <div
+                      key={`new-${idx}`}
+                      style={{
+                        position: 'relative',
+                        width: '78px',
+                        height: '78px',
+                        border: '2px dashed #2ec4b6',
+                        borderRadius: '8px',
+                        overflow: 'hidden'
+                      }}
+                    >
+                      <img
+                        src={previewUrl}
+                        alt="New Preview"
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveNewImage(idx)}
+                        style={{
+                          position: 'absolute',
+                          top: '3px',
+                          right: '3px',
+                          width: '20px',
+                          height: '20px',
+                          borderRadius: '50%',
+                          background: 'rgba(230, 57, 70, 0.9)',
+                          color: '#fff',
+                          border: 'none',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          fontSize: '11px',
+                          padding: 0
+                        }}
+                        title="Remove image"
+                      >
+                        <LuX />
+                      </button>
+                    </div>
+                  ))}
                 </div>
 
-                <input
-                  type="file"
-                  id="productImage"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                />
+                {existingImages.length + newImages.length < 3 && (
+                  <input
+                    type="file"
+                    id="productImages"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageChange}
+                  />
+                )}
               </div>
 
               <div className="adminproduct-edit-action">
