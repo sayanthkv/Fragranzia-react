@@ -480,7 +480,7 @@ const Wishlist = () => {
                         </h5>
                         <p className="mb-1 homepage-footer-contact">
                           <i className="fa-regular fa-envelope me-2"></i>
-                          ftrafurniture@gmail.com
+                          admin@fragranzia.com
                         </p>
                         <p className="mb-3 homepage-footer-contact">
                           <i className="fa-solid fa-phone me-2"></i>
