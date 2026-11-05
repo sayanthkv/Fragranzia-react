@@ -619,23 +619,25 @@ export default function Profile() {
 
                       return (
                         <div key={order._id} className="card shadow-sm border-0 p-3 mb-2 rounded-3">
-                          <div className="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                          <div className="profile-order-top border-bottom pb-2 mb-3">
                             <div>
-                              <span className="fw-bold text-dark me-2">Order ID: #{order._id}</span>
+                              <span className="fw-bold text-dark me-2 profile-order-id">
+                                Order ID: #{order._id}
+                              </span>
                               <small className="text-muted d-block d-sm-inline mt-1 mt-sm-0">
                                 Placed on {order.createdAt ? new Date(order.createdAt).toLocaleDateString("en-IN") : "N/A"}
                               </small>
                             </div>
 
                             {isReturnActive ? (
-                              <span className="badge bg-warning text-dark px-3 py-2 fs-6">
+                              <span className="badge bg-warning text-dark px-3 py-2 fs-6 profile-order-status">
                                 <i className="fa-solid fa-rotate-left me-1"></i>
                                 {order.returnStatus === "Completed"
                                   ? "Product Returned"
                                   : `Return ${order.returnStatus || "Requested"}`}
                               </span>
                             ) : (
-                              <span className={`badge ${getStatusBadge(currentDeliveryStatus)} px-3 py-2 fs-6`}>
+                              <span className={`badge ${getStatusBadge(currentDeliveryStatus)} px-3 py-2 fs-6 profile-order-status`}>
                                 {currentDeliveryStatus}
                               </span>
                             )}
@@ -666,7 +668,7 @@ export default function Profile() {
                               );
                             })}
 
-                          <div className="d-flex justify-content-between align-items-center pt-3 mt-1">
+                          <div className="d-flex justify-content-between align-items-center pt-3 mt-1 flex-wrap gap-2">
                             <div className="text-muted small">
                               Payment: <strong className="text-dark">{order.paymentMethod?.toUpperCase() || "N/A"}</strong> ({order.paymentStatus || "Pending"})
                             </div>

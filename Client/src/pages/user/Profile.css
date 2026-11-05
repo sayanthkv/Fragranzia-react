@@ -34,8 +34,14 @@
   flex-wrap: wrap;
   gap: 10px;
   margin: 24px 0 30px;
-  border-bottom: 0;
+  border-bottom: 0 !important;
+  box-shadow: none !important;
   padding-bottom: 0;
+}
+.tab-container::before,
+.tab-container::after {
+  content: none !important;
+  display: none !important;
 }
 .tab-btn {
   border: 1px solid transparent;
@@ -91,7 +97,7 @@
 
 .alladdress-content { transition: filter .2s ease; }
 .alladdress-content-blurred { filter: blur(2px); }
-.address-toolbar { display: flex; justify-content: flex-end; margin: 0 0 22px; }
+.address-toolbar { display: flex; justify-content: flex-end; align-items: center; width: 100%; margin: 0 0 24px; }
 .alladdress-heading { font-size: 2rem; font-weight: 700; }
 .alladdress-breadcrumb { font-size: .9rem; }
 .address-card {
@@ -101,15 +107,30 @@
   background: #fff;
   box-shadow: 0 5px 20px rgba(0, 0, 0, .045);
   transition: transform .2s ease, box-shadow .2s ease;
+  height: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 .address-card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0, 0, 0, .08); }
 .address-title { font-size: 17px; font-weight: 700; margin: 0; }
 .badge-tag { display: inline-flex; align-items: center; gap: 5px; border-radius: 30px; padding: 5px 10px; background: #f8f9fa; color: var(--profile-accent-dark); font-size: 12px; }
 .address-name { color: #1a1a1a; }
-.address-text { color: #6c757d; font-size: 14px; line-height: 1.7; overflow-wrap: anywhere; }
-.alladdress-card-actions { display: flex; gap: 10px; margin-top: 18px; }
+.address-text { color: #6c757d; font-size: 14px; line-height: 1.7; overflow-wrap: anywhere; margin-bottom: 0; }
+.alladdress-card-actions { display: flex; gap: 10px; margin-top: auto; padding-top: 18px; flex-wrap: wrap; }
 .alladdress-small-edit { border: 1px solid var(--profile-accent); background: #fff; color: var(--profile-accent-dark); border-radius: 6px; padding: 7px 14px; font-weight: 600; }
 .alladdress-small-edit:hover { background: #f8f9fa; }
+
+.address-section-inner {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 8px 0 28px;
+}
+.address-section-inner > .row {
+  margin-left: 0;
+  margin-right: 0;
+}
 
 .alladdress-modal-overlay,
 .alladdress-view-overlay,
@@ -174,208 +195,40 @@
 .btn-modal-edit { background: #f8f9fa; color: var(--profile-accent-dark); }
 .alladdress-view-input { background: #f8f9fa; }
 .profile-edit-modal { width: min(100%, 900px); }
-.profile-orders-placeholder { padding: 28px 0; }
-.profile-orders-placeholder h2 { font-size: 22px; font-weight: 700; }
-.profile-orders-placeholder p { color: var(--profile-muted); }
-.profile-orders-link { color: var(--profile-accent-dark); font-weight: 600; }
 
-@media (max-width: 767px) {
-  .homepage-navbar { padding: 12px 16px; }
-  .tab-container { gap: 7px; margin: 18px 0 22px; }
-  .tab-btn { flex: 1; padding: 10px 8px; font-size: 13px; }
-  .alladdress-custom-modal,
-  .alladdress-view-modal,
-  .alladdress-edit-modal,
-  .profile-edit-modal { padding: 18px; }
-  .alladdress-modal-heading,
-  .alladdress-view-heading,
-  .alladdress-edit-heading { font-size: 20px; }
-  .type-label { padding: 9px 11px; }
-}
-
-
-/* My Orders - styled to match the supplied OrderTracking design */
+/* Orders & Action Buttons */
 .profile-orders-section {
   width: 100%;
   color: #1a1a1a;
- 
 }
 
-.profile-orders-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px;
-  align-items: start;
-}
-
-.profile-order-column {
-  min-width: 0;
-}
-
-.profile-order-card {
-  width: 100%;
-  min-height: 132px;
-  border: 1px solid #c9c9c9;
-  border-radius: 10px;
-  padding: 16px;
-  background: #ffffff;
-}
-
-/* Ensure the order header wraps and spaces items cleanly */
 .profile-order-top {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap; /* Allows badge to drop below if space is tight */
-  margin-bottom: 16px;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
-/* Allow the long hex hash/order number to break across lines */
+.profile-order-top > div:first-child {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
 .profile-order-id {
   margin: 0;
   color: #1a1a1a;
   font-weight: 700;
   font-size: 14px;
-  min-width: 0;
-  flex: 1 1 auto;
-  word-break: break-all;      /* Prevents long hashes from overflowing horizontally */
+  word-break: break-all;
   overflow-wrap: anywhere;
 }
 
-/* Ensure status badge doesn't shrink awkwardly */
 .profile-order-status {
   flex-shrink: 0;
+  max-width: fit-content;
+  white-space: nowrap;
 }
-.profile-order-status.status-delivered {
-  background: #15803d;
-  color: #ffffff;
-}
-
-.profile-order-status.status-out-for-delivery {
-  background: #c2410c;
-  color: #ffffff;
-}
-
-.profile-order-product {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.profile-order-image {
-  flex: 0 0 100px;
-  width: 100px;
-  height: 100px;
-  overflow: hidden;
-  border-radius: 6px;
-  background: #f8f9fa;
-}
-
-.profile-order-image img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.profile-order-details {
-  min-width: 0;
-}
-
-.profile-order-title {
-  margin: 0 0 5px;
-  font-weight: 700;
-  color: #1a1a1a;
-  line-height: 1.45;
-}
-
-.profile-order-details small {
-  color: #6c757d;
-  font-size: 13px;
-}
-
-.profile-order-price {
-  margin: 8px 0 0;
-  font-weight: 700;
-  color: #1a1a1a;
-}
-
-@media (max-width: 767px) {
-  .profile-orders-grid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 16px;
-  }
-
-  .profile-order-card {
-    padding: 14px;
-  }
-
-  .profile-order-top {
-    align-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  .profile-order-product {
-    gap: 12px;
-  }
-
-  .profile-order-image {
-    flex-basis: 82px;
-    width: 82px;
-    height: 82px;
-  }
-}
-
-
-/* Reworked tab and address alignment */
-.tab-container {
-  border-bottom: none !important;
-  box-shadow: none !important;
-}
-.tab-container::before,
-.tab-container::after {
-  content: none !important;
-  display: none !important;
-}
-.address-section-inner {
-  width: 100%;
-  max-width: 100%;
-  margin: 0;
-  padding: 8px 0 28px;
-}
-.address-toolbar {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  width: 100%;
-  margin: 0 0 24px;
-}
-.address-section-inner > .row {
-  margin-left: 0;
-  margin-right: 0;
-}
-.address-section-inner .address-card {
-  height: 100%;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-.address-section-inner .address-text {
-  margin-bottom: 0;
-  overflow-wrap: anywhere;
-}
-.address-section-inner .alladdress-card-actions {
-  margin-top: auto;
-  padding-top: 18px;
-  flex-wrap: wrap;
-}
-@media (max-width: 767px) {
-  .address-section-inner { padding: 4px 0 22px; }
-  .address-toolbar { margin-bottom: 18px; }
-  .address-section-inner .address-card { padding: 18px 16px; }
-}
-
 
 .setprimary {
   background-color: transparent;
@@ -389,92 +242,56 @@
   cursor: pointer;
   transition: all 0.2s ease-in-out;
 }
-
 .setprimary:hover {
   background-color: #198754;
   color: #ffffff;
   box-shadow: 0 2px 6px rgba(25, 135, 84, 0.3);
 }
-
 .setprimary:active {
   transform: scale(0.97);
 }
 
+/* Mobile Responsiveness */
 @media (max-width: 767px) {
+  .homepage-navbar { padding: 12px 16px; }
+  
   .tab-container {
     display: flex;
-    align-items: stretch; /* Ensures all buttons match the tallest item */
+    align-items: stretch;
     gap: 7px;
     margin: 18px 0 22px;
   }
-
   .tab-btn {
-    flex: 1 1 0; /* Equal width distribution */
+    flex: 1 1 0;
     min-width: 0;
     display: inline-flex;
-    align-items: center; /* Centers text vertically */
-    justify-content: center; /* Centers text horizontally */
+    align-items: center;
+    justify-content: center;
     text-align: center;
     padding: 8px 6px;
     font-size: 13px;
-    white-space: nowrap; /* Prevents "My Order" from wrapping onto two lines */
+    white-space: nowrap;
   }
-}
 
-@media (max-width: 767px) {
   .profile-order-top {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
-
-  .profile-order-id {
+  .profile-order-top > div:first-child {
     width: 100%;
   }
-}
 
-/* 1. Prevent the card and its flex children from overflowing */
-.profile-order-card {
-  overflow: hidden;
-  box-sizing: border-box;
-}
+  .address-section-inner { padding: 4px 0 22px; }
+  .address-toolbar { margin-bottom: 18px; }
+  .address-card { padding: 18px 16px; }
 
-/* 2. Force the top header to wrap onto a new line if there isn't enough horizontal space */
-.profile-order-top {
-  display: flex !important;
-  flex-wrap: wrap !important;
-  justify-content: space-between !important;
-  align-items: flex-start !important;
-  gap: 10px !important;
-}
-
-/* 3. Target whatever wrapper holds the Order ID and Date so it doesn't push the badge out */
-.profile-order-top > div,
-.profile-order-top > *:first-child {
-  min-width: 0 !important;
-  max-width: 100% !important;
-  flex: 1 1 auto;
-}
-
-/* 4. Force the long hash string to wrap onto the next line */
-.profile-order-id,
-.profile-order-top h6,
-.profile-order-top p,
-.profile-order-top span {
-  word-break: break-all !important;
-  overflow-wrap: anywhere !important;
-}
-
-/* 5. Keep the badge from shrinking or getting cut off */
-.profile-order-status {
-  flex-shrink: 0 !important;
-  max-width: fit-content;
-}
-
-/* 6. On mobile screens, cleanly stack the badge below the order details */
-@media (max-width: 767px) {
-  .profile-order-top {
-    flex-direction: column !important;
-    align-items: flex-start !important;
-  }
+  .alladdress-custom-modal,
+  .alladdress-view-modal,
+  .alladdress-edit-modal,
+  .profile-edit-modal { padding: 18px; }
+  .alladdress-modal-heading,
+  .alladdress-view-heading,
+  .alladdress-edit-heading { font-size: 20px; }
+  .type-label { padding: 9px 11px; }
 }

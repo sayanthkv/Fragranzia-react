@@ -565,7 +565,7 @@ const Cart = () => {
 
                 <Link
                   to="/paymentpage"
-                  className={`btn cart-btn-proceed text-center w-100 ${
+                  className={`btn cart-btn-proceed text-center w-100 d-flex align-items-center justify-content-center text-decoration-none  ${
                     loading || cartItems.length === 0 ? "disabled" : ""
                   }`}
                 >

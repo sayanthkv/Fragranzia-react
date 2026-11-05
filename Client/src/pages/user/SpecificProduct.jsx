@@ -685,123 +685,120 @@ const SpecificProduct = () => {
           </div>
 
           {/* Suggested For You */}
-          <div className="container-fluid my-5 px-4 px-md-5">
-            <div className="d-flex justify-content-between align-items-center mb-4">
-              <h2 className="fw-bold homepage-section-title homepage-featured-title">
-                Suggested <span>For You</span>
-              </h2>
+<div className="container-fluid my-5 mx-4">
+  <div className="d-flex justify-content-between align-items-center mb-4">
+    <h2 className="fw-bold homepage-section-title homepage-featured-title">
+      Suggested <span> For You</span>
+    </h2>
+    <div className="d-flex gap-2">
+      <button
+        className="scroll-arrow-btn homepage-scroll-arrow-btn"
+        type="button"
+        onClick={() => scrollSuggestedProducts(-1)}
+        aria-label="Previous featured products"
+      >
+        <i className="fa-solid fa-chevron-left"></i>
+      </button>
+      <button
+        className="scroll-arrow-btn homepage-scroll-arrow-btn"
+        type="button"
+        onClick={() => scrollSuggestedProducts(1)}
+        aria-label="Next featured products"
+      >
+        <i className="fa-solid fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
 
-              <div className="d-flex gap-2">
-                <button
-                  className="scroll-arrow-btn homepage-scroll-arrow-btn"
-                  type="button"
-                  onClick={() => scrollSuggestedProducts(-1)}
-                  aria-label="Previous suggested products"
-                >
-                  <i className="fa-solid fa-chevron-left"></i>
-                </button>
+  <div
+    ref={suggestedSliderRef}
+    className="product-slider-container homepage-product-slider-container d-flex gap-4 overflow-auto"
+    id="featuredSlider"
+  >
+    {suggestedProducts.map((item, index) => {
+      const isItemInWishlist = wishlistIds.has(String(item._id));
+      const isItemWishlistLoading = wishlistLoadingId === String(item._id);
 
-                <button
-                  className="scroll-arrow-btn homepage-scroll-arrow-btn"
-                  type="button"
-                  onClick={() => scrollSuggestedProducts(1)}
-                  aria-label="Next suggested products"
-                >
-                  <i className="fa-solid fa-chevron-right"></i>
-                </button>
-              </div>
-            </div>
-
-            <div
-              className="product-slider-container homepage-product-slider-container d-flex gap-4"
-              id="suggestedProductsSlider"
-              ref={suggestedSliderRef}
-            >
-              {suggestedProducts.map((item) => (
-                <div
-                  className="product-card-custom homepage-product-card-custom"
-                  key={item._id}
-                >
-                  <div className="product-image-frame homepage-product-image-frame mb-3">
-                    <Link to={`/SpecificProduct/${item._id}`}>
-                      <img
-                        src={getCleanImageUrl(item.image)}
-                        alt={item.name}
-                      />
-                    </Link>
-                  </div>
-
-                  <div className="d-flex justify-content-between align-items-center mb-2">
-                    <h5 className="product-title homepage-product-title mb-0">
-                      {item.name}
-                    </h5>
-
-                    <button
-                      className="specificproduct-action-btn"
-                      type="button"
-                      onClick={() => handleSuggestedWishlist(item._id)}
-                      disabled={wishlistLoadingId === String(item._id)}
-                      aria-label={
-                        wishlistIds.has(String(item._id))
-                          ? "Remove from wishlist"
-                          : "Add to wishlist"
-                      }
-                      aria-pressed={wishlistIds.has(String(item._id))}
-                      style={{
-                        border: "none",
-                        background: "transparent",
-                        cursor: "pointer",
-                        flexShrink: 0,
-                        fontSize: "20px",
-                        padding: "4px 8px",
-                      }}
-                    >
-                      <i
-                        className={
-                          wishlistIds.has(String(item._id))
-                            ? "bi bi-heart-fill"
-                            : "bi bi-heart"
-                        }
-                        style={{
-                          color: wishlistIds.has(String(item._id))
-                            ? "#e63946"
-                            : "#555",
-                          transition: "color 0.2s ease",
-                        }}
-                      ></i>
-                    </button>
-                  </div>
-
-                  <div className="mb-3 homepage-product-price">
-                    <span className="fw-bold fs-5">
-                      Rs {item.saleprice ?? item.price}
-                    </span>
-
-                    {Number(item.price) >
-                      Number(item.saleprice ?? item.price) && (
-                      <span className="text-decoration-line-through text-muted ms-2 fs-6 small">
-                        Rs {item.price}
-                      </span>
-                    )}
-                  </div>
-
-                  <button
-                    onClick={() => handleSuggestedAddToCart(item._id)}
-                    className="btn-add-cart homepage-btn-add-cart"
-                    type="button"
-                  >
-                    Add to Cart
-                  </button>
-                </div>
-              ))}
-
-              {suggestedProducts.length === 0 && (
-                <p className="text-muted">
-                  No suggested products available right now.
-                </p>
-              )}
-            </div>
+      return (
+        <div
+          className="product-card-custom homepage-product-card-custom"
+          key={item._id || index}
+        >
+          <div className="product-image-frame homepage-product-image-frame mb-3">
+            <Link to={`/SpecificProduct/${item._id}`}>
+              <img
+                src={getCleanImageUrl(item.image)}
+                alt={item.name}
+              />
+            </Link>
           </div>
+
+          <div className="d-flex justify-content-between align-items-center mb-2">
+            <h5 className="product-title homepage-product-title mb-0">
+              {item.name}
+            </h5>
+
+            <button
+              className="specificproduct-action-btn"
+              type="button"
+              onClick={() => handleSuggestedWishlist(item._id)}
+              disabled={isItemWishlistLoading}
+              aria-label={
+                isItemInWishlist
+                  ? "Remove from wishlist"
+                  : "Add to wishlist"
+              }
+              aria-pressed={isItemInWishlist}
+              style={{
+                border: "none",
+                background: "transparent",
+                cursor: "pointer",
+                flexShrink: 0,
+                fontSize: "20px",
+                padding: "4px 8px",
+              }}
+            >
+              <i
+                className={
+                  isItemInWishlist ? "bi bi-heart-fill" : "bi bi-heart"
+                }
+                style={{
+                  color: isItemInWishlist ? "#e63946" : "#555",
+                  transition: "color 0.2s ease",
+                }}
+              ></i>
+            </button>
+          </div>
+
+          <div className="mb-3 homepage-product-price">
+            <span className="fw-bold fs-5" style={{ color: "#28a745" }}>
+              Rs {item.saleprice ?? item.price}
+            </span>
+            {item.saleprice && item.saleprice < item.price && (
+              <span className="text-decoration-line-through text-muted ms-2 fs-6 small">
+                Rs {item.price}
+              </span>
+            )}
+          </div>
+
+          <button
+            onClick={() => handleSuggestedAddToCart(item._id)}
+            className="btn-add-cart homepage-btn-add-cart"
+            type="button"
+          >
+            Add to Cart
+          </button>
+        </div>
+      );
+    })}
+
+    {suggestedProducts.length === 0 && (
+      <p className="text-muted">
+        No suggested products available right now.
+      </p>
+    )}
+  </div>
+</div>
         </>
       )}
 
