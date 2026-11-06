@@ -2,6 +2,10 @@ import React from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 
+// Layouts
+import FullLayout from "./Components/layouts/FullLayout.jsx";
+import NavbarOnlyLayout from "./Components/layouts/NavbarOnlyLayout.jsx";
+
 // User & Auth Pages
 import Login from "./pages/register/Login.jsx";
 import Signup from "./pages/register/Signup.jsx";
@@ -32,13 +36,9 @@ import AdminProtectedRoute, {
 function App() {
   return (
     <>
-      {/* 🔔 Global Toaster Notification Engine */}
       <Toaster
         position="top-center"
-        containerStyle={{
-          top: 85,
-          zIndex: 99999,
-        }}
+        containerStyle={{ top: 85, zIndex: 99999 }}
         toastOptions={{
           duration: 5000,
           style: {
@@ -51,48 +51,58 @@ function App() {
             boxShadow: "0 4px 14px rgba(0,0,0,0.2)",
           },
           success: {
-            iconTheme: {
-              primary: "#2ec4b6",
-              secondary: "#ffffff",
-            },
+            iconTheme: { primary: "#2ec4b6", secondary: "#ffffff" },
           },
           error: {
-            style: {
-              background: "#721c24",
-              color: "#ffffff",
-            },
-            iconTheme: {
-              primary: "#f5c6cb",
-              secondary: "#721c24",
-            },
+            style: { background: "#721c24", color: "#ffffff" },
+            iconTheme: { primary: "#f5c6cb", secondary: "#721c24" },
           },
         }}
       />
 
       <Routes>
-        {/* 🛍️ Public Storefront Routes (Blocked for logged-in Admins) */}
-        <Route element={<NonAdminRoute />}>
-          <Route path="/" element={<Homepage />} />
-          <Route path="/Products" element={<Products />} />
-          <Route path="/About" element={<About />} />
-          <Route path="/SpecificProduct/:id" element={<SpecificProduct />} />
+        {/* =========================================
+            1. PAGES WITH NAVBAR + FOOTER
+            (Homepage, Products, SpecificProduct, About, Wishlist, Cart)
+           ========================================= */}
+        <Route element={<FullLayout />}>
+          {/* Public Storefront */}
+          <Route element={<NonAdminRoute />}>
+            <Route path="/" element={<Homepage />} />
+            <Route path="/Products" element={<Products />} />
+            <Route path="/SpecificProduct/:id" element={<SpecificProduct />} />
+            <Route path="/About" element={<About />} />
+          </Route>
+
+          {/* Protected Storefront */}
+          <Route element={<UserProtectedRoute />}>
+            <Route path="/Wishlist" element={<Wishlist />} />
+            <Route path="/Cart" element={<Cart />} />
+          </Route>
         </Route>
 
-        {/* 🚫 Guest-Only Routes (Redirects if already logged in) */}
+        {/* =========================================
+            2. PAGES WITH NAVBAR ONLY (NO FOOTER)
+            (Profile, Paymentpage)
+           ========================================= */}
+        <Route element={<NavbarOnlyLayout />}>
+          <Route element={<UserProtectedRoute />}>
+            <Route path="/Profile" element={<Profile />} />
+            <Route path="/Paymentpage" element={<Paymentpage />} />
+          </Route>
+        </Route>
+
+        {/* =========================================
+            3. AUTH / GUEST ROUTES (NO NAVBAR, NO FOOTER)
+           ========================================= */}
         <Route element={<PublicOnlyRoute />}>
           <Route path="/LogIn" element={<Login />} />
           <Route path="/Signup" element={<Signup />} />
         </Route>
 
-        {/* 🔒 Protected User Routes (Regular customers only; Admins blocked) */}
-        <Route element={<UserProtectedRoute />}>
-          <Route path="/Paymentpage" element={<Paymentpage />} />
-          <Route path="/Cart" element={<Cart />} />
-          <Route path="/Profile" element={<Profile />} />
-          <Route path="/Wishlist" element={<Wishlist />} />
-        </Route>
-
-        {/* 🔒 Protected Admin Routes (Admins only) */}
+        {/* =========================================
+            4. ADMIN ROUTES (NO USER NAVBAR, NO USER FOOTER)
+           ========================================= */}
         <Route element={<AdminProtectedRoute />}>
           <Route path="/AdminDashboard" element={<AdminDashboard />} />
           <Route path="/dashboard" element={<Navigate to="/AdminDashboard" replace />} />
@@ -104,7 +114,7 @@ function App() {
           <Route path="/Adminorder" element={<Adminorder />} />
         </Route>
 
-        {/* 🧭 Fallback Route for undefined paths */}
+        {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
