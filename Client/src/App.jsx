@@ -5,6 +5,7 @@ import { Toaster } from "react-hot-toast";
 // Layouts
 import FullLayout from "./Components/layouts/FullLayout.jsx";
 import NavbarOnlyLayout from "./Components/layouts/NavbarOnlyLayout.jsx";
+import AdminLayout from "./Components/layouts/AdminLayout.jsx";
 
 // User & Auth Pages
 import Login from "./pages/register/Login.jsx";
@@ -62,11 +63,9 @@ function App() {
 
       <Routes>
         {/* =========================================
-            1. PAGES WITH NAVBAR + FOOTER
-            (Homepage, Products, SpecificProduct, About, Wishlist, Cart)
+            1. PAGES WITH USER NAVBAR + FOOTER
            ========================================= */}
         <Route element={<FullLayout />}>
-          {/* Public Storefront */}
           <Route element={<NonAdminRoute />}>
             <Route path="/" element={<Homepage />} />
             <Route path="/Products" element={<Products />} />
@@ -74,7 +73,6 @@ function App() {
             <Route path="/About" element={<About />} />
           </Route>
 
-          {/* Protected Storefront */}
           <Route element={<UserProtectedRoute />}>
             <Route path="/Wishlist" element={<Wishlist />} />
             <Route path="/Cart" element={<Cart />} />
@@ -82,8 +80,7 @@ function App() {
         </Route>
 
         {/* =========================================
-            2. PAGES WITH NAVBAR ONLY (NO FOOTER)
-            (Profile, Paymentpage)
+            2. PAGES WITH USER NAVBAR ONLY
            ========================================= */}
         <Route element={<NavbarOnlyLayout />}>
           <Route element={<UserProtectedRoute />}>
@@ -93,7 +90,7 @@ function App() {
         </Route>
 
         {/* =========================================
-            3. AUTH / GUEST ROUTES (NO NAVBAR, NO FOOTER)
+            3. AUTH / GUEST ROUTES
            ========================================= */}
         <Route element={<PublicOnlyRoute />}>
           <Route path="/LogIn" element={<Login />} />
@@ -101,17 +98,19 @@ function App() {
         </Route>
 
         {/* =========================================
-            4. ADMIN ROUTES (NO USER NAVBAR, NO USER FOOTER)
+            4. ADMIN ROUTES WITH ADMIN NAVBAR
            ========================================= */}
         <Route element={<AdminProtectedRoute />}>
-          <Route path="/AdminDashboard" element={<AdminDashboard />} />
-          <Route path="/dashboard" element={<Navigate to="/AdminDashboard" replace />} />
-          <Route path="/admin" element={<Navigate to="/AdminDashboard" replace />} />
-          <Route path="/AdminCategory" element={<Category />} />
-          <Route path="/AdminProducts" element={<Adminproducts />} />
-          <Route path="/AdminaddProducts" element={<Adminaddproducts />} />
-          <Route path="/AdminCustomerdetails" element={<AdminCustomerdetails />} />
-          <Route path="/Adminorder" element={<Adminorder />} />
+          <Route element={<AdminLayout />}>
+            <Route path="/AdminDashboard" element={<AdminDashboard />} />
+            <Route path="/dashboard" element={<Navigate to="/AdminDashboard" replace />} />
+            <Route path="/admin" element={<Navigate to="/AdminDashboard" replace />} />
+            <Route path="/AdminCategory" element={<Category />} />
+            <Route path="/AdminProducts" element={<Adminproducts />} />
+            <Route path="/AdminaddProducts" element={<Adminaddproducts />} />
+            <Route path="/AdminCustomerdetails" element={<AdminCustomerdetails />} />
+            <Route path="/Adminorder" element={<Adminorder />} />
+          </Route>
         </Route>
 
         {/* Fallback */}

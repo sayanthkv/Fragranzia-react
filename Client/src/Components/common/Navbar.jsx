@@ -90,25 +90,42 @@ const Navbar = () => {
               </div>
             </li>
 
-            <li className="nav-item">
-              <Link to="/Cart" className="icon-btn homepage-icon-btn" aria-label="Cart">
-                <i className="fa-solid fa-cart-shopping"></i>
-              </Link>
-            </li>
-            <li className="nav-item">
-              <button
-                className="icon-btn homepage-icon-btn"
-                type="button"
-                aria-label="Notifications"
-              >
-                <i className="fa-regular fa-bell"></i>
-              </button>
-            </li>
-            <li className="nav-item">
-              <Link to="/Profile" className="icon-btn homepage-icon-btn" aria-label="Profile">
-                <i className="fa-regular fa-user"></i>
-              </Link>
-            </li>
+            {/* Cart NavLink */}
+<li className="nav-item">
+  <NavLink
+    to="/Cart"
+    className={({ isActive }) =>
+      `icon-btn homepage-icon-btn ${isActive ? "active" : ""}`
+    }
+    aria-label="Cart"
+  >
+    <i className="fa-solid fa-cart-shopping"></i>
+  </NavLink>
+</li>
+
+{/* Notification Button */}
+<li className="nav-item">
+  <button
+    className="icon-btn homepage-icon-btn"
+    type="button"
+    aria-label="Notifications"
+  >
+    <i className="fa-regular fa-bell"></i>
+  </button>
+</li>
+
+{/* Profile NavLink */}
+<li className="nav-item">
+  <NavLink
+    to="/Profile"
+    className={({ isActive }) =>
+      `icon-btn homepage-icon-btn ${isActive ? "active" : ""}`
+    }
+    aria-label="Profile"
+  >
+    <i className="fa-regular fa-user"></i>
+  </NavLink>
+</li>
           </ul>
         </div>
       </div>
