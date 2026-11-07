@@ -1,0 +1,235 @@
+/* =========================================
+   Sidebar / Drawer Base (Left-Pinned)
+   ========================================= */
+.admin-navbar {
+  width: 260px;
+  background-color: #ffffff;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 18px;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0; /* Anchored to the left side */
+  z-index: 1050;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
+}
+
+.admin-navbar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.admin-navbar-brand h2 {
+  color: #10b981;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin: 0;
+  white-space: nowrap;
+}
+
+/* Nav item list */
+.admin-navbar-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.admin-nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* Left-aligns icon + text */
+  gap: 14px;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  color: #475569;
+  font-size: 15px;
+  font-weight: 500;
+  border-radius: 10px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+}
+
+.admin-nav-item:hover {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+.admin-nav-item.active {
+  background-color: #ecfdf5;
+  color: #059669;
+  font-weight: 600;
+}
+
+.admin-nav-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.admin-nav-label {
+  display: inline-block !important;
+  white-space: nowrap;
+  font-size: 15px;
+  color: inherit;
+  text-align: left;
+}
+
+/* Logout button */
+.admin-navbar-logout {
+  padding-top: 16px;
+  margin-top: auto;
+  border-top: 1px solid #f1f5f9;
+}
+
+.admin-logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px;
+  background-color: #10b981;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.admin-logout-btn:hover {
+  background-color: #059669;
+}
+
+/* =========================================
+   Mobile Top Bar (Left-aligned Hamburger + Brand)
+   ========================================= */
+.admin-mobile-topbar {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0 16px;
+  z-index: 1000;
+  box-sizing: border-box;
+}
+
+.admin-mobile-brand-title {
+  color: #10b981;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  white-space: nowrap;
+}
+
+.admin-hamburger-btn,
+.admin-drawer-close-btn {
+  background: transparent;
+  border: none;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.admin-hamburger-btn:hover,
+.admin-drawer-close-btn:hover {
+  background-color: #f1f5f9;
+}
+
+.admin-drawer-close-btn {
+  display: none;
+}
+
+.admin-navbar-backdrop {
+  display: none;
+}
+
+/* =========================================
+   Small Screens (< 600px Breakpoint)
+   ========================================= */
+@media (max-width: 600px) {
+  /* Show Mobile Header with left-aligned contents */
+  .admin-mobile-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .admin-drawer-close-btn {
+    display: flex;
+  }
+
+  /* Drawer positioned on the LEFT */
+  .admin-navbar {
+    top: 0;
+    left: 0;
+    right: auto;
+    width: 78vw;
+    max-width: 280px;
+    height: 100vh;
+    padding: 20px 14px;
+    transform: translateX(-100%); /* Hidden to the left */
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Slides out towards the right from the left boundary */
+  .admin-navbar.open {
+    transform: translateX(0);
+  }
+
+  /* Left-aligned navigation links */
+  .admin-navbar-buttons {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .admin-nav-item {
+    justify-content: flex-start;
+    padding: 12px 14px;
+    gap: 12px;
+  }
+
+  .admin-nav-label {
+    display: inline-block !important;
+    font-size: 14.5px;
+  }
+
+  /* Dimmed backdrop */
+  .admin-navbar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(2px);
+    z-index: 1040;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .admin-navbar-backdrop.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}

@@ -261,55 +261,7 @@ const Adminproducts = () => {
         }}
       />
 
-      <nav className="adminproduct-navbar">
-        <div className="adminproduct-navbar-brand">
-          <h2>Dashtar</h2>
-        </div>
-
-        <div className="adminproduct-navbar-buttons">
-          <button className="adminproduct-nav-item">
-            <LuLayoutDashboard className="adminproduct-nav-icon" />
-            <Link to="/AdminDashboard">
-              <span>Dashboard</span>
-            </Link>
-          </button>
-
-          <button className="admin-nav-item active">
-            <LuShoppingBag className="adminproduct-nav-icon" />
-            <Link to="/Adminproducts">
-              <span>Products</span>
-            </Link>
-          </button>
-
-          <button className="adminproduct-nav-item">
-            <LuList className="adminproduct-nav-icon" />
-            <Link to="/AdminCategory">
-              <span>Categories</span>
-            </Link>
-          </button>
-
-          <button className="adminproduct-nav-item">
-            <LuUsers className="adminproduct-nav-icon" />
-            <Link to="/AdminCustomerdetails">
-              <span>Customers</span>
-            </Link>
-          </button>
-
-          <button className="adminproduct-nav-item">
-            <LuShoppingCart className="adminproduct-nav-icon" />
-            <Link to="/Adminorder">
-              <span>Orders</span>
-            </Link>
-          </button>
-        </div>
-
-        <div className="admin-navbar-logout">
-          <button className="admin-logout-btn" onClick={handleLogout}>
-            <LuLogOut className="admin-nav-icon" />
-            <span>Log Out</span>
-          </button>
-        </div>
-      </nav>
+      
 
       <div className="adminproduct-main-content">
         <div className="adminproduct-action-bar">

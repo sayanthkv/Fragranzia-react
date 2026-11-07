@@ -212,56 +212,6 @@ const Adminaddproducts = () => {
         }}
       />
 
-      <nav className="admin-navbar">
-        <div className="admin-navbar-brand">
-          <h2>Dashtar</h2>
-        </div>
-
-        <div className="admin-navbar-buttons">
-          <button className="admin-nav-item">
-            <LuLayoutDashboard className="admin-nav-icon" />
-            <Link to="/AdminDashboard">
-              <span>Dashboard</span>
-            </Link>
-          </button>
-
-          <button className="admin-nav-item active">
-            <LuShoppingBag className="admin-nav-icon" />
-            <Link to="/Adminproducts">
-              <span>Products</span>
-            </Link>
-          </button>
-
-          <button className="admin-nav-item">
-            <LuList className="admin-nav-icon" />
-            <Link to="/AdminCategory">
-              <span>Categories</span>
-            </Link>
-          </button>
-
-          <button className="admin-nav-item">
-            <LuUsers className="admin-nav-icon" />
-            <Link to="/AdminCustomerdetails">
-              <span>Customers</span>
-            </Link>
-          </button>
-
-          <button className="admin-nav-item">
-            <LuShoppingCart className="admin-nav-icon" />
-            <Link to="/Adminorder">
-              <span>Orders</span>
-            </Link>
-          </button>
-        </div>
-
-        <div className="admin-navbar-logout">
-          <button className="admin-logout-btn" onClick={handleLogout}>
-            <LuLogOut className="admin-nav-icon" />
-            <span>Log Out</span>
-          </button>
-        </div>
-      </nav>
-
       <div className="addproduct-main">
         <h3>Add Product</h3>
         <span>Add your product and necessary information here</span>
