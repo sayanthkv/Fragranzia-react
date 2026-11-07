@@ -2,120 +2,137 @@
    Sidebar / Drawer Base (Left-Pinned)
    ========================================= */
 .admin-navbar {
-  width: 260px;
-  background-color: #ffffff;
+  width: 260px !important;
+  min-width: 260px !important;
+  background-color: #ffffff !important;
   border-right: 1px solid #e2e8f0;
-  display: flex;
-  flex-direction: column;
-  padding: 24px 18px;
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  left: 0; /* Anchored to the left side */
-  z-index: 1050;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-sizing: border-box;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 24px 18px !important;
+  position: fixed !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: auto !important;
+  z-index: 1050 !important;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-sizing: border-box !important;
+  overflow-x: hidden !important;
 }
 
 .admin-navbar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 24px !important;
+  width: 100% !important;
+}
+
+.admin-navbar-brand {
+  margin: 0 !important;
 }
 
 .admin-navbar-brand h2 {
-  color: #10b981;
-  font-size: 24px;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-  margin: 0;
-  white-space: nowrap;
+  color: #10b981 !important;
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.5px !important;
+  margin: 0 !important;
+  white-space: nowrap !important;
+  display: block !important;
 }
 
-/* Nav item list */
+/* Nav Item List */
 .admin-navbar-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  flex: 1;
-  overflow-y: auto;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  flex: 1 !important;
+  overflow-y: auto !important;
+  width: 100% !important;
+  align-items: flex-start !important;
 }
 
 .admin-nav-item {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start; /* Left-aligns icon + text */
-  gap: 14px;
-  padding: 12px 16px;
-  border: none;
-  background: transparent;
-  color: #475569;
-  font-size: 15px;
-  font-weight: 500;
-  border-radius: 10px;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  width: 100%;
-  box-sizing: border-box;
-  text-align: left;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 14px !important;
+  padding: 12px 16px !important;
+  border: none !important;
+  background: transparent !important;
+  color: #475569 !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  border-radius: 10px !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  text-align: left !important;
+  white-space: nowrap !important;
 }
 
 .admin-nav-item:hover {
-  background-color: #f8fafc;
-  color: #0f172a;
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
 }
 
 .admin-nav-item.active {
-  background-color: #ecfdf5;
-  color: #059669;
-  font-weight: 600;
+  background-color: #ecfdf5 !important;
+  color: #059669 !important;
+  font-weight: 600 !important;
 }
 
 .admin-nav-icon {
-  font-size: 20px;
-  flex-shrink: 0;
+  font-size: 20px !important;
+  min-width: 20px !important;
+  flex-shrink: 0 !important;
 }
 
 .admin-nav-label {
   display: inline-block !important;
-  white-space: nowrap;
-  font-size: 15px;
-  color: inherit;
-  text-align: left;
+  white-space: nowrap !important;
+  font-size: 15px !important;
+  color: inherit !important;
+  text-align: left !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
-/* Logout button */
+/* Logout Button */
 .admin-navbar-logout {
-  padding-top: 16px;
-  margin-top: auto;
-  border-top: 1px solid #f1f5f9;
+  padding-top: 16px !important;
+  margin-top: auto !important;
+  border-top: 1px solid #f1f5f9 !important;
+  width: 100% !important;
 }
 
 .admin-logout-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  width: 100%;
-  padding: 12px;
-  background-color: #10b981;
-  color: #ffffff;
-  border: none;
-  border-radius: 10px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  width: 100% !important;
+  padding: 12px !important;
+  background-color: #10b981 !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 10px !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s ease !important;
+  box-sizing: border-box !important;
 }
 
 .admin-logout-btn:hover {
-  background-color: #059669;
+  background-color: #059669 !important;
 }
 
 /* =========================================
-   Mobile Top Bar (Left-aligned Hamburger + Brand)
+   Mobile Top Bar (Desktop Hidden)
    ========================================= */
 .admin-mobile-topbar {
   display: none;
@@ -166,70 +183,64 @@
 }
 
 /* =========================================
-   Small Screens (< 600px Breakpoint)
+   Mobile Responsive Screen Rules (< 768px & < 600px)
    ========================================= */
-@media (max-width: 600px) {
-  /* Show Mobile Header with left-aligned contents */
+@media (max-width: 768px) {
+  /* Show Mobile Header */
   .admin-mobile-topbar {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
   }
 
   .admin-drawer-close-btn {
-    display: flex;
+    display: flex !important;
   }
 
-  /* Drawer positioned on the LEFT */
+  /* Off-canvas Left Drawer */
   .admin-navbar {
-    top: 0;
-    left: 0;
-    right: auto;
-    width: 78vw;
-    max-width: 280px;
-    height: 100vh;
-    padding: 20px 14px;
-    transform: translateX(-100%); /* Hidden to the left */
-    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+    top: 0 !important;
+    left: 0 !important;
+    right: auto !important;
+    width: 280px !important;
+    min-width: 270px !important;
+    max-width: 85vw !important;
+    height: 100vh !important;
+    padding: 20px 16px !important;
+    transform: translateX(-100%) !important; /* Pushed off-screen left */
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15) !important;
   }
 
-  /* Slides out towards the right from the left boundary */
+  /* Slide in when open state is active */
   .admin-navbar.open {
-    transform: translateX(0);
-  }
-
-  /* Left-aligned navigation links */
-  .admin-navbar-buttons {
-    align-items: flex-start;
-    width: 100%;
+    transform: translateX(0) !important;
   }
 
   .admin-nav-item {
-    justify-content: flex-start;
-    padding: 12px 14px;
-    gap: 12px;
+    padding: 12px 14px !important;
+    gap: 12px !important;
   }
 
   .admin-nav-label {
     display: inline-block !important;
-    font-size: 14.5px;
+    font-size: 14.5px !important;
   }
 
-  /* Dimmed backdrop */
+  /* Dimmed Backdrop */
   .admin-navbar-backdrop {
-    display: block;
-    position: fixed;
-    inset: 0;
-    background-color: rgba(15, 23, 42, 0.45);
-    backdrop-filter: blur(2px);
-    z-index: 1040;
+    display: block !important;
+    position: fixed !important;
+    inset: 0 !important;
+    background-color: rgba(15, 23, 42, 0.45) !important;
+    backdrop-filter: blur(2px) !important;
+    z-index: 1040 !important;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease;
   }
 
   .admin-navbar-backdrop.show {
-    opacity: 1;
-    pointer-events: auto;
+    opacity: 1 !important;
+    pointer-events: auto !important;
   }
 }

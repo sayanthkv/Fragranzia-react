@@ -1,11 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
-  LuLayoutDashboard,
-  LuShoppingBag,
-  LuList,
-  LuUsers,
   LuShoppingCart,
-  LuLogOut,
   LuEye,
   LuX,
   LuCopy,
@@ -21,8 +16,9 @@ import {
   LuCircleX
 } from 'react-icons/lu';
 import './Adminorder.css';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import AdminService from '../../services/admin-api-services/AdminService';
+import AdminNavbar from "../../Components/admin/AdminNavbar"
 import toast, { Toaster } from 'react-hot-toast';
 
 const Adminorder = () => {
@@ -66,7 +62,6 @@ const Adminorder = () => {
   };
 
   const handleStatusChange = async (id, status) => {
-    // Keep reference of previous status for clean rollback if API fails
     const previousOrders = [...orders];
 
     setOrders((prevOrders) =>
@@ -89,7 +84,6 @@ const Adminorder = () => {
     } catch (error) {
       console.error("Failed to update status on server:", error);
       toast.error(error.response?.data?.message || "Failed to update delivery status");
-      // Revert state
       setOrders(previousOrders);
       if (selectedOrder && selectedOrder._id === id) {
         const originalItem = previousOrders.find((o) => o._id === id);
@@ -146,16 +140,8 @@ const Adminorder = () => {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("Token");
-    localStorage.removeItem("role");
-    toast.success("Logged out successfully");
-    navigate('/LogIn');
-  };
-
   return (
     <>
-      {/* Brand-Themed Toaster */}
       <Toaster
         position="top-center"
         containerStyle={{
@@ -193,10 +179,11 @@ const Adminorder = () => {
       />
 
       <div className="product-main-container">
-        {/* Navigation Sidebar */}
-      
+        {/* Responsive Navbar */}
+        <AdminNavbar />
+
         {/* Main Content Area */}
-        <div className="AdminCustomerdetails-content">
+        <main className="AdminCustomerdetails-content">
           <div className="order-page-header">
             <div className="order-heading">
               <div className="order-title">
@@ -220,9 +207,9 @@ const Adminorder = () => {
                 <div
                   className="spinner-border"
                   style={{
-                    width: "3rem",
-                    height: "3rem",
-                    color: "#043948",
+                    width: "2.5rem",
+                    height: "2.5rem",
+                    color: "#10b981",
                     borderWidth: "3px",
                   }}
                   role="status"
@@ -231,10 +218,9 @@ const Adminorder = () => {
                 </div>
                 <span
                   style={{
-                    color: "#043948",
-                    fontSize: "0.95rem",
-                    fontWeight: "600",
-                    letterSpacing: "0.3px",
+                    color: "#64748b",
+                    fontSize: "0.9rem",
+                    fontWeight: "500",
                   }}
                 >
                   Loading orders...
@@ -331,14 +317,13 @@ const Adminorder = () => {
                                 <span className="d-block text-muted small">
                                   Qty: {totalQuantity}
                                 </span>
-                                <span className="order-total fw-bold text-dark small">
+                                <span className="order-total small">
                                   Total: ₹{data.totalPrice?.toLocaleString('en-IN') || 0}
                                 </span>
                               </div>
                             </div>
                           </td>
 
-                          {/* RETURN REQUEST STATUS & ACTION COLUMNS */}
                           <td>
                             {isReturnRequested ? (
                               <div className="d-flex flex-column gap-1 align-items-start">
@@ -416,7 +401,7 @@ const Adminorder = () => {
               </table>
             )}
           </div>
-        </div>
+        </main>
       </div>
 
       {/* Modal Overlay for Detailed Order View */}
@@ -449,7 +434,7 @@ const Adminorder = () => {
             </div>
 
             <div className="order-details-body">
-              {/* Return Request Banner inside Modal */}
+              {/* Return Request Banner */}
               {(selectedOrder.isReturned || selectedOrder.returnStatus === "Requested") && (
                 <div className="alert alert-warning d-flex align-items-center justify-content-between p-3 mb-3 rounded shadow-sm">
                   <div>
@@ -492,7 +477,7 @@ const Adminorder = () => {
 
                     <div>
                       <strong>{selectedOrder.user?.name || 'Customer'}</strong>
-                      <p className="mb-0">User ID:</p>
+                      <p className="mb-0">User ID: </p>
                       <span>{selectedOrder.user?._id?.slice(-8) || selectedOrder.user?.slice?.(-8) || 'N/A'}</span>
                     </div>
                   </div>
@@ -518,9 +503,9 @@ const Adminorder = () => {
 
                   <div className="shipping-address">
                     <strong>{selectedOrder.shippingAddress?.fullName || selectedOrder.user?.name}</strong>
-                    <p className="mb-1">{selectedOrder.shippingAddress?.street}</p>
-                    <p className="mb-1">{selectedOrder.shippingAddress?.city}, {selectedOrder.shippingAddress?.state}</p>
-                    <p className="mb-2">{selectedOrder.shippingAddress?.country} {selectedOrder.shippingAddress?.zip}</p>
+                    <p>{selectedOrder.shippingAddress?.street}</p>
+                    <p>{selectedOrder.shippingAddress?.city}, {selectedOrder.shippingAddress?.state}</p>
+                    <p>{selectedOrder.shippingAddress?.country} {selectedOrder.shippingAddress?.zip}</p>
 
                     <div className="address-contact">
                       <LuPhone />
@@ -561,18 +546,18 @@ const Adminorder = () => {
               </div>
 
               {/* Ordered Items List */}
-              <div className="items-title mt-4 mb-2 fw-bold">ITEMS ORDERED</div>
+              <div className="items-title">ITEMS ORDERED</div>
 
               <div className="d-flex flex-column gap-2 mb-3">
                 {selectedOrder.orderItems?.map((item, idx) => (
-                  <div key={item._id || idx} className="ordered-item-card d-flex align-items-center justify-content-between p-2 border rounded">
+                  <div key={item._id || idx} className="ordered-item-card">
                     <div className="d-flex align-items-center gap-3">
-                      <div className="ordered-product-image flex-shrink-0">
+                      <div className="ordered-product-image">
                         {item.product?.image ? (
                           <img
                             src={item.product?.image}
                             alt={item.product?.name}
-                            style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '6px' }}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                           />
                         ) : (
                           <span style={{ fontSize: '24px' }}>🧴</span>
@@ -580,8 +565,8 @@ const Adminorder = () => {
                       </div>
 
                       <div className="ordered-product-information">
-                        <h3 className="fs-6 mb-1">{item.product?.name || 'Product Name'}</h3>
-                        <div className="ordered-product-meta text-muted small">
+                        <h3>{item.product?.name || 'Product Name'}</h3>
+                        <div className="text-muted small">
                           <span>Category: <strong>{item.product?.categories?.name || item.product?.category?.name || 'General'}</strong></span>
                         </div>
                       </div>

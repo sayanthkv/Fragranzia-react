@@ -1,17 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import {
-  LuLayoutDashboard,
-  LuShoppingBag,
-  LuList,
-  LuUsers,
-  LuShoppingCart,
-  LuLogOut,
-  LuPencil
-} from 'react-icons/lu';
+import { LuPencil } from 'react-icons/lu';
 import './Category.css';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import AdminService from '../../services/admin-api-services/AdminService';
+import AdminNavbar from "../../Components/admin/AdminNavbar"
 import toast, { Toaster } from 'react-hot-toast';
+import './Category.css'
 
 function Category() {
   const [categories, setCategories] = useState([]);
@@ -41,7 +35,6 @@ function Category() {
       const res = await getCategory(page, 10);
 
       if (Array.isArray(res)) {
-        // Fallback if backend still returns an array
         setCategories(res);
         setTotalPages(Math.ceil(res.length / 10) || 1);
       } else {
@@ -175,13 +168,6 @@ function Category() {
     setEditDetails({ id: '', name: '', description: '' });
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('Token');
-    localStorage.removeItem('role');
-    toast.success('Logged out successfully');
-    navigate('/LogIn');
-  };
-
   return (
     <>
       <Toaster
@@ -200,33 +186,16 @@ function Category() {
             borderRadius: '8px',
             padding: '12px 20px',
             boxShadow: '0 4px 14px rgba(0,0,0,0.2)'
-          },
-          success: {
-            iconTheme: {
-              primary: '#2ec4b6',
-              secondary: '#ffffff'
-            }
-          },
-          error: {
-            style: {
-              background: '#721c24',
-              color: '#ffffff'
-            },
-            iconTheme: {
-              primary: '#f5c6cb',
-              secondary: '#721c24'
-            }
           }
         }}
       />
 
       <div className="category-main-container">
-        
+        {/* Responsive Navbar */}
+        <AdminNavbar />
 
-        <div className="category-main-content">
+        <main className="category-main-content">
           <div className="category-action-bar">
-            <div className="category-action-left"></div>
-
             <button
               onClick={() => setIsDrawerOpen(true)}
               className="category-btn category-btn-primary"
@@ -235,15 +204,15 @@ function Category() {
             </button>
           </div>
 
-       <div className="category-table-card">
+          <div className="category-table-card">
             {loading ? (
               <div className="d-flex flex-column justify-content-center align-items-center py-5 my-5 gap-3">
                 <div
                   className="spinner-border"
                   style={{
-                    width: '3rem',
-                    height: '3rem',
-                    color: '#043948',
+                    width: '2.5rem',
+                    height: '2.5rem',
+                    color: '#10b981',
                     borderWidth: '3px'
                   }}
                   role="status"
@@ -252,10 +221,9 @@ function Category() {
                 </div>
                 <span
                   style={{
-                    color: '#043948',
-                    fontSize: '0.95rem',
-                    fontWeight: '600',
-                    letterSpacing: '0.3px'
+                    color: '#64748b',
+                    fontSize: '0.9rem',
+                    fontWeight: '500'
                   }}
                 >
                   Loading categories...
@@ -294,9 +262,7 @@ function Category() {
                         <button
                           onClick={() => toggleStatus(cat._id)}
                           className={`category-status-btn ${
-                            cat.isActive
-                              ? 'isActive-unblock'
-                              : 'isActive-block'
+                            cat.isActive ? 'isActive-unblock' : 'isActive-block'
                           }`}
                         >
                           {cat.isActive ? 'Unblocked' : 'Blocked'}
@@ -335,7 +301,7 @@ function Category() {
               </div>
             )}
           </div>
-        </div>
+        </main>
       </div>
 
       {/* Drawer: Add Category */}
@@ -360,7 +326,7 @@ function Category() {
             <label>Category Name</label>
             <input
               type="text"
-              placeholder="Category Name"
+              placeholder="e.g. Footwear"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
@@ -370,7 +336,7 @@ function Category() {
             <label>Description</label>
             <textarea
               rows="4"
-              placeholder="Category Description"
+              placeholder="Brief description of the category..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
@@ -385,24 +351,11 @@ function Category() {
               Cancel
             </button>
             <button
-              className="submit-btn d-flex align-items-center justify-content-center gap-2"
+              className="submit-btn"
               onClick={submitdetails}
               disabled={isSubmitting}
             >
-              {isSubmitting ? (
-                <>
-                  <div
-                    className="spinner-border spinner-border-sm text-light"
-                    role="status"
-                    style={{ width: '1rem', height: '1rem', borderWidth: '2px' }}
-                  >
-                    <span className="visually-hidden">Loading...</span>
-                  </div>
-                  <span>Adding...</span>
-                </>
-              ) : (
-                'Add Category'
-              )}
+              {isSubmitting ? 'Adding...' : 'Add Category'}
             </button>
           </div>
         </div>
@@ -457,24 +410,11 @@ function Category() {
               Cancel
             </button>
             <button
-              className="submit-btn d-flex align-items-center justify-content-center gap-2"
+              className="submit-btn"
               onClick={submiteditdetails}
               disabled={isSubmitting}
             >
-              {isSubmitting ? (
-                <>
-                  <div
-                    className="spinner-border spinner-border-sm text-light"
-                    role="status"
-                    style={{ width: '1rem', height: '1rem', borderWidth: '2px' }}
-                  >
-                    <span className="visually-hidden">Loading...</span>
-                  </div>
-                  <span>Updating...</span>
-                </>
-              ) : (
-                'Update Category'
-              )}
+              {isSubmitting ? 'Updating...' : 'Update Category'}
             </button>
           </div>
         </div>

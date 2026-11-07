@@ -1,18 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import toast, { Toaster } from 'react-hot-toast';
 import AdminService from '../../services/admin-api-services/AdminService';
+import AdminNavbar from "../../Components/admin/AdminNavbar"
 
-import {
-  LuLayoutDashboard,
-  LuShoppingBag,
-  LuList,
-  LuUsers,
-  LuShoppingCart,
-  LuLogOut,
-  LuX
-} from 'react-icons/lu';
-
+import { LuX } from 'react-icons/lu';
 import './Adminaddproducts.css';
 
 const Adminaddproducts = () => {
@@ -42,7 +34,6 @@ const Adminaddproducts = () => {
     }));
   };
 
-  // Append new files up to a maximum of 3
   const handlefilechange = (e) => {
     const selectedFiles = Array.from(e.target.files);
     if (!selectedFiles.length) return;
@@ -64,11 +55,9 @@ const Adminaddproducts = () => {
     setImages((prev) => [...prev, ...filesToAdd]);
     setPreviewUrls((prev) => [...prev, ...newPreviews]);
 
-    // Reset input so re-selecting the same file works if needed
     e.target.value = '';
   };
 
-  // Remove individual preview and revoke object URL
   const handleRemoveImage = (indexToRemove) => {
     URL.revokeObjectURL(previewUrls[indexToRemove]);
     setImages((prev) => prev.filter((_, idx) => idx !== indexToRemove));
@@ -91,18 +80,10 @@ const Adminaddproducts = () => {
 
     handleCategories();
 
-    // Cleanup previews on component unmount
     return () => {
       previewUrls.forEach((url) => URL.revokeObjectURL(url));
     };
   }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem('Token');
-    localStorage.removeItem('role');
-    toast.success('Logged out successfully');
-    navigate('/LogIn');
-  };
 
   const handleCancel = () => {
     previewUrls.forEach((url) => URL.revokeObjectURL(url));
@@ -151,7 +132,6 @@ const Adminaddproducts = () => {
       formData.append('description', productData.description);
       formData.append('status', productData.status);
 
-      // Append files. Note: check backend key expectation ('images' or 'images[]')
       images.forEach((file) => {
         formData.append('images', file);
       });
@@ -192,37 +172,29 @@ const Adminaddproducts = () => {
             borderRadius: '8px',
             padding: '12px 20px',
             boxShadow: '0 4px 14px rgba(0,0,0,0.2)'
-          },
-          success: {
-            iconTheme: {
-              primary: '#2ec4b6',
-              secondary: '#ffffff'
-            }
-          },
-          error: {
-            style: {
-              background: '#721c24',
-              color: '#ffffff'
-            },
-            iconTheme: {
-              primary: '#f5c6cb',
-              secondary: '#721c24'
-            }
           }
         }}
       />
 
-      <div className="addproduct-main">
-        <h3>Add Product</h3>
-        <span>Add your product and necessary information here</span>
+      {/* Responsive Admin Sidebar / Mobile Navbar */}
+      <AdminNavbar />
 
-        <form onSubmit={Onhandlesubmit}>
+      <main className="addproduct-main">
+        <div className="addproduct-header">
+          <h3>Add Product</h3>
+          <span className="addproduct-subtitle">
+            Add your product and necessary information here
+          </span>
+        </div>
+
+        <form onSubmit={Onhandlesubmit} className="addproduct-form">
           <div className="input-row">
             <div className="col">
               <label>Product name</label>
               <input
                 type="text"
                 name="name"
+                placeholder="e.g. Leather Bag"
                 value={productData.name}
                 onChange={handlechange}
                 required
@@ -234,6 +206,7 @@ const Adminaddproducts = () => {
               <input
                 type="number"
                 name="price"
+                placeholder="e.g. 1500"
                 value={productData.price}
                 onChange={handlechange}
                 min="0"
@@ -248,6 +221,7 @@ const Adminaddproducts = () => {
               <input
                 type="number"
                 name="saleprice"
+                placeholder="e.g. 1200"
                 value={productData.saleprice}
                 onChange={handlechange}
                 min="0"
@@ -260,6 +234,7 @@ const Adminaddproducts = () => {
               <input
                 type="number"
                 name="quantity"
+                placeholder="e.g. 25"
                 value={productData.quantity}
                 onChange={handlechange}
                 min="0"
@@ -291,8 +266,8 @@ const Adminaddproducts = () => {
             <div className="col">
               <label>Product Description</label>
               <textarea
-                className="textarea"
                 name="description"
+                placeholder="Write product specifications and details..."
                 value={productData.description}
                 onChange={handlechange}
                 required
@@ -311,41 +286,15 @@ const Adminaddproducts = () => {
                 onChange={handlefilechange}
                 disabled={images.length >= 3}
               />
-              <div className="d-flex gap-2 mt-2">
+              <div className="addproduct-previews-container">
                 {previewUrls.map((url, i) => (
-                  <div
-                    key={i}
-                    style={{ position: 'relative', display: 'inline-block' }}
-                  >
-                    <img
-                      src={url}
-                      alt={`Preview ${i + 1}`}
-                      style={{
-                        width: 60,
-                        height: 60,
-                        objectFit: 'cover',
-                        borderRadius: 4
-                      }}
-                    />
+                  <div key={i} className="addproduct-preview-thumb">
+                    <img src={url} alt={`Preview ${i + 1}`} />
                     <button
                       type="button"
+                      className="addproduct-preview-remove-btn"
                       onClick={() => handleRemoveImage(i)}
-                      style={{
-                        position: 'absolute',
-                        top: -6,
-                        right: -6,
-                        background: '#e63946',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '50%',
-                        width: 20,
-                        height: 20,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        padding: 0
-                      }}
+                      aria-label="Remove image"
                     >
                       <LuX size={12} />
                     </button>
@@ -367,31 +316,14 @@ const Adminaddproducts = () => {
 
             <button
               type="submit"
-              className="submit-btn d-flex align-items-center justify-content-center gap-2"
+              className="submit-btn"
               disabled={isSubmitting}
             >
-              {isSubmitting ? (
-                <>
-                  <div
-                    className="spinner-border spinner-border-sm text-light"
-                    role="status"
-                    style={{
-                      width: '1rem',
-                      height: '1rem',
-                      borderWidth: '2px'
-                    }}
-                  >
-                    <span className="visually-hidden">Loading...</span>
-                  </div>
-                  <span>Adding Product...</span>
-                </>
-              ) : (
-                'Add Product'
-              )}
+              {isSubmitting ? 'Adding Product...' : 'Add Product'}
             </button>
           </div>
         </form>
-      </div>
+      </main>
     </div>
   );
 };

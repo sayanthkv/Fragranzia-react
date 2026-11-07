@@ -1,17 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import {
-  LuLayoutDashboard,
-  LuShoppingBag,
-  LuList,
-  LuUsers,
-  LuShoppingCart,
-  LuLogOut,
-  LuEye,
-  LuX
-} from 'react-icons/lu';
+import { LuEye, LuX } from 'react-icons/lu';
 import './AdminCustomerdetails.css';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import AdminService from '../../services/admin-api-services/AdminService';
+import AdminNavbar from "../../Components/admin/AdminNavbar"
 import toast, { Toaster } from 'react-hot-toast';
 
 const AdminCustomerdetails = () => {
@@ -49,13 +41,16 @@ const AdminCustomerdetails = () => {
 
     setUsersDetails((prev) =>
       prev.map((item) =>
-        (item._id === userId || item.id === userId)
+        item._id === userId || item.id === userId
           ? { ...item, status: updatedStatus }
           : item
       )
     );
 
-    if (selectedCustomer && (selectedCustomer._id === userId || selectedCustomer.id === userId)) {
+    if (
+      selectedCustomer &&
+      (selectedCustomer._id === userId || selectedCustomer.id === userId)
+    ) {
       setSelectedCustomer((prev) => ({ ...prev, status: updatedStatus }));
     }
 
@@ -73,12 +68,15 @@ const AdminCustomerdetails = () => {
       );
       setUsersDetails((prev) =>
         prev.map((item) =>
-          (item._id === userId || item.id === userId)
+          item._id === userId || item.id === userId
             ? { ...item, status: user.status }
             : item
         )
       );
-      if (selectedCustomer && (selectedCustomer._id === userId || selectedCustomer.id === userId)) {
+      if (
+        selectedCustomer &&
+        (selectedCustomer._id === userId || selectedCustomer.id === userId)
+      ) {
         setSelectedCustomer((prev) => ({ ...prev, status: user.status }));
       }
     }
@@ -90,13 +88,6 @@ const AdminCustomerdetails = () => {
 
   const handleCloseProduct = () => {
     setSelectedCustomer(null);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("Token");
-    localStorage.removeItem("role");
-    toast.success("Logged out successfully");
-    navigate('/LogIn');
   };
 
   useEffect(() => {
@@ -142,11 +133,11 @@ const AdminCustomerdetails = () => {
       />
 
       <div className="product-main-container">
-        {/* Navigation Sidebar */}
-       
+        {/* Responsive Navbar */}
+        <AdminNavbar />
 
         {/* Main Content Area */}
-        <div className="AdminCustomerdetails-content">
+        <main className="AdminCustomerdetails-content">
           <div className="customer-page-header">
             <h2>User List</h2>
             <p>Manage registered Customers account and status</p>
@@ -158,9 +149,9 @@ const AdminCustomerdetails = () => {
                 <div
                   className="spinner-border"
                   style={{
-                    width: "3rem",
-                    height: "3rem",
-                    color: "#043948",
+                    width: "2.5rem",
+                    height: "2.5rem",
+                    color: "#10b981",
                     borderWidth: "3px",
                   }}
                   role="status"
@@ -169,10 +160,9 @@ const AdminCustomerdetails = () => {
                 </div>
                 <span
                   style={{
-                    color: "#043948",
-                    fontSize: "0.95rem",
-                    fontWeight: "600",
-                    letterSpacing: "0.3px",
+                    color: "#64748b",
+                    fontSize: "0.9rem",
+                    fontWeight: "500",
                   }}
                 >
                   Loading customers...
@@ -195,7 +185,9 @@ const AdminCustomerdetails = () => {
                     usersDetails.map((data) => {
                       const userId = data._id || data.id;
                       const isBlocked =
-                        data.status === false || data.status === "Blocked" || data.status === "Block";
+                        data.status === false ||
+                        data.status === "Blocked" ||
+                        data.status === "Block";
 
                       return (
                         <tr key={userId}>
@@ -206,7 +198,6 @@ const AdminCustomerdetails = () => {
                           <td className="product-col-category">
                             {data.email || "N/A"}
                           </td>
-
                           <td className="product-col-category">
                             <button
                               className="product-action-show-btn"
@@ -216,7 +207,6 @@ const AdminCustomerdetails = () => {
                               Show
                             </button>
                           </td>
-
                           <td className="product-col-category">
                             <button
                               onClick={() => toggleStatus(data)}
@@ -249,9 +239,12 @@ const AdminCustomerdetails = () => {
                 selectedCustomer.status === "Block";
 
               return (
-                <div className="admincustomer-overlay" onClick={handleCloseProduct}>
+                <div
+                  className="admincustomer-overlay"
+                  onClick={handleCloseProduct}
+                >
                   <div
-                    className="admincustomer-content product-details-modal"
+                    className="admincustomer-content"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <div className="adminmodal-header">
@@ -303,14 +296,13 @@ const AdminCustomerdetails = () => {
                       readOnly
                       value={
                         selectedCustomer.createdAt
-                          ? new Date(selectedCustomer.createdAt).toLocaleDateString(
-                              "en-IN",
-                              {
-                                day: "numeric",
-                                month: "short",
-                                year: "numeric",
-                              }
-                            )
+                          ? new Date(
+                              selectedCustomer.createdAt
+                            ).toLocaleDateString("en-IN", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })
                           : "N/A"
                       }
                     />
@@ -326,7 +318,7 @@ const AdminCustomerdetails = () => {
               );
             })()}
           </div>
-        </div>
+        </main>
       </div>
     </>
   );

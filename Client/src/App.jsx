@@ -5,7 +5,7 @@ import { Toaster } from "react-hot-toast";
 // Layouts
 import FullLayout from "./Components/layouts/FullLayout.jsx";
 import NavbarOnlyLayout from "./Components/layouts/NavbarOnlyLayout.jsx";
-import AdminLayout from "./Components/layouts/AdminLayout.jsx";
+import AdminLayout from "./Components/admin/AdminLayout.jsx";
 
 // User & Auth Pages
 import Login from "./pages/register/Login.jsx";

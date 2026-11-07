@@ -1,15 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import AdminService from '../../services/admin-api-services/AdminService';
+import AdminNavbar from "../../Components/admin/AdminNavbar"
 import toast, { Toaster } from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
 
 import {
-  LuLayoutDashboard,
-  LuShoppingBag,
-  LuList,
-  LuUsers,
-  LuShoppingCart,
-  LuLogOut,
   LuPencil,
   LuPlus,
   LuEye,
@@ -72,7 +67,6 @@ const Adminproducts = () => {
       category: item.category?._id || item.category || ''
     });
 
-    // Populate existing images array from DB
     const currentImgs = item.images && item.images.length > 0 
       ? item.images 
       : item.image ? [item.image] : [];
@@ -98,7 +92,6 @@ const Adminproducts = () => {
     }));
   };
 
-  // Add new image files without exceeding 3 total
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
@@ -126,7 +119,6 @@ const Adminproducts = () => {
     e.target.value = '';
   };
 
-  // Remove existing DB image
   const handleRemoveExistingImage = (indexToRemove) => {
     const totalRemaining = (existingImages.length - 1) + newImages.length;
     if (totalRemaining < 1) {
@@ -136,7 +128,6 @@ const Adminproducts = () => {
     setExistingImages((prev) => prev.filter((_, idx) => idx !== indexToRemove));
   };
 
-  // Remove newly selected image file
   const handleRemoveNewImage = (indexToRemove) => {
     const totalRemaining = existingImages.length + (newImages.length - 1);
     if (totalRemaining < 1) {
@@ -173,12 +164,10 @@ const Adminproducts = () => {
       formData.append('quantity', editingProduct.quantity || '');
       formData.append('category', editingProduct.category || '');
 
-      // Send retained existing image URLs
       existingImages.forEach((imgUrl) => {
         formData.append('existingImages', imgUrl);
       });
 
-      // Send newly selected image files
       newImages.forEach((file) => {
         formData.append('images', file);
       });
@@ -232,13 +221,6 @@ const Adminproducts = () => {
 
   const formatStatusLabel = (status) => (status === 'Block' ? 'Blocked' : 'Unblocked');
 
-  const handleLogout = () => {
-    localStorage.removeItem('Token');
-    localStorage.removeItem('role');
-    toast.success('Logged out successfully');
-    navigate('/LogIn');
-  };
-
   useEffect(() => {
     fetchproduct();
     fetchCategories();
@@ -261,7 +243,8 @@ const Adminproducts = () => {
         }}
       />
 
-      
+      {/* Responsive Admin Sidebar / Mobile Navbar */}
+      <AdminNavbar />
 
       <div className="adminproduct-main-content">
         <div className="adminproduct-action-bar">
@@ -368,7 +351,7 @@ const Adminproducts = () => {
             <div className="adminproduct-view-product-info">
               <div className="adminproduct-view-product-image-section">
                 <label>Product Images</label>
-                <div className="d-flex gap-2 flex-wrap">
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   {(selectedProduct.images?.length > 0
                     ? selectedProduct.images
                     : selectedProduct.image ? [selectedProduct.image] : []
@@ -382,7 +365,7 @@ const Adminproducts = () => {
                         height: '70px',
                         objectFit: 'cover',
                         borderRadius: '6px',
-                        border: '1px solid #ddd'
+                        border: '1px solid #e2e8f0'
                       }}
                     />
                   ))}
@@ -414,21 +397,19 @@ const Adminproducts = () => {
                   </div>
                 </div>
 
-                <div className="adminproduct-view-status-section">
-                  <div className="adminproduct-view-detail-group">
-                    <label>Stock</label>
-                    <span
-                      className={`adminproduct-view-stock-badge ${
-                        selectedProduct.quantity > 0
-                          ? 'adminproduct-in-stock'
-                          : 'adminproduct-out-of-stock'
-                      }`}
-                    >
-                      {selectedProduct.quantity > 0
-                        ? `${selectedProduct.quantity} In Stock`
-                        : 'Out of Stock'}
-                    </span>
-                  </div>
+                <div className="adminproduct-view-detail-group">
+                  <label>Stock</label>
+                  <span
+                    className={`adminproduct-view-stock-badge ${
+                      selectedProduct.quantity > 0
+                        ? 'adminproduct-in-stock'
+                        : 'adminproduct-out-of-stock'
+                    }`}
+                  >
+                    {selectedProduct.quantity > 0
+                      ? `${selectedProduct.quantity} In Stock`
+                      : 'Out of Stock'}
+                  </span>
                 </div>
               </div>
             </div>
@@ -465,7 +446,7 @@ const Adminproducts = () => {
       {editingProduct && (
         <div className="adminproduct-modal-overlay" onClick={handleCloseEdit}>
           <div
-            className="adminproduct-modal-content adminproduct-edit-modal"
+            className="adminproduct-modal-content"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="adminproduct-modal-header">
@@ -558,7 +539,7 @@ const Adminproducts = () => {
                 </select>
               </div>
 
-              {/* Product Images (Up to 3 with 'x' remove buttons) */}
+              {/* Product Images */}
               <div className="adminproduct-form-group">
                 <label>
                   Product Images (Min 1, Max 3) — Currently: {existingImages.length + newImages.length}/3
@@ -572,14 +553,13 @@ const Adminproducts = () => {
                     marginBottom: '10px'
                   }}
                 >
-                  {/* Saved Existing Images */}
                   {existingImages.map((imgUrl, idx) => (
                     <div
                       key={`existing-${idx}`}
                       style={{
                         position: 'relative',
-                        width: '78px',
-                        height: '78px',
+                        width: '74px',
+                        height: '74px',
                         border: '1px solid #dcdcdc',
                         borderRadius: '8px',
                         overflow: 'hidden'
@@ -600,7 +580,7 @@ const Adminproducts = () => {
                           width: '20px',
                           height: '20px',
                           borderRadius: '50%',
-                          background: 'rgba(230, 57, 70, 0.9)',
+                          background: 'rgba(239, 68, 68, 0.9)',
                           color: '#fff',
                           border: 'none',
                           display: 'flex',
@@ -617,15 +597,14 @@ const Adminproducts = () => {
                     </div>
                   ))}
 
-                  {/* Newly selected images before upload */}
                   {newImagePreviews.map((previewUrl, idx) => (
                     <div
                       key={`new-${idx}`}
                       style={{
                         position: 'relative',
-                        width: '78px',
-                        height: '78px',
-                        border: '2px dashed #2ec4b6',
+                        width: '74px',
+                        height: '74px',
+                        border: '2px dashed #10b981',
                         borderRadius: '8px',
                         overflow: 'hidden'
                       }}
@@ -645,7 +624,7 @@ const Adminproducts = () => {
                           width: '20px',
                           height: '20px',
                           borderRadius: '50%',
-                          background: 'rgba(230, 57, 70, 0.9)',
+                          background: 'rgba(239, 68, 68, 0.9)',
                           color: '#fff',
                           border: 'none',
                           display: 'flex',

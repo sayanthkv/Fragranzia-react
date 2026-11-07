@@ -26,11 +26,21 @@ const AdminNavbar = () => {
   };
 
   const handleLogout = () => {
+    // 1. Clear the exact keys checked by AdminProtectedRoute & PublicOnlyRoute
+    localStorage.removeItem("Token");
+    localStorage.removeItem("role");
+    
+    // Fallback cleanup in case lowercase keys exist anywhere
+    localStorage.removeItem("token");
     localStorage.removeItem("adminToken");
+    localStorage.removeItem("user");
     sessionStorage.clear();
+
     toast.success("Logged out successfully");
     closeMobileMenu();
-    navigate("/LogIn");
+
+    // 2. Redirect cleanly to login and wipe current history entry
+    navigate("/LogIn", { replace: true });
   };
 
   const navLinks = [
@@ -43,7 +53,7 @@ const AdminNavbar = () => {
 
   return (
     <>
-      {/* 📱 Mobile Top Header (Always visible on mobile) */}
+      {/* 📱 Mobile Top Header */}
       <header className="admin-mobile-topbar">
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <button
@@ -67,7 +77,6 @@ const AdminNavbar = () => {
 
       {/* 🚪 Sidebar / Drawer */}
       <aside className={`admin-navbar ${isMobileOpen ? "open" : ""}`}>
-        {/* Drawer Header with full name and mobile close icon */}
         <div className="admin-navbar-header">
           <div className="admin-navbar-brand">
             <h2>Dashtar</h2>
@@ -82,7 +91,7 @@ const AdminNavbar = () => {
           </button>
         </div>
 
-        {/* Navigation Items: Icon + Full Label */}
+        {/* Navigation Items */}
         <nav className="admin-navbar-buttons">
           {navLinks.map((item) => {
             const Icon = item.icon;

@@ -22,40 +22,51 @@ a {
   text-decoration: none;
 }
 
+/* =========================================
+   Layout Container
+   ========================================= */
 .product-main-container {
   display: flex;
   min-height: 100vh;
   background-color: #f8fafc;
+  width: 100%;
+  box-sizing: border-box;
 }
-
-/* Navbar */
-
-/* Main Content */
 
 .AdminCustomerdetails-content {
-  width: 100%;
+  flex: 1;
   min-height: 100vh;
-  background-color: #eef0ef;
-  margin-left: 260px;
-  padding: 40px;
-  margin-top: 20px;
-  margin-right: 20px;
+  background-color: #f8fafc;
+  margin-left: 260px; /* Offset for desktop sidebar */
+  padding: 32px;
+  width: calc(100% - 260px);
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
-.AdminCustomerdetails-content h2 {
+.customer-page-header {
+  margin-bottom: 24px;
+}
+
+.customer-page-header h2 {
+  font-size: 24px;
   font-weight: 800;
   color: #1e293b;
+  margin: 0;
 }
 
-.AdminCustomerdetails-content p {
-  color: gray;
-  margin-top: 5px;
+.customer-page-header p {
+  color: #64748b;
+  margin-top: 4px;
+  font-size: 14px;
+  font-weight: 500;
 }
 
-/* Table */
-
+/* =========================================
+   Table Card
+   ========================================= */
 .product-table-card {
-  margin-top: 50px;
   background: #ffffff;
   border-radius: 12px;
   box-shadow:
@@ -63,13 +74,16 @@ a {
     0 2px 4px -1px rgba(0, 0, 0, 0.03);
   border: 1px solid #f1f5f9;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .product-table {
   width: 100%;
-  min-width: 850px;
+  min-width: 760px; /* Ensures readable columns on narrow devices */
   border-collapse: collapse;
-  text-align: center;
+  text-align: left;
 }
 
 .product-table-head {
@@ -78,12 +92,12 @@ a {
 }
 
 .product-table-head th {
-  padding: 16px 24px;
-  font-size: 15px;
+  padding: 16px 20px;
+  font-size: 14px;
   font-weight: 700;
-  color: #000000;
+  color: #1e293b;
   text-transform: capitalize;
-  background-color: #d0cdcd;
+  background-color: #f1f5f9;
   white-space: nowrap;
 }
 
@@ -101,26 +115,20 @@ a {
 }
 
 .product-table-body td {
-  padding: 16px 24px;
+  padding: 14px 20px;
   font-size: 14px;
   color: #334155;
   vertical-align: middle;
 }
 
 .product-col-name {
-  font-weight: 500;
-  color: #1e293b;
+  font-weight: 600;
+  color: #0f172a;
 }
 
 .product-col-category {
   color: #475569;
-}
-
-.product-col-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  align-items: center;
+  white-space: nowrap;
 }
 
 .product-action-show-btn {
@@ -128,7 +136,7 @@ a {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 7px 12px;
+  padding: 6px 14px;
   border: 1px solid #e2e8f0;
   background-color: #ffffff;
   color: #475569;
@@ -137,6 +145,7 @@ a {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .product-action-show-btn:hover {
@@ -148,14 +157,11 @@ a {
   font-size: 15px;
 }
 
-/* Status */
-
-/* Status */
-
+/* Status Badges */
 .product-status-btn {
   padding: 6px 14px;
   border-radius: 20px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   border: none;
   cursor: pointer;
@@ -163,9 +169,9 @@ a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  white-space: nowrap;
 }
 
-/* Blocked: Soft Red Background + Dark Red Text */
 .status-block {
   background-color: #fee2e2;
   color: #dc2626;
@@ -177,7 +183,6 @@ a {
   color: #b91c1c;
 }
 
-/* Unblocked: Soft Green Background + Dark Green Text */
 .status-unblock {
   background-color: #dcfce7;
   color: #15803d;
@@ -189,36 +194,29 @@ a {
   color: #166534;
 }
 
-.product-table-body td:nth-child(4) {
-  white-space: nowrap;
-}
-
-.product-table-body td:nth-child(5) {
-  white-space: nowrap;
-}
-
-/* Customer Modal Overlay */
-
+/* =========================================
+   Customer Modal Overlay
+   ========================================= */
 .admincustomer-overlay {
   position: fixed;
   inset: 0;
-  width: 100%;
+  width: 100vw;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.45);
+  background-color: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 20px;
-  z-index: 9999;
+  z-index: 1100;
+  box-sizing: border-box;
 }
-
-/* Customer Modal */
 
 .admincustomer-content {
   position: relative;
   background-color: #ffffff;
-  border-radius: 12px;
-  width: 420px;
+  border-radius: 14px;
+  width: 440px;
   max-width: 100%;
   max-height: 90vh;
   overflow-y: auto;
@@ -226,9 +224,8 @@ a {
   box-shadow:
     0 20px 25px -5px rgba(0, 0, 0, 0.15),
     0 10px 10px -5px rgba(0, 0, 0, 0.08);
+  box-sizing: border-box;
 }
-
-/* Modal Header */
 
 .adminmodal-header {
   display: flex;
@@ -273,50 +270,50 @@ a {
 }
 
 /* Modal Inputs */
-
 .admincustomer-content > label {
   display: block;
-  margin-bottom: 7px;
+  margin-bottom: 6px;
   font-size: 11px;
   font-weight: 700;
   color: #64748b;
+  letter-spacing: 0.5px;
 }
 
 .admincustomer-content > input {
   display: block;
   width: 100%;
-  height: 40px;
-  padding: 0 0 10px 0;
-  margin-bottom: 20px;
+  height: 38px;
+  padding: 0 0 8px 0;
+  margin-bottom: 18px;
   border: none;
   border-bottom: 1px solid #cbd5e1;
   outline: none;
   background-color: transparent;
   color: #334155;
   font-size: 14px;
+  font-weight: 500;
 }
 
 .admincustomer-content > input:focus {
   border-bottom-color: #10b981;
 }
 
-/* Status and Role */
-
+/* Status and Role Group */
 .view-detail-group {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  gap: 80px;
+  gap: 40px;
   width: 100%;
   margin-top: 5px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .customer-status,
 .customer-role {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 6px;
 }
 
 .customer-status label,
@@ -324,6 +321,7 @@ a {
   font-size: 11px;
   font-weight: 700;
   color: #64748b;
+  letter-spacing: 0.5px;
 }
 
 .customer-status-badge,
@@ -332,39 +330,36 @@ a {
   align-items: center;
   justify-content: center;
   width: fit-content;
-  min-width: 75px;
-  padding: 6px 12px;
+  min-width: 85px;
+  padding: 6px 14px;
   border-radius: 20px;
   font-size: 11px;
   font-weight: 600;
   border: none;
-}
-
-.customer-status-badge {
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .customer-role-badge {
   background-color: #e0f2fe;
   color: #0369a1;
+  cursor: default;
 }
 
 .customer-status-badge:hover {
   opacity: 0.85;
 }
 
-/* Close Button */
-
 .close-button {
   display: block;
-  background-color: rgb(240, 236, 236);
+  background-color: #f1f5f9;
   color: #475569;
-  border: none;
-  border-radius: 7px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
   width: 100px;
   height: 40px;
   margin-left: auto;
-  margin-top: 10px;
+  margin-top: 14px;
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
@@ -376,54 +371,91 @@ a {
   color: #1e293b;
 }
 
-/* Responsive */
+/* =========================================
+   Responsive Breakpoints
+   ========================================= */
 
-@media (max-width: 900px) {
-  .admin-navbar {
-    width: 210px;
-  }
-
+/* Tablets & Mobile (< 768px) */
+@media (max-width: 768px) {
   .AdminCustomerdetails-content {
-    margin-left: 220px;
-    padding: 25px;
+    margin-left: 0;
+    width: 100%;
+    padding: 20px;
+    padding-top: 80px; /* Space for fixed mobile navbar */
   }
 }
 
-@media (max-width: 700px) {
-  .admin-navbar {
-    width: 180px;
-    padding: 20px 10px;
-  }
-
-  .admin-navbar-brand h2 {
-    padding-left: 8px;
-  }
-
-  .admin-nav-item {
-    padding: 10px 8px;
-    gap: 8px;
-  }
-
+/* Small Screens (< 600px) */
+@media (max-width: 600px) {
   .AdminCustomerdetails-content {
-    margin-left: 190px;
-    padding: 20px;
+    padding: 16px;
+    padding-top: 76px;
+  }
+
+  .customer-page-header h2 {
+    font-size: 20px;
+  }
+
+  .customer-page-header p {
+    font-size: 13px;
+  }
+
+  .admincustomer-overlay {
+    padding: 12px;
   }
 
   .admincustomer-content {
-    width: 380px;
+    width: 100%;
+    padding: 20px 16px;
+  }
+
+  .view-detail-group {
+    gap: 24px;
+  }
+
+  .close-button {
+    width: 100%;
+    margin-top: 16px;
   }
 }
 
-.customer-status-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: fit-content;
-  min-width: 85px;
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
+@media (max-width: 600px) {
+  .AdminCustomerdetails-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+    /* Increase top padding so heading clears the 60px/64px fixed header */
+    padding: 16px !important;
+    padding-top: 84px !important; 
+    box-sizing: border-box;
+  }
+
+  .customer-page-header {
+    margin-top: 0 !important;
+    margin-bottom: 20px !important;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  /* Make sure the title heading renders prominently and isn't clipped */
+  .customer-page-header h2 {
+    font-size: 22px !important;
+    font-weight: 800 !important;
+    color: #1e293b !important;
+    margin: 0 !important;
+    display: block !important;
+    line-height: 1.3 !important;
+  }
+
+  .customer-page-header p {
+    font-size: 13px !important;
+    color: #64748b !important;
+    margin-top: 6px !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* Reduce table card top margin on mobile */
+  .product-table-card {
+    margin-top: 16px !important;
+  }
 }
