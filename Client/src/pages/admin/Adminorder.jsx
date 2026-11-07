@@ -18,7 +18,7 @@ import {
 import './Adminorder.css';
 import { useNavigate } from 'react-router-dom';
 import AdminService from '../../services/admin-api-services/AdminService';
-import AdminNavbar from "../../Components/admin/AdminNavbar"
+import AdminNavbar from "../../Components/admin/AdminNavbar";
 import toast, { Toaster } from 'react-hot-toast';
 
 const Adminorder = () => {
@@ -99,10 +99,17 @@ const Adminorder = () => {
       if (typeof processReturnStatus === 'function') {
         const res = await processReturnStatus(orderId, status);
         toast.success(res?.message || `Return request ${status.toLowerCase()} successfully.`);
-        fetchOrderedProducts();
+
+        // Optimistically update the selected order modal if open
         if (selectedOrder && selectedOrder._id === orderId) {
-          setSelectedOrder(null);
+          setSelectedOrder((prev) => ({
+            ...prev,
+            returnStatus: status,
+            deliveryStatus: status === "Approved" ? "Returned" : prev.deliveryStatus
+          }));
         }
+
+        fetchOrderedProducts();
       }
     } catch (error) {
       console.error("Failed to process return request:", error);
@@ -244,11 +251,13 @@ const Adminorder = () => {
                   {orders.length > 0 ? (
                     orders.map((data) => {
                       const firstItem = data.orderItems?.[0];
-                      const totalQuantity = data.orderItems?.reduce(
-                        (sum, item) => sum + (item.quantity || 1), 0
-                      ) || 0;
+                      const totalQuantity =
+                        data.orderItems?.reduce(
+                          (sum, item) => sum + (item.quantity || 1),
+                          0
+                        ) || 0;
 
-                      const isReturnRequested = data.isReturned || data.returnStatus === "Requested";
+                      const isReturnPending = data.returnStatus === "Requested";
 
                       return (
                         <tr key={data._id}>
@@ -267,7 +276,9 @@ const Adminorder = () => {
                           <td>
                             <div className="order-customer">
                               <div className="order-avatar">
-                                {data.user?.name ? data.user.name.charAt(0).toUpperCase() : 'U'}
+                                {data.user?.name
+                                  ? data.user.name.charAt(0).toUpperCase()
+                                  : 'U'}
                               </div>
                               <div className="order-customer-info">
                                 <strong>
@@ -302,7 +313,12 @@ const Adminorder = () => {
                                   <img
                                     src={firstItem.product.image}
                                     alt={firstItem.product.name}
-                                    style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '6px' }}
+                                    style={{
+                                      width: '40px',
+                                      height: '40px',
+                                      objectFit: 'cover',
+                                      borderRadius: '6px'
+                                    }}
                                   />
                                 ) : (
                                   <span style={{ fontSize: '20px' }}>🧴</span>
@@ -310,9 +326,13 @@ const Adminorder = () => {
                               </div>
 
                               <div className="order-product-info text-start">
-                                <strong className="d-block text-truncate" style={{ maxWidth: '180px' }}>
+                                <strong
+                                  className="d-block text-truncate"
+                                  style={{ maxWidth: '180px' }}
+                                >
                                   {firstItem?.product?.name || 'Product'}
-                                  {data.orderItems?.length > 1 && ` (+${data.orderItems.length - 1} more)`}
+                                  {data.orderItems?.length > 1 &&
+                                    ` (+${data.orderItems.length - 1} more)`}
                                 </strong>
                                 <span className="d-block text-muted small">
                                   Qty: {totalQuantity}
@@ -325,33 +345,38 @@ const Adminorder = () => {
                           </td>
 
                           <td>
-                            {isReturnRequested ? (
+                            {isReturnPending ? (
                               <div className="d-flex flex-column gap-1 align-items-start">
                                 <span className="badge bg-warning text-dark px-2 py-1 small">
                                   <LuRotateCcw className="me-1" /> Requested
                                 </span>
-                                <small className="text-muted text-truncate" style={{ maxWidth: '120px' }}>
+                                <small
+                                  className="text-muted text-truncate"
+                                  style={{ maxWidth: '120px' }}
+                                >
                                   {data.returnReason || "No reason specified"}
                                 </small>
-                                {data.returnStatus === "Requested" && (
-                                  <div className="d-flex gap-1 mt-1">
-                                    <button
-                                      className="btn btn-success btn-sm py-0 px-2 fs-7"
-                                      onClick={() => handleReturnProcess(data._id, "Approved")}
-                                    >
-                                      Approve
-                                    </button>
-                                    <button
-                                      className="btn btn-danger btn-sm py-0 px-2 fs-7"
-                                      onClick={() => handleReturnProcess(data._id, "Rejected")}
-                                    >
-                                      Reject
-                                    </button>
-                                  </div>
-                                )}
+                                <div className="d-flex gap-1 mt-1">
+                                  <button
+                                    className="btn btn-success btn-sm py-0 px-2 fs-7"
+                                    onClick={() => handleReturnProcess(data._id, "Approved")}
+                                  >
+                                    Approve
+                                  </button>
+                                  <button
+                                    className="btn btn-danger btn-sm py-0 px-2 fs-7"
+                                    onClick={() => handleReturnProcess(data._id, "Rejected")}
+                                  >
+                                    Reject
+                                  </button>
+                                </div>
                               </div>
                             ) : data.returnStatus ? (
-                              <span className={`badge ${data.returnStatus === 'Approved' ? 'bg-success' : 'bg-danger'} px-2 py-1`}>
+                              <span
+                                className={`badge ${
+                                  data.returnStatus === 'Approved' ? 'bg-success' : 'bg-danger'
+                                } px-2 py-1`}
+                              >
                                 {data.returnStatus}
                               </span>
                             ) : (
@@ -435,7 +460,7 @@ const Adminorder = () => {
 
             <div className="order-details-body">
               {/* Return Request Banner */}
-              {(selectedOrder.isReturned || selectedOrder.returnStatus === "Requested") && (
+              {selectedOrder.returnStatus === "Requested" ? (
                 <div className="alert alert-warning d-flex align-items-center justify-content-between p-3 mb-3 rounded shadow-sm">
                   <div>
                     <strong className="d-block text-dark mb-1">
@@ -460,7 +485,31 @@ const Adminorder = () => {
                     </button>
                   </div>
                 </div>
-              )}
+              ) : selectedOrder.returnStatus === "Approved" ? (
+                <div className="alert alert-success d-flex align-items-center justify-content-between p-3 mb-3 rounded shadow-sm">
+                  <div>
+                    <strong className="d-block text-success mb-1">
+                      <LuCircleCheck className="me-2" /> Return Request Approved
+                    </strong>
+                    <span className="text-muted small">
+                      Reason: <strong>{selectedOrder.returnReason || "Not provided"}</strong>
+                    </span>
+                  </div>
+                  <span className="badge bg-success px-3 py-2">Approved & Restocked</span>
+                </div>
+              ) : selectedOrder.returnStatus === "Rejected" ? (
+                <div className="alert alert-danger d-flex align-items-center justify-content-between p-3 mb-3 rounded shadow-sm">
+                  <div>
+                    <strong className="d-block text-danger mb-1">
+                      <LuCircleX className="me-2" /> Return Request Rejected
+                    </strong>
+                    <span className="text-muted small">
+                      Reason: <strong>{selectedOrder.returnReason || "Not provided"}</strong>
+                    </span>
+                  </div>
+                  <span className="badge bg-danger px-3 py-2">Rejected</span>
+                </div>
+              ) : null}
 
               <div className="order-information-grid">
                 {/* Customer Info Card */}
@@ -472,24 +521,36 @@ const Adminorder = () => {
 
                   <div className="customer-detail-main">
                     <div className="customer-detail-avatar">
-                      {selectedOrder.user?.name ? selectedOrder.user.name.charAt(0).toUpperCase() : 'U'}
+                      {selectedOrder.user?.name
+                        ? selectedOrder.user.name.charAt(0).toUpperCase()
+                        : 'U'}
                     </div>
 
                     <div>
                       <strong>{selectedOrder.user?.name || 'Customer'}</strong>
                       <p className="mb-0">User ID: </p>
-                      <span>{selectedOrder.user?._id?.slice(-8) || selectedOrder.user?.slice?.(-8) || 'N/A'}</span>
+                      <span>
+                        {selectedOrder.user?._id?.slice(-8) ||
+                          selectedOrder.user?.slice?.(-8) ||
+                          'N/A'}
+                      </span>
                     </div>
                   </div>
 
                   <div className="customer-contact">
                     <div>
                       <LuPhone />
-                      <span>{selectedOrder.user?.phone || selectedOrder.shippingAddress?.phone || 'N/A'}</span>
+                      <span>
+                        {selectedOrder.user?.phone ||
+                          selectedOrder.shippingAddress?.phone ||
+                          'N/A'}
+                      </span>
                     </div>
                     <div>
                       <LuMail />
-                      <span>{selectedOrder.user?.email || 'No email available'}</span>
+                      <span>
+                        {selectedOrder.user?.email || 'No email available'}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -502,14 +563,24 @@ const Adminorder = () => {
                   </div>
 
                   <div className="shipping-address">
-                    <strong>{selectedOrder.shippingAddress?.fullName || selectedOrder.user?.name}</strong>
+                    <strong>
+                      {selectedOrder.shippingAddress?.fullName || selectedOrder.user?.name}
+                    </strong>
                     <p>{selectedOrder.shippingAddress?.street}</p>
-                    <p>{selectedOrder.shippingAddress?.city}, {selectedOrder.shippingAddress?.state}</p>
-                    <p>{selectedOrder.shippingAddress?.country} {selectedOrder.shippingAddress?.zip}</p>
+                    <p>
+                      {selectedOrder.shippingAddress?.city},{' '}
+                      {selectedOrder.shippingAddress?.state}
+                    </p>
+                    <p>
+                      {selectedOrder.shippingAddress?.country}{' '}
+                      {selectedOrder.shippingAddress?.zip}
+                    </p>
 
                     <div className="address-contact">
                       <LuPhone />
-                      <span>Address Contact: {selectedOrder.shippingAddress?.phone || 'N/A'}</span>
+                      <span>
+                        Address Contact: {selectedOrder.shippingAddress?.phone || 'N/A'}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -526,7 +597,10 @@ const Adminorder = () => {
                       <span>Order Date:</span>
                       <strong>
                         {new Date(selectedOrder.createdAt).toLocaleDateString("en-IN")},<br />
-                        {new Date(selectedOrder.createdAt).toLocaleTimeString("en-IN", { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(selectedOrder.createdAt).toLocaleTimeString("en-IN", {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
                       </strong>
                     </div>
 
@@ -557,7 +631,11 @@ const Adminorder = () => {
                           <img
                             src={item.product?.image}
                             alt={item.product?.name}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover'
+                            }}
                           />
                         ) : (
                           <span style={{ fontSize: '24px' }}>🧴</span>
@@ -567,7 +645,14 @@ const Adminorder = () => {
                       <div className="ordered-product-information">
                         <h3>{item.product?.name || 'Product Name'}</h3>
                         <div className="text-muted small">
-                          <span>Category: <strong>{item.product?.categories?.name || item.product?.category?.name || 'General'}</strong></span>
+                          <span>
+                            Category:{' '}
+                            <strong>
+                              {item.product?.categories?.name ||
+                                item.product?.category?.name ||
+                                'General'}
+                            </strong>
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -575,12 +660,16 @@ const Adminorder = () => {
                     <div className="d-flex align-items-center gap-4 text-end">
                       <div className="ordered-price">
                         <span className="d-block text-muted small">Pricing</span>
-                        <strong>₹{item.product?.saleprice || 0} x {item.quantity}</strong>
+                        <strong>
+                          ₹{item.product?.saleprice || 0} x {item.quantity}
+                        </strong>
                       </div>
 
                       <div className="ordered-total">
                         <span className="d-block text-muted small">Total Price</span>
-                        <strong>₹{(item.product?.saleprice || 0) * item.quantity}</strong>
+                        <strong>
+                          ₹{(item.product?.saleprice || 0) * item.quantity}
+                        </strong>
                       </div>
                     </div>
                   </div>
@@ -596,9 +685,13 @@ const Adminorder = () => {
                 <div className="footer-status">
                   <span>DELIVERY STATUS:</span>
                   <select
-                    className={`order-details-status-select ${getStatusClass(selectedOrder.deliveryStatus)}`}
+                    className={`order-details-status-select ${getStatusClass(
+                      selectedOrder.deliveryStatus
+                    )}`}
                     value={selectedOrder.deliveryStatus || 'Pending'}
-                    onChange={(e) => handleStatusChange(selectedOrder._id, e.target.value)}
+                    onChange={(e) =>
+                      handleStatusChange(selectedOrder._id, e.target.value)
+                    }
                   >
                     <option value="Pending">Pending</option>
                     <option value="Processing">Processing</option>
