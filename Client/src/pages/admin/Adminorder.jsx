@@ -29,6 +29,13 @@ const Adminorder = () => {
   const { getOrders, updateStatus, processReturnStatus } = AdminService();
   const navigate = useNavigate();
 
+  // Helper function to check if the product should NOT be restocked
+  const isNonRestockableReason = (reason) => {
+    if (!reason) return false;
+    const normalized = reason.trim().toLowerCase();
+    return normalized === "damaged product" || normalized === "defective product";
+  };
+
   const fetchOrderedProducts = async () => {
     try {
       setLoading(true);
@@ -258,6 +265,7 @@ const Adminorder = () => {
                         ) || 0;
 
                       const isReturnPending = data.returnStatus === "Requested";
+                      const isDamagedOrDefective = isNonRestockableReason(data.returnReason);
 
                       return (
                         <tr key={data._id}>
@@ -352,7 +360,8 @@ const Adminorder = () => {
                                 </span>
                                 <small
                                   className="text-muted text-truncate"
-                                  style={{ maxWidth: '120px' }}
+                                  style={{ maxWidth: '140px' }}
+                                  title={data.returnReason}
                                 >
                                   {data.returnReason || "No reason specified"}
                                 </small>
@@ -360,8 +369,9 @@ const Adminorder = () => {
                                   <button
                                     className="btn btn-success btn-sm py-0 px-2 fs-7"
                                     onClick={() => handleReturnProcess(data._id, "Approved")}
+                                    title={isDamagedOrDefective ? "Approve without Restocking" : "Approve and Restock"}
                                   >
-                                    Approve
+                                    {isDamagedOrDefective ? "Approve (Discard)" : "Approve"}
                                   </button>
                                   <button
                                     className="btn btn-danger btn-sm py-0 px-2 fs-7"
@@ -371,13 +381,22 @@ const Adminorder = () => {
                                   </button>
                                 </div>
                               </div>
-                            ) : data.returnStatus ? (
-                              <span
-                                className={`badge ${
-                                  data.returnStatus === 'Approved' ? 'bg-success' : 'bg-danger'
-                                } px-2 py-1`}
-                              >
-                                {data.returnStatus}
+                            ) : data.returnStatus === "Approved" ? (
+                              <div className="d-flex flex-column align-items-start gap-1">
+                                <span
+                                  className={`badge ${
+                                    isDamagedOrDefective ? "bg-secondary text-white" : "bg-success"
+                                  } px-2 py-1`}
+                                >
+                                  {isDamagedOrDefective ? "Returned (Not Restocked)" : "Approved & Restocked"}
+                                </span>
+                                <small className="text-muted small" style={{ fontSize: "11px" }}>
+                                  {data.returnReason}
+                                </small>
+                              </div>
+                            ) : data.returnStatus === "Rejected" ? (
+                              <span className="badge bg-danger px-2 py-1">
+                                Rejected
                               </span>
                             ) : (
                               <span className="text-muted small">None</span>
@@ -469,13 +488,21 @@ const Adminorder = () => {
                     <span className="text-muted small">
                       Reason: <strong>{selectedOrder.returnReason || "Not provided"}</strong>
                     </span>
+                    {isNonRestockableReason(selectedOrder.returnReason) && (
+                      <small className="d-block text-danger fw-semibold mt-1">
+                        ⚠️ Damaged/Defective item: Approving will NOT restock inventory.
+                      </small>
+                    )}
                   </div>
                   <div className="d-flex gap-2">
                     <button
                       className="btn btn-success btn-sm d-flex align-items-center gap-1 fw-bold"
                       onClick={() => handleReturnProcess(selectedOrder._id, "Approved")}
                     >
-                      <LuCircleCheck /> Approve & Restock
+                      <LuCircleCheck />{" "}
+                      {isNonRestockableReason(selectedOrder.returnReason)
+                        ? "Approve (No Restock)"
+                        : "Approve & Restock"}
                     </button>
                     <button
                       className="btn btn-danger btn-sm d-flex align-items-center gap-1 fw-bold"
@@ -486,16 +513,38 @@ const Adminorder = () => {
                   </div>
                 </div>
               ) : selectedOrder.returnStatus === "Approved" ? (
-                <div className="alert alert-success d-flex align-items-center justify-content-between p-3 mb-3 rounded shadow-sm">
+                <div
+                  className={`alert ${
+                    isNonRestockableReason(selectedOrder.returnReason)
+                      ? "alert-secondary border-secondary"
+                      : "alert-success border-success"
+                  } d-flex align-items-center justify-content-between p-3 mb-3 rounded shadow-sm`}
+                >
                   <div>
-                    <strong className="d-block text-success mb-1">
+                    <strong
+                      className={`d-block ${
+                        isNonRestockableReason(selectedOrder.returnReason)
+                          ? "text-dark"
+                          : "text-success"
+                      } mb-1`}
+                    >
                       <LuCircleCheck className="me-2" /> Return Request Approved
                     </strong>
                     <span className="text-muted small">
                       Reason: <strong>{selectedOrder.returnReason || "Not provided"}</strong>
                     </span>
                   </div>
-                  <span className="badge bg-success px-3 py-2">Approved & Restocked</span>
+                  <span
+                    className={`badge ${
+                      isNonRestockableReason(selectedOrder.returnReason)
+                        ? "bg-secondary text-white"
+                        : "bg-success"
+                    } px-3 py-2 fs-7`}
+                  >
+                    {isNonRestockableReason(selectedOrder.returnReason)
+                      ? "Returned (Not Restocked)"
+                      : "Approved & Restocked"}
+                  </span>
                 </div>
               ) : selectedOrder.returnStatus === "Rejected" ? (
                 <div className="alert alert-danger d-flex align-items-center justify-content-between p-3 mb-3 rounded shadow-sm">
