@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import styles from "./Signup.module.css";
 import signupImg from "../../assets/signup.jpg";
-import { User, Mail, Lock, Eye } from "lucide-react";
+import { User, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { GoogleLogin } from "@react-oauth/google";
 import UserService from "../../services/user-api-services/UserService";
 
@@ -23,6 +23,8 @@ function Signup() {
     terms: false,
   });
 
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [serverError, setServerError] = useState("");
 
   const navigate = useNavigate();
@@ -172,13 +174,22 @@ function Signup() {
         {/* Right Side: Form */}
         <section className={styles.formSection}>
           <form className={styles.signupForm} onSubmit={onhandlesubmit}>
-            {/* Full-width Google Sign-up */}
-            <div style={{ width: "100%", display: "flex", justifyContent: "center", marginBottom: "16px" }}>
+            {/* Google Sign-up */}
+            <div
+              style={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "center",
+                marginBottom: "16px",
+              }}
+            >
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
-                onError={() => setServerError("Google Sign-Up was unsuccessful")}
+                onError={() =>
+                  setServerError("Google Sign-Up was unsuccessful")
+                }
                 useOneTap
-                width="100%"
+                width="350"
                 text="signup_with"
                 shape="rectangular"
                 theme="outline"
@@ -247,19 +258,25 @@ function Signup() {
               <input
                 id="password"
                 name="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 value={formData.password}
                 placeholder="Enter your password"
                 onChange={onhandlechange}
                 onBlur={handleBlur}
               />
-              <button type="button" className={styles.eyeIconBtn}>
-                <Eye size={18} />
+              <button
+                type="button"
+                className={styles.eyeIconBtn}
+                onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
               {formErr.password && (
                 <span className={styles.error}>
-                  Password must contain at least 8 characters, one uppercase letter,
-                  one lowercase letter, one number, and one special character.
+                  Password must contain at least 8 characters, one uppercase
+                  letter, one lowercase letter, one number, and one special
+                  character.
                 </span>
               )}
             </div>
@@ -270,14 +287,23 @@ function Signup() {
               <input
                 id="confirmPassword"
                 name="confirmpassword"
-                type="password"
+                type={showConfirmPassword ? "text" : "password"}
                 value={formData.confirmpassword}
                 placeholder="Confirm your password"
                 onChange={onhandlechange}
                 onBlur={handleBlur}
               />
-              <button type="button" className={styles.eyeIconBtn}>
-                <Eye size={18} />
+              <button
+                type="button"
+                className={styles.eyeIconBtn}
+                onClick={() => setShowConfirmPassword((prev) => !prev)}
+                aria-label={
+                  showConfirmPassword
+                    ? "Hide confirm password"
+                    : "Show confirm password"
+                }
+              >
+                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
               {formErr.confirmpassword && (
                 <span className={styles.error}>Password doesn't match</span>
@@ -298,7 +324,9 @@ function Signup() {
               </label>
             </div>
             {formErr.terms && (
-              <span className={styles.error}>Accept our terms and conditions</span>
+              <span className={styles.error}>
+                Accept our terms and conditions
+              </span>
             )}
 
             <button type="submit" className={styles.signupButton}>
@@ -306,7 +334,7 @@ function Signup() {
             </button>
 
             <p className={styles.loginText}>
-              Already have an account? <Link to="/login">Sign In</Link>
+              Already have an account? <Link to="/LogIn">Sign In</Link>
             </p>
           </form>
         </section>

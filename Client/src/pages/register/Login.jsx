@@ -147,13 +147,20 @@ function Login() {
         {/* Right Side: Form */}
         <section className={styles.formSection}>
           <form className={styles.loginForm} onSubmit={onHandleSubmit}>
-            {/* Full-width Google Sign-in */}
-            <div style={{ width: "100%", display: "flex", justifyContent: "center", marginBottom: "16px" }}>
+            {/* Google Sign-in */}
+            <div
+              style={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "center",
+                marginBottom: "16px",
+              }}
+            >
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
                 onError={() => setServerError("Google Sign-In was unsuccessful")}
                 useOneTap
-                width="100%"
+                width="350"
                 shape="rectangular"
                 theme="outline"
               />
@@ -214,6 +221,7 @@ function Login() {
                 type="button"
                 className={styles.eyeIconBtn}
                 onClick={togglePasswordVisibility}
+                aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -233,7 +241,7 @@ function Login() {
             </button>
 
             <p className={styles.signupText}>
-              Don't have an account? <Link to="/signup">Sign Up</Link>
+              Don't have an account? <Link to="/Signup">Sign Up</Link>
             </p>
           </form>
         </section>
