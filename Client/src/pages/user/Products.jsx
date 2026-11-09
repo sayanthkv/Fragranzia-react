@@ -62,10 +62,8 @@ const Products = () => {
       setSpecialFilter("all");
     }
 
-    if (urlSearch) {
-      setSearchTerm(urlSearch);
-    }
-
+   setSearchTerm(urlSearch || "");
+   
     if (urlMinPrice) {
       setMaxPrice(20000);
     }
