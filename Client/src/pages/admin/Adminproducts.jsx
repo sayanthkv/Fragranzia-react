@@ -244,7 +244,7 @@ const Adminproducts = () => {
       />
 
       {/* Responsive Admin Sidebar / Mobile Navbar */}
-      <AdminNavbar />
+      {/* <AdminNavbar /> */}
 
       <div className="adminproduct-main-content">
         <div className="adminproduct-action-bar">

@@ -18,4 +18,4 @@ import { Navigate, Outlet } from "react-router-dom";
   return <Outlet />;
 };
 
-export default UserProtectedRoute()
+export default UserProtectedRoute
