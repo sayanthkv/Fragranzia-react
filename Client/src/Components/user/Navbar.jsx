@@ -12,6 +12,12 @@ const Navbar = () => {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("Token");
+    localStorage.removeItem("role");
+    navigate("/LogIn");
+  };
+
   return (
     <nav className="navbar navbar-expand-lg navbar-light shadow-sm homepage-navbar sticky-top">
       <div className="container-fluid px-0">
@@ -91,41 +97,45 @@ const Navbar = () => {
             </li>
 
             {/* Cart NavLink */}
-<li className="nav-item">
-  <NavLink
-    to="/Cart"
-    className={({ isActive }) =>
-      `icon-btn homepage-icon-btn ${isActive ? "active" : ""}`
-    }
-    aria-label="Cart"
-  >
-    <i className="fa-solid fa-cart-shopping"></i>
-  </NavLink>
-</li>
+            <li className="nav-item">
+              <NavLink
+                to="/Cart"
+                className={({ isActive }) =>
+                  `icon-btn homepage-icon-btn ${isActive ? "active" : ""}`
+                }
+                aria-label="Cart"
+              >
+                <i className="fa-solid fa-cart-shopping"></i>
+              </NavLink>
+            </li>
 
-{/* Notification Button */}
-<li className="nav-item">
-  <button
-    className="icon-btn homepage-icon-btn"
-    type="button"
-    aria-label="Notifications"
-  >
-    <i className="fa-regular fa-bell"></i>
-  </button>
-</li>
+            {/* Log Out Button (Replaced Notification Bell) */}
+            
 
-{/* Profile NavLink */}
-<li className="nav-item">
-  <NavLink
-    to="/Profile"
-    className={({ isActive }) =>
-      `icon-btn homepage-icon-btn ${isActive ? "active" : ""}`
-    }
-    aria-label="Profile"
-  >
-    <i className="fa-regular fa-user"></i>
-  </NavLink>
-</li>
+            {/* Profile NavLink */}
+            <li className="nav-item">
+              <NavLink
+                to="/Profile"
+                className={({ isActive }) =>
+                  `icon-btn homepage-icon-btn ${isActive ? "active" : ""}`
+                }
+                aria-label="Profile"
+              >
+                <i className="fa-regular fa-user"></i>
+              </NavLink>
+            </li>
+
+            <li className="nav-item">
+              <button
+                className="icon-btn homepage-icon-btn text-danger"
+                type="button"
+                aria-label="Log Out"
+                title="Log Out"
+                onClick={handleLogout}
+              >
+                <i className="fa-solid fa-right-from-bracket"></i>
+              </button>
+            </li>
           </ul>
         </div>
       </div>
