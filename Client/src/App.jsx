@@ -3,9 +3,9 @@ import { Route, Routes, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 
 // Layouts
-import FullLayout from "./Components/layouts/FullLayout.jsx";
-import NavbarOnlyLayout from "./Components/layouts/NavbarOnlyLayout.jsx";
-import AdminLayout from "./Components/admin/AdminLayout.jsx";
+import FullLayout from "./Components/layouts/userlayout/FullLayout.jsx";
+import NavbarOnlyLayout from "./Components/layouts/userlayout/NavbarOnlyLayout.jsx";
+import AdminLayout from "./Components/layouts/adminlayout/AdminLayout.jsx";
 
 // User & Auth Pages
 import Login from "./pages/register/Login.jsx";
@@ -30,9 +30,10 @@ import Adminorder from "./pages/admin/Adminorder.jsx";
 // Route Guards
 import AdminProtectedRoute, {
   PublicOnlyRoute,
-  UserProtectedRoute,
   NonAdminRoute,
 } from "./Components/protected-route/AdminProtectedRoute.jsx";
+
+import UserProtectedRoute from "./Components/protected-route/UserProtectedRoute.jsx"
 
 function App() {
   return (

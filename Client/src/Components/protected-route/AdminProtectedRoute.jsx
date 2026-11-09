@@ -13,22 +13,7 @@ const AdminProtectedRoute = () => {
   return <Outlet />;
 };
 
-// 🔒 2. Protect User Account Routes (Only Non-Admin Logged-in Users allowed)
-export const UserProtectedRoute = () => {
-  const token = localStorage.getItem("Token");
-  const role = localStorage.getItem("role");
 
-  if (!token) {
-    return <Navigate to="/LogIn" replace />;
-  }
-
-  // If logged in as admin, block access and send to admin panel
-  if (role && role.toLowerCase() === "admin") {
-    return <Navigate to="/AdminCategory" replace />;
-  }
-
-  return <Outlet />;
-};
 
 // 🚫 3. Protect Login/Signup Pages (Logged-in users/admins CANNOT access)
 export const PublicOnlyRoute = () => {
