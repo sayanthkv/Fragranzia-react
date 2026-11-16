@@ -142,7 +142,7 @@ const Paymentpage = () => {
       }
 
       const options = {
-        key: "rzp_test_TtcgxkiZwyZJ7b",
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_TtcgxkiZwyZJ7b",
         amount: razorpayOrder.amount,
         currency: "INR",
         name: "Fragranzia",

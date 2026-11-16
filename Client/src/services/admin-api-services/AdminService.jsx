@@ -15,7 +15,7 @@ const AdminService = () => {
   };
 
   const EditCategory = async (categoryId, data) => {
-    const response = await axiosPrivate.put(`Category/${categoryId}/editdetails`, data);
+    const response = await axiosPrivate.put(`/Category/${categoryId}/editdetails`, data);
     return response?.data;
   };
 
@@ -36,12 +36,12 @@ const getCategory = async (page = 1, limit = 10) => {
   };
 
   const editStatus = async (categoryId, data) => {
-    const response = await axiosPrivate.put(`Category/${categoryId}/status`, data);
+    const response = await axiosPrivate.put(`/Category/${categoryId}/status`, data);
     return response?.data;
   };
 
   const editProductStatus = async (productId, data) => {
-    const response = await axiosPrivate.put(`Products/${productId}/status`, data);
+    const response = await axiosPrivate.put(`/Products/${productId}/status`, data);
     return response?.data;
   };
 

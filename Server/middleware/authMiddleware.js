@@ -3,12 +3,15 @@ const jwt = require("jsonwebtoken");
 const checkAuth = (req, res, next) => {
   let token;
 
-  if (req.headers.authorization ) {
+  if (req.headers.authorization) {
     token = req.headers.authorization;
+    if (token.startsWith("Bearer ")) {
+      token = token.slice(7).trim();
+    }
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       req.userId = decoded._id;
-      next();
+      return next();
     } catch (error) {
       return res.status(401).json({ message: "Not Authorized" });
     }

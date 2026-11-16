@@ -1,4 +1,4 @@
-import useAxiosPrivate from "../../hooks/useAxiosprivate";
+import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 
 const UserService = () => {
   const axiosPrivate = useAxiosPrivate();

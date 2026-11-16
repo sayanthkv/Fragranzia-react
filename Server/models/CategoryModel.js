@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-// const { Variant } = require("./VariantModel");
 
 const categorySchema = new mongoose.Schema({
   name: { type: String, required: true, unique: true },
@@ -8,5 +7,5 @@ const categorySchema = new mongoose.Schema({
 }, { timestamps: true });
 
 module.exports = {
-    Category: mongoose.model("Category", categorySchema),
+  Category: mongoose.model("Category", categorySchema),
 };

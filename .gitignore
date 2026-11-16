@@ -13,6 +13,8 @@ lerna-debug.log*
 # Dependencies
 # ----------------------
 node_modules/
+Client/node_modules/
+Server/node_modules/
 client/node_modules/
 server/node_modules/
 
@@ -21,6 +23,8 @@ server/node_modules/
 # ----------------------
 dist/
 dist-ssr/
+Client/dist/
+Server/dist/
 client/build/
 client/dist/
 server/dist/
@@ -30,6 +34,10 @@ server/dist/
 # ----------------------
 .env
 .env.*
+Client/.env
+Client/.env.*
+Server/.env
+Server/.env.*
 client/.env
 client/.env.*
 server/.env
