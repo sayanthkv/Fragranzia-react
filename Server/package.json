@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "echo 'Build complete'",
     "start": "node index.js",
     "dev": "nodemon index.js"
   },
@@ -27,7 +28,12 @@
     "nodemon": "^3.1.14",
     "razorpay": "^2.9.8"
   },
+  "overrides": {
+    "multer-storage-cloudinary": {
+      "cloudinary": "$cloudinary"
+    }
+  },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=18.0.0 <=22.x"
   }
 }
