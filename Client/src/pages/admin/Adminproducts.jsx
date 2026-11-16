@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import AdminService from '../../services/admin-api-services/AdminService';
+
+import AdminService from '../../services/admin-api-services/AdminService.jsx';
 import AdminNavbar from "../../Components/admin/AdminNavbar"
 import toast, { Toaster } from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
