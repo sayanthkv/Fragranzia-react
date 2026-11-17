@@ -61,3 +61,25 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# ----------------------
+# Unused Vite template / leftover assets
+# ----------------------
+Client/src/assets/react.svg
+Client/src/assets/vite.svg
+Client/src/assets/hero.png
+Client/public/icons.svg
+Client/src/App.css
+Client/README.md
+
+# ----------------------
+# Font / binary build artifacts
+# ----------------------
+*.woff
+*.woff2
+
+# ----------------------
+# OS / runtime
+# ----------------------
+*.pem
+.cache/
