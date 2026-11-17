@@ -222,19 +222,7 @@ Frontend runs at **http://localhost:5173** · Backend runs at **http://localhost
 
 ---
 
-## 📸 Screenshots
 
-> _Add screenshots here after deployment._
-
-| Home | Product Listing | Product Detail |
-|------|----------------|----------------|
-| — | — | — |
-
-| Cart | Admin Dashboard | Orders |
-|------|----------------|--------|
-| — | — | — |
-
----
 
 ## 📄 License
 
