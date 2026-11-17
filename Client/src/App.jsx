@@ -95,7 +95,9 @@ function App() {
            ========================================= */}
         <Route element={<PublicOnlyRoute />}>
           <Route path="/LogIn" element={<Login />} />
+          <Route path="/login" element={<Navigate to="/LogIn" replace />} />
           <Route path="/Signup" element={<Signup />} />
+          <Route path="/signup" element={<Navigate to="/Signup" replace />} />
         </Route>
 
         {/* =========================================

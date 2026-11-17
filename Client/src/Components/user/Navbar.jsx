@@ -13,6 +13,21 @@ const Navbar = () => {
   // Logout confirmation modal state
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
+  // Auth state to toggle login/logout button
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("Token"));
+
+  useEffect(() => {
+    setIsLoggedIn(!!localStorage.getItem("Token"));
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setIsLoggedIn(!!localStorage.getItem("Token"));
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
   // Sync state if URL search query changes externally
   useEffect(() => {
     const currentQuery = searchParams.get("search") || "";
@@ -53,6 +68,7 @@ const Navbar = () => {
   const confirmLogout = () => {
     localStorage.removeItem("Token");
     localStorage.removeItem("role");
+    setIsLoggedIn(false);
     setShowLogoutModal(false);
     navigate("/LogIn");
   };
@@ -187,17 +203,30 @@ const Navbar = () => {
                 </NavLink>
               </li>
 
-              {/* Trigger Confirmation Modal */}
+              {/* Login / Logout Button */}
               <li className="nav-item">
-                <button
-                  className="icon-btn homepage-icon-btn text-danger"
-                  type="button"
-                  aria-label="Log Out"
-                  title="Log Out"
-                  onClick={() => setShowLogoutModal(true)}
-                >
-                  <i className="fa-solid fa-right-from-bracket"></i>
-                </button>
+                {isLoggedIn ? (
+                  <button
+                    className="icon-btn homepage-icon-btn text-danger"
+                    type="button"
+                    aria-label="Log Out"
+                    title="Log Out"
+                    onClick={() => setShowLogoutModal(true)}
+                  >
+                    <i className="fa-solid fa-right-from-bracket"></i>
+                  </button>
+                ) : (
+                  <NavLink
+                    to="/LogIn"
+                    className={({ isActive }) =>
+                      `icon-btn homepage-icon-btn ${isActive ? "active" : ""}`
+                    }
+                    aria-label="Log In"
+                    title="Log In"
+                  >
+                    <i className="fa-solid fa-right-to-bracket"></i>
+                  </NavLink>
+                )}
               </li>
             </ul>
           </div>
